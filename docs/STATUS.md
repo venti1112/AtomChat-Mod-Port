@@ -2,6 +2,15 @@
 
 > 截至 2026-10-21。这里只维护当前快照，提交及推送事实以 Git 查询为准。
 
+## Skija / Windows ARM64 迁移
+
+- 用户授权尝试升级以支持 Windows ARM64；Skija 现钉 0.143.18（仓库根单一定义），types 0.2.0，模组版本仍为 0.3.2。已适配字体、PathBuilder、ColorType 与 GPU flush 接口。
+- 三加载器 × Windows x64 / Windows ARM64 / Linux x64 九包均构建，文件名统一以系统与架构结尾；完整测试 NeoForge 1377 / Fabric 1389 / Forge 1377，均 0 失败、0 错误，各 2 原有跳过。
+- 九包 native/登记/版本/资源与同加载器应用内容一致性通过，Windows/WSL Linux x64 native CPU 冒烟通过；独立审查四项 P2 已修复并复查通过。详见 [迁移验证](verification/2026-10-21-skija-windows-arm64.md) 与 [包指纹](verification/2026-10-21-skija-packages.json)。
+- 候选包集中于 `.work/skija-upgrade/dist/`。用户已反馈所部署 Windows x64 候选渲染正常，并授权三加载器改动提交、推送。该反馈不代表 Windows ARM64 实机、Linux 新版 GPU、其他加载器运行或量化性能已逐项验收。
+- 已按用户授权部署到 Windows `1.21.1-CCB` Fabric 实例：`atomchat-Fabric-1.21.1-0.3.2-windows-x64.jar`，SHA-256 `5bcd0e33cc13dd06e4ebd3c97114ff5b3a5e374d12aa39634b7f7a4d0c238974`。旧包已备份，其他 73 个文件哈希/大小/修改时间不变，只有一个 AtomChat；由用户启动并完成上述 x64 渲染验收。
+- 本轮仅提交、推送源码，不打 tag 或发布；具体完成状态以 Git 查询为准。下文旧六包与旧 CCB 哈希是升级前已验收基线。商店正文与正式发布说明未同步此次候选。
+
 ## 项目与验收
 
 - 仓库 `D:/AtomChat-Main`，分支 `main`，远端 `origin` 为 `NoWordz/AtomChat-Mod`；发布三端为 Fabric 1.21.1、NeoForge 1.21.1、Forge 1.20.1，源码版本保持 0.3.2。本分支 `port/1.21.4-fabric` 另加 1.21.4 Fabric 移植目标（未发布）。
@@ -14,7 +23,8 @@
 ## 1.21.4 Fabric 移植（分支 `port/1.21.4-fabric`）
 
 - 目标 `1.21.4-fabric` 已接入矩阵：Fabric Loader 0.19.5、Fabric API 0.119.4+1.21.4、Loom 1.17.21、Gradle 9.7.1、Java 21；映射改为 Mojang 官方名并挂 `1.21+` / `official` / `fabric` 三层，复用官方映射家族源码。1.21.1 保持冻结，仍是唯一的 Yarn 目标。
-- 单元测试 1387 项（0 失败、2 项原有跳过）与 Windows/Linux 两个变体构建通过；`verify_targets.py`、seams、孪生残差、`verify_jars.py` 均通过。
+- 已并入 main 的 Skija 0.143.18 / Windows ARM64 改动：Skija 版本改由仓库根统一提供，types 升到 0.2.0，测试原生库按宿主 JVM 选择，产物名统一以系统与架构结尾。
+- 单元测试 1389 项（0 失败、2 项原有跳过）与 Windows x64 / Windows ARM64 / Linux x64 三个变体构建通过；`verify_targets.py`、seams、孪生残差、`verify_jars.py`、聊天资源一致性均通过。
 - 开发客户端已启动到主菜单，AtomChat 初始化与 mixin 应用无报错；**尚未在游戏内打开面板**，也未做多人/重连实机验证。
 
 ## 最终验证与部署

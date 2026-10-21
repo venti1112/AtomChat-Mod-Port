@@ -58,7 +58,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DragDropPasteUploadTest {
     private static final ActionToast.Translator KEYS = key -> key;
 
-    /** Direct buffers are never relocated, but the name strings must outlive the call. */
+    /** Direct buffers are never relocated, but the pointer array and name strings must outlive the call. */
     private static final List<ByteBuffer> NATIVE_STRINGS = new ArrayList<>();
 
     @TempDir
@@ -205,6 +205,7 @@ class DragDropPasteUploadTest {
     /** GLFW's drop argument: {@code count} pointers to NUL-terminated file names. */
     private static long nameArray(String... names) {
         ByteBuffer pointers = ByteBuffer.allocateDirect(names.length * Long.BYTES).order(ByteOrder.nativeOrder());
+        NATIVE_STRINGS.add(pointers);
         for (int i = 0; i < names.length; i++) {
             byte[] bytes = names[i].getBytes(StandardCharsets.UTF_8);
             ByteBuffer name = ByteBuffer.allocateDirect(bytes.length + 1);
