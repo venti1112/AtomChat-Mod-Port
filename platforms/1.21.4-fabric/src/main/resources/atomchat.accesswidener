@@ -1,0 +1,5 @@
+accessWidener v2 named
+accessible field net/minecraft/client/gui/components/EditBox cursorPos I
+accessible field net/minecraft/client/gui/components/EditBox highlightPos I
+accessible field net/minecraft/stats/StatsCounter stats Lit/unimi/dsi/fastutil/objects/Object2IntMap;
+accessible field net/minecraft/client/gui/screens/ChatScreen commandSuggestions Lnet/minecraft/client/gui/components/CommandSuggestions;

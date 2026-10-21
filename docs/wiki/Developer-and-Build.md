@@ -17,7 +17,7 @@ layers/
   mapping/official/            # shared by the official-mappings family (NeoForge + Forge)
   version/  loader/            # version and loader layers (empty today - see "why there is no version layer yet")
 platforms/
-  1.21.1-fabric/  1.21.1-neoforge/  1.20.1-forge/   # each target's own code, build script, metadata and resources
+  1.21.4-fabric/  1.21.1-fabric/  1.21.1-neoforge/  1.20.1-forge/   # each target's own code, build script, metadata and resources
 tools/verify_targets.py        # the matrix and identity guard (local and CI run the same file)
 docs/                          # store copy, plus the sources of this wiki
 ```
@@ -28,9 +28,10 @@ Current size of each project:
 
 | Project | main | test | Contents |
 |---|---:|---:|---|
-| `shared/` | 103 | 57 | Shared by all three targets |
-| `layers/mapping/official/` | 37 | 13 | Shared by NeoForge + Forge |
+| `shared/` | 103 | 57 | Shared by every target |
+| `layers/mapping/official/` | 37 | 13 | Shared by the official-mappings family |
 | `platforms/1.21.1-fabric/` | 60 | 16 | Including 48 Yarn-named twin copies |
+| `platforms/1.21.4-fabric/` | 38 | 7 | Official mappings; mounts `1.21+` / `official` / `fabric` |
 | `platforms/1.21.1-neoforge/` | 23 | 3 | |
 | `platforms/1.20.1-forge/` | 23 | 3 | |
 
@@ -100,14 +101,14 @@ Three classes need package-private access inside vanilla's own packages, so thei
 | Workflow | Trigger | What it does |
 |---|---|---|
 | `build.yml` | push to `main` / pull requests (ignoring `**.md` and `docs/**`) | reads the matrix → each target installs its JDK and runs `./gradlew build` (tests included) |
-| `release.yml` | a `v*` tag | **`vX.Y.Z`:** build all three loader targets for Windows x64 and Linux x64 → check the repository version matches the tag → create a Release with six JARs → publish to the stores; **`vX.Y.Z-rc1`:** a prerelease only, **nothing goes to the stores** |
+| `release.yml` | a `v*` tag | **`vX.Y.Z`:** build all four loader targets for Windows x64 and Linux x64 → check the repository version matches the tag → create a Release with eight JARs → publish to the stores; **`vX.Y.Z-rc1`:** a prerelease only, **nothing goes to the stores** |
 
 Release checklist:
 
 1. bump `mod_version` in the root `gradle.properties`;
 2. write a `## vX.Y.Z` section in `RELEASE_NOTES.md` (the release body comes from it; a tagged suffix falls back to the base version's section);
 3. commit and push `main`;
-4. tag `vX.Y.Z`, push the tag, and watch the three jobs in `release.yml`.
+4. tag `vX.Y.Z`, push the tag, and watch the four jobs in `release.yml`.
 
 To rehearse the flow without touching the stores, push a suffixed tag (`vX.Y.Z-rc1`); the store job is skipped entirely.
 

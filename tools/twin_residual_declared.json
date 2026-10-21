@@ -27,6 +27,55 @@
         "reason": "主会话 2026-10-09 批复：结构性合法（loader 接缝）：官方侧走 Platform.configDir() provider，fabric 侧直接用 FabricLoader.getInstance().getConfigDir()（Fabric 自己的加载器 API，无对应官方名）",
         "sample_a": "            Path dir = com.atom.chat.platform.Platform.configDir().resolve(\"atomchat/debug\");",
         "sample_b": "            Path dir = FabricLoader.getInstance().getConfigDir().resolve(\"atomchat/debug\");"
+      },
+      {
+        "fingerprint": "b3267353ed30",
+        "kind": "code",
+        "reason": "1.21.4 移植（本轮）：1.21.2+ 官方映射移除 NativeImage.setPixelRGBA，official 层要同时编译到 1.21.4；改为先写 int[] 再 applyToAllPixels 写同一 ABGR 字节，输出不变。冻结的 1.21.1 fabric 孪生不动，故登记为结构分歧。",
+        "sample_a": "     * Fills a fresh RGBA image in memory order. 1.21.1's {@code setPixelRGBA}",
+        "sample_b": ""
+      },
+      {
+        "fingerprint": "e055b1aee696",
+        "kind": "code",
+        "reason": "1.21.4 移植（本轮）：1.21.2+ 官方映射移除 NativeImage.setPixelRGBA，official 层要同时编译到 1.21.4；改为先写 int[] 再 applyToAllPixels 写同一 ABGR 字节，输出不变。冻结的 1.21.1 fabric 孪生不动，故登记为结构分歧。",
+        "sample_a": "            int[] rawPixels = new int[SKIN_SIZE * SKIN_SIZE];",
+        "sample_b": ""
+      },
+      {
+        "fingerprint": "6affe573171b",
+        "kind": "code",
+        "reason": "1.21.4 移植（本轮）：1.21.2+ 官方映射移除 NativeImage.setPixelRGBA，official 层要同时编译到 1.21.4；改为先写 int[] 再 applyToAllPixels 写同一 ABGR 字节，输出不变。冻结的 1.21.1 fabric 孪生不动，故登记为结构分歧。",
+        "sample_a": "                    rawPixels[y * SKIN_SIZE + x] = (a << 24) | (b << 16) | (g << 8) | r;",
+        "sample_b": "                    rawImg.setPixelRGBA(x, y, (a << 24) | (b << 16) | (g << 8) | r);"
+      },
+      {
+        "fingerprint": "cbaf15eb188b",
+        "kind": "code",
+        "reason": "1.21.4 移植（本轮）：1.21.2+ 官方映射移除 NativeImage.setPixelRGBA，official 层要同时编译到 1.21.4；改为先写 int[] 再 applyToAllPixels 写同一 ABGR 字节，输出不变。冻结的 1.21.1 fabric 孪生不动，故登记为结构分歧。",
+        "sample_a": "            writePixels(rawImg, rawPixels);",
+        "sample_b": ""
+      },
+      {
+        "fingerprint": "422890f17c4d",
+        "kind": "code",
+        "reason": "1.21.4 移植（本轮）：1.21.2+ 官方映射移除 NativeImage.setPixelRGBA，official 层要同时编译到 1.21.4；改为先写 int[] 再 applyToAllPixels 写同一 ABGR 字节，输出不变。冻结的 1.21.1 fabric 孪生不动，故登记为结构分歧。",
+        "sample_a": "            int[] faceOut = new int[FACE_SIZE * 8 * FACE_SIZE * 8];",
+        "sample_b": ""
+      },
+      {
+        "fingerprint": "f544978b1bd3",
+        "kind": "code",
+        "reason": "1.21.4 移植（本轮）：1.21.2+ 官方映射移除 NativeImage.setPixelRGBA，official 层要同时编译到 1.21.4；改为先写 int[] 再 applyToAllPixels 写同一 ABGR 字节，输出不变。冻结的 1.21.1 fabric 孪生不动，故登记为结构分歧。",
+        "sample_a": "                    faceOut[y * FACE_SIZE * 8 + x] = (255 << 24) | (b << 16) | (g << 8) | r;",
+        "sample_b": "                    faceImg.setPixelRGBA(x, y, (255 << 24) | (b << 16) | (g << 8) | r);"
+      },
+      {
+        "fingerprint": "261f3a60418e",
+        "kind": "code",
+        "reason": "1.21.4 移植（本轮）：1.21.2+ 官方映射移除 NativeImage.setPixelRGBA，official 层要同时编译到 1.21.4；改为先写 int[] 再 applyToAllPixels 写同一 ABGR 字节，输出不变。冻结的 1.21.1 fabric 孪生不动，故登记为结构分歧。",
+        "sample_a": "            writePixels(faceImg, faceOut);",
+        "sample_b": ""
       }
     ],
     "src/main/java/com/atom/chat/net/ConfigScreenClient.java": [

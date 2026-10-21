@@ -22,6 +22,7 @@ on:
         type: choice
         options:
           - all
+          - 1.21.4-fabric
           - 1.21.1-fabric
           - 1.21.1-neoforge
           - 1.20.1-forge
@@ -152,7 +153,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: 取回六个 jar
+      - name: 取回八个 jar
         uses: actions/download-artifact@v8
         with:
           path: artifacts
@@ -166,8 +167,8 @@ jobs:
           ls -la release-out
           count=$(find release-out -name "*.jar" | wc -l)
           echo "Release 将挂上 ${count} 个 jar"
-          if [ "$count" -ne 6 ]; then
-            echo "::error::Release 期望 6 个发布 JAR（3 个加载器 × 2 个操作系统），实际 ${count} 个"
+          if [ "$count" -ne 8 ]; then
+            echo "::error::Release 期望 8 个发布 JAR（4 个加载器 × 2 个操作系统），实际 ${count} 个"
             exit 1
           fi
 

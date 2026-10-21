@@ -42,7 +42,7 @@
   "official": {
     "mappings": "official",
     "populated": true,
-    "note": "映射层：写给 Mojang 官方名的那一份。Fabric 用 Yarn，同一段逻辑的两套名字就是「映射接缝」：该层由所有 official 映射的目标挂载（NeoForge 1.21.1 与 Forge 1.20.1），Fabric 不挂、保留自己那份 Yarn 名副本。两边的文件路径一一对应，由 tools/verify_targets.py 的孪生副本检查盯着（少一个就红）。"
+    "note": "映射层：写给 Mojang 官方名的那一份。1.21.1 Fabric 是冻结的 Yarn 遗留目标，不挂该层、保留自己那份 Yarn 名副本；新 Fabric 目标（1.21.4+）与 NeoForge / Forge 一样挂该层。两边的文件路径一一对应，由 tools/verify_targets.py 的孪生副本检查盯着（少一个就红）。"
   },
   "fabric": {
     "loader": "Fabric",

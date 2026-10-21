@@ -1,0 +1,22 @@
+{
+  "notification": {
+    "sounds": [
+      "atomchat:notification"
+    ]
+  },
+  "feedback_button": {
+    "sounds": [
+      "atomchat:feedback_button"
+    ]
+  },
+  "feedback_send": {
+    "sounds": [
+      "atomchat:feedback_send"
+    ]
+  },
+  "feedback_panel_open": {
+    "sounds": [
+      "atomchat:feedback_panel_open"
+    ]
+  }
+}

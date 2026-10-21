@@ -156,6 +156,17 @@ public final class AvatarRenderer {
     }
 
     /**
+     * Fills a fresh RGBA image in memory order. 1.21.1's {@code setPixelRGBA}
+     * and 1.21.4's {@code setPixel} (ARGB argument) both changed across the
+     * mapping seam, while {@code applyToAllPixels} takes the raw int in memory
+     * (ABGR) on both — the one writer shared by every target of this layer.
+     */
+    private static void writePixels(NativeImage image, int[] abgr) {
+        int[] cursor = {0};
+        image.applyToAllPixels(ignored -> abgr[cursor[0]++]);
+    }
+
+    /**
      * Hunt instrumentation (config debug=true, once per launch): writes the raw
      * GL read and the blended face as PNGs under {@code <config>/atomchat/debug/}
      * so the color pipeline can be verified against the real skin without
@@ -170,6 +181,7 @@ public final class AvatarRenderer {
             Path dir = com.atom.chat.platform.Platform.configDir().resolve("atomchat/debug");
             Files.createDirectories(dir);
             NativeImage rawImg = new NativeImage(SKIN_SIZE, SKIN_SIZE, false);
+            int[] rawPixels = new int[SKIN_SIZE * SKIN_SIZE];
             for (int y = 0; y < SKIN_SIZE; y++) {
                 for (int x = 0; x < SKIN_SIZE; x++) {
                     int i = (y * SKIN_SIZE + x) * 4;
@@ -177,20 +189,23 @@ public final class AvatarRenderer {
                     int g = raw.get(i + 1) & 0xFF;
                     int b = raw.get(i + 2) & 0xFF;
                     int a = raw.get(i + 3) & 0xFF;
-                    rawImg.setPixelRGBA(x, y, (a << 24) | (b << 16) | (g << 8) | r);
+                    rawPixels[y * SKIN_SIZE + x] = (a << 24) | (b << 16) | (g << 8) | r;
                 }
             }
+            writePixels(rawImg, rawPixels);
             rawImg.writeToFile(dir.resolve("atomchat-debug-skin-gl.png"));
             NativeImage faceImg = new NativeImage(FACE_SIZE * 8, FACE_SIZE * 8, false);
+            int[] faceOut = new int[FACE_SIZE * 8 * FACE_SIZE * 8];
             for (int y = 0; y < FACE_SIZE * 8; y++) {
                 for (int x = 0; x < FACE_SIZE * 8; x++) {
                     int i = (y * FACE_SIZE * 8 + x) * 4;
                     int b = facePixels[i] & 0xFF;
                     int g = facePixels[i + 1] & 0xFF;
                     int r = facePixels[i + 2] & 0xFF;
-                    faceImg.setPixelRGBA(x, y, (255 << 24) | (b << 16) | (g << 8) | r);
+                    faceOut[y * FACE_SIZE * 8 + x] = (255 << 24) | (b << 16) | (g << 8) | r;
                 }
             }
+            writePixels(faceImg, faceOut);
             faceImg.writeToFile(dir.resolve("atomchat-debug-face.png"));
             AtomChat.LOGGER.info(com.atom.chat.diagnostics.AtomChatLog.message("avatar", "Avatar debug dumps written to {}"), dir);
         } catch (Throwable t) {

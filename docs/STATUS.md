@@ -4,12 +4,18 @@
 
 ## 项目与验收
 
-- 仓库 `D:/AtomChat-Main`，分支 `main`，远端 `origin` 为 `NoWordz/AtomChat-Mod`；三端为 Fabric 1.21.1、NeoForge 1.21.1、Forge 1.20.1，源码版本保持 0.3.2。
+- 仓库 `D:/AtomChat-Main`，分支 `main`，远端 `origin` 为 `NoWordz/AtomChat-Mod`；发布三端为 Fabric 1.21.1、NeoForge 1.21.1、Forge 1.20.1，源码版本保持 0.3.2。本分支 `port/1.21.4-fabric` 另加 1.21.4 Fabric 移植目标（未发布）。
 - 用户已确认图片预览/过滤、半屏与面板外关闭均验收通过，授权提交、推送和清理旧轮次材料；本次不打 tag 或发布。
 - 图片预览支持平滑淡入、鼠标锚点滚轮缩放与左键拖动；三种弹层统一裁切，保存预设与默认主题单一选中，公屏系统/玩家过滤持久化。见 [预览与过滤验证](verification/2026-10-20-preview-and-filter.md)。
 - 半屏模式位于外观→调整→布局，左、上、下贴边，顶底栏贴边并去掉手机外环。原宽度滑条分别保存手机/半屏宽度，切换及重载后恢复；内部卡片、气泡和主题保留。
 - 左键点击面板外世界画面正常关闭并消费事件；拖动移出面板不关闭。伸出面板的原生命令补全框仍可点击，弹层打开时不激活底层补全。
 - 半屏应用个人预设不覆盖手机宽度；手机应用预设保留原宽度行为。详情见 [半屏方案](superpowers/plans/2026-10-20-half-screen.md) 和 [半屏验证](verification/2026-10-21-half-screen.md)。
+
+## 1.21.4 Fabric 移植（分支 `port/1.21.4-fabric`）
+
+- 目标 `1.21.4-fabric` 已接入矩阵：Fabric Loader 0.19.5、Fabric API 0.119.4+1.21.4、Loom 1.17.21、Gradle 9.7.1、Java 21；映射改为 Mojang 官方名并挂 `1.21+` / `official` / `fabric` 三层，复用官方映射家族源码。1.21.1 保持冻结，仍是唯一的 Yarn 目标。
+- 单元测试 1387 项（0 失败、2 项原有跳过）与 Windows/Linux 两个变体构建通过；`verify_targets.py`、seams、孪生残差、`verify_jars.py` 均通过。
+- 开发客户端已启动到主菜单，AtomChat 初始化与 mixin 应用无报错；**尚未在游戏内打开面板**，也未做多人/重连实机验证。
 
 ## 最终验证与部署
 

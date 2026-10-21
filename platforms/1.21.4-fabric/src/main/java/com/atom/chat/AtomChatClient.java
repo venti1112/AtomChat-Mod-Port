@@ -1,0 +1,135 @@
+package com.atom.chat;
+
+import com.atom.chat.banner.BannerStore;
+import com.atom.chat.config.AtomChatConfig;
+import com.atom.chat.image.ImageLoader;
+import com.atom.chat.notification.NotificationBanner;
+import com.atom.chat.notification.NotificationController;
+import com.atom.chat.render.PanelBlurRenderer;
+import com.atom.chat.util.AwtDisplay;
+import com.atom.chat.util.CacheDirs;
+import com.atom.chat.wallpaper.WallpaperStore;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.fabricmc.api.ClientModInitializer;
+import com.atom.chat.chat.ChatStore;
+import com.atom.chat.chat.PrivateChatStore;
+import com.atom.chat.chat.PrivateEchoTracker;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.minecraft.client.KeyMapping;
+import com.atom.chat.screen.AtomChatScreen;
+import com.atom.chat.screen.AtomChatScreen.AtomChatOpenMode;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.resources.ResourceManager;
+import org.lwjgl.glfw.GLFW;
+
+public class AtomChatClient implements ClientModInitializer {
+    public static final KeyMapping OPEN_ATOMCHAT_KEY = KeyBindingHelper.registerKeyBinding(
+            new KeyMapping("key.atomchat.open", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Y,
+                    "key.atomchat.category"));
+
+    @Override
+    public void onInitializeClient() {
+        // Idempotent second call: the client-only mixin plugin claimed AWT
+        // before Minecraft's Main ran. This log line reports the outcome of
+        // whichever call won, so it is the picker's field diagnostic.
+        AtomChat.LOGGER.info(com.atom.chat.diagnostics.AtomChatLog.message("startup", "AWT toolkit: {}"), AwtDisplay.claim());
+        AtomChatConfig.get();
+        CacheDirs.migrateFromOldConfigPaths();
+        WallpaperStore.init(
+                net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir()
+                        .resolve("atomchat/wallpaper"));
+        com.atom.chat.theme.AppearancePresetStore.init(
+                net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir()
+                        .resolve("atomchat/appearance-presets"));
+        BannerStore.init(
+                net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir()
+                        .resolve("atomchat"));
+        ImageLoader.get().init(CacheDirs.imageCacheDir());
+        com.atom.chat.net.AvatarCompanionClient.init();
+        com.atom.chat.net.PokeCompanionClient.init();
+        com.atom.chat.net.ReactionCompanionClient.init();
+        // Test command receiver: turns a simulated event into the same reaction
+        // the real one produces (/atomchat test on the server side).
+        com.atom.chat.net.TestCompanionClient.init();
+        com.atom.chat.net.MediaCompanionClient.init();
+        com.atom.chat.net.ProfileCompanionClient.init();
+        com.atom.chat.net.PackNetClient.install();
+        com.atom.chat.net.FabricConfigScreenReceivers.init();
+        com.atom.chat.history.ChatHistory.init(
+                net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir()
+                        .resolve("atomchat/history"));
+        ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
+            @Override
+            public ResourceLocation getFabricId() {
+                return ResourceLocation.fromNamespaceAndPath(AtomChat.MOD_ID, "panel_blur_shaders");
+            }
+
+            @Override
+            public void onResourceManagerReload(ResourceManager manager) {
+                PanelBlurRenderer.resetShader();
+            }
+        });
+        AtomChat.LOGGER.info(com.atom.chat.diagnostics.AtomChatLog.message("startup", "AtomChat client initialized"));
+
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
+            // Adopt the world key first so a saved history can be loaded before
+            // join-time system lines start arriving.
+            com.atom.chat.history.ChatHistory.onJoin(client);
+        com.atom.chat.chat.DraftSessionStore.reset();
+            com.atom.chat.page.ProfilePage.noteJoin();
+            com.atom.chat.net.AvatarCompanionClient.onJoin();
+            com.atom.chat.net.MediaCompanionClient.onJoin();
+            com.atom.chat.net.ProfileCompanionClient.onJoin();
+            com.atom.chat.net.PackSyncClient.onJoin();
+            com.atom.chat.chat.OwnIdentity.reset();
+            com.atom.chat.chat.TeleportCommands.reset();
+        });
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+            // Save before the stores are cleared, then drop the world key.
+            com.atom.chat.history.ChatHistory.onDisconnect(client);
+        com.atom.chat.chat.DraftSessionStore.reset();
+            PrivateChatStore.reset();
+            PrivateEchoTracker.clear();
+            com.atom.chat.chat.PublicEchoTracker.clear();
+            ChatStore.reset();
+            com.atom.chat.chat.SeenPlayers.clear();
+            com.atom.chat.chat.OwnIdentity.reset();
+            com.atom.chat.net.MediaCompanionClient.onDisconnect();
+            com.atom.chat.net.ProfileCompanionClient.onLeave();
+            com.atom.chat.reaction.ReactionClient.reset();
+            com.atom.chat.net.PokeCompanionClient.setHandler(null);
+        com.atom.chat.net.PackSyncClient.onDisconnect();
+        com.atom.chat.net.ConfigScreenClient.onDisconnect();
+        });
+        NotificationController.registerSound();
+        com.atom.chat.audio.FeedbackSoundController.registerSound();
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            // First tick only (self-guarded): identity always, the detailed
+            // block when debug is on. It lives here rather than in client init
+            // because the GPU rows need a current GL context, which only the
+            // render thread has — and the tick runs on it.
+            com.atom.chat.diagnostics.EnvironmentSummary.logOnce(AtomChat.version(), AtomChat.artifactPath());
+            com.atom.chat.history.ChatHistory.tick(client);
+            com.atom.chat.net.MediaCompanionClient.tick();
+        com.atom.chat.net.ProfileCompanionClient.tick();
+        com.atom.chat.net.PackSyncClient.tick();
+            // Expires banners regardless of whether the panel is open: their 4s
+            // lifetime starts at enqueue, so a banner queued while the panel was
+            // closed is already gone if you open the panel later than that.
+            NotificationBanner.INSTANCE.tick();
+            while (OPEN_ATOMCHAT_KEY.consumeClick()) {
+                // 原生库不在就别开：面板在那些平台上开出来是必崩的（Skija 的失败落在原生层，
+                // try/catch 拦不住）。键位照旧注册，按下去只是什么都不发生 —— 原因在启动时
+                // 由 SkiaSupport 写进日志了。
+                if (client.screen == null && com.atom.chat.render.SkiaSupport.available()) {
+                    client.setScreen(new AtomChatScreen("", AtomChatOpenMode.RESTORE));
+                }
+            }
+        });
+    }
+}

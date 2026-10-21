@@ -15,6 +15,11 @@
   "shader_extensions": [".json", ".vsh", ".fsh"],
 
   "targets": {
+    "1.21.4-fabric": {
+      "shaders_root": "assets/minecraft/shaders/core",
+      "lang_root": "assets/atomchat/lang",
+      "note": "Fabric 侧着色器必须落在原版命名空间下（官方映射目标同 1.21.1 Fabric）"
+    },
     "1.21.1-fabric": {
       "shaders_root": "assets/minecraft/shaders/core",
       "lang_root": "assets/atomchat/lang",
