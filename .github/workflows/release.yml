@@ -154,22 +154,26 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: 取回九个 jar
+      - name: 取回发布 jar（未验证目标不进 Release）
         uses: actions/download-artifact@v8
         with:
           path: artifacts
-          merge-multiple: true
+          merge-multiple: false
 
       - name: 汇总并校验数量
         run: |
           set -euo pipefail
           mkdir -p release-out
-          find artifacts -name "*.jar" ! -name "*sources*" ! -name "*-slim*" -exec cp {} release-out/ \;
+          # buildable: false 的目标也参与构建（产物名带 -未验证），但不进 Release。
+          find artifacts -name "*.jar" ! -name "*sources*" ! -name "*-slim*" \
+            ! -path "*-未验证/*" -exec cp {} release-out/ \;
           ls -la release-out
           count=$(find release-out -name "*.jar" | wc -l)
-          echo "Release 将挂上 ${count} 个 jar"
-          if [ "$count" -ne 9 ]; then
-            echo "::error::Release 期望 9 个发布 JAR（3 个加载器 × 3 个系统/架构变体），实际 ${count} 个"
+          expected=$(python3 -c "import json; t=json.load(open('versions/targets.json', encoding='utf-8')); print(3*sum(1 for k,v in t.items() if not k.startswith('_') and v.get('buildable')))")
+          targets_count=$((expected / 3))
+          echo "Release 将挂上 ${count} 个 jar（期望 ${expected} = ${targets_count} 个可发布目标 × 3 个系统/架构变体）"
+          if [ "$count" -ne "$expected" ]; then
+            echo "::error::Release 期望 ${expected} 个发布 JAR（buildable: true 的目标 × 3 个系统/架构变体），实际 ${count} 个"
             exit 1
           fi
 
@@ -250,9 +254,10 @@ jobs:
       - name: 构建并发布到 Modrinth 与 CurseForge
         if: >-
           ${{
-            inputs.target == '' ||
-            inputs.target == 'all' ||
-            inputs.target == matrix.target
+            matrix.buildable &&
+            (inputs.target == '' ||
+             inputs.target == 'all' ||
+             inputs.target == matrix.target)
           }}
         working-directory: ${{ matrix.project }}
         run: |

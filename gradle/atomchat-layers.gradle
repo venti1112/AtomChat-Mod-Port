@@ -64,6 +64,14 @@ if (targetEntry == null) {
 def targetName = targetEntry.key.toString()
 def targetDef = targetEntry.value as Map
 
+// 暴露本目标的定义，供平台自己的构建脚本使用（例如增量目标要读 overlay_base）。
+// overlay_base 只在这里解析成路径；它的合法性（是不是矩阵里的实体目标、映射/加载器是否一致）
+// 由 tools/verify_targets.py 统一校验，构建脚本不再维护第二份判据。
+ext.atomchatTargetName = targetName
+ext.atomchatTarget = targetDef
+ext.atomchatOverlayBaseDir = targetDef.overlay_base == null ? null
+        : new File(repoRoot, targetDef.overlay_base.toString()).canonicalFile
+
 def layers = new JsonSlurper().parse(layersFile)
 def mounted = (targetDef.layers ?: []) as List
 if (mounted.isEmpty() && !(targetDef.containsKey('no_layers') && targetDef.no_layers)) {
@@ -275,6 +283,7 @@ sourceSets.main.resources.srcDir(generateBuildStamp)
 // 这些值在【配置期】取好：doLast 里碰 project / sourceSets 会让配置缓存失效
 // （NeoForge 目标开着 org.gradle.configuration-cache=true）。
 def targetLabel = "${targetDef.minecraft} / ${targetDef.loader} ${targetDef.loader_version}".toString()
+def overlayBaseLabel = targetDef.overlay_base == null ? null : targetDef.overlay_base.toString()
 def mountedList = mounted.collect { it.toString() }
 def mainJavaList = mainJava.collect { it.toString() }
 def mainResList = mainRes.collect { it.toString() }
@@ -286,6 +295,9 @@ tasks.register('atomchatLayers') {
     description = '打印本目标挂载的共享层与接进来的源目录'
     doLast {
         logger.lifecycle("目标 ${targetName}：${targetLabel}，仓库版本 ${repoVersion}")
+        if (overlayBaseLabel != null) {
+            logger.lifecycle("  增量基础：${overlayBaseLabel}（构建期复制源码树后应用 patches/*.patch）")
+        }
         logger.lifecycle("  挂载层：${mountedList.isEmpty() ? '（无）' : mountedList.join(', ')}")
         logger.lifecycle("  main java：${mainJavaList.isEmpty() ? '（共享层暂无内容）' : mainJavaList.join(', ')}")
         logger.lifecycle("  main resources：${mainResList.isEmpty() ? '（共享层暂无内容）' : mainResList.join(', ')}")
