@@ -77,6 +77,21 @@ tasks.withType(Test).configureEach {
     }
 }
 
+// Plain JUnit does not launch Knot. Apply its named-package access repair before
+// vanilla registry bootstrap; this agent is test-only and never enters mod JARs.
+// 增量目标不复制 build.gradle，这段需要与基础平台手动保持一致。
+def fabricTestAgent = tasks.register('fabricTestAgent', Jar) {
+    dependsOn tasks.named('testClasses')
+    from(sourceSets.test.output) { include 'com/atom/chat/testing/FabricPackageAccessAgent*.class' }
+    archiveFileName = 'fabric-package-access-agent.jar'
+    destinationDirectory = layout.buildDirectory.dir('test-agent')
+    manifest { attributes 'Premain-Class': 'com.atom.chat.testing.FabricPackageAccessAgent' }
+}
+tasks.named('test', Test) {
+    dependsOn fabricTestAgent
+    jvmArgs "-javaagent:${layout.buildDirectory.file('test-agent/fabric-package-access-agent.jar').get().asFile}"
+}
+
 loom {
     // AW 不随增量补丁走，直接读基础平台那一份：生成树在配置期还不存在，
     // 指向生成路径会让 Loom 在配置阶段就报找不到文件。

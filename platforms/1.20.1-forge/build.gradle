@@ -220,6 +220,31 @@ tasks.withType(Test).configureEach {
     useJUnitPlatform()
 }
 
+// Forge's vanilla bootstrap also initializes its network event channels. Mirror
+// the runtime event transformation in JUnit; this agent never enters mod JARs.
+def forgeTestAgent = tasks.register('forgeTestAgent', Jar) {
+    dependsOn tasks.named('testClasses')
+    from(sourceSets.test.output) { include 'com/atom/chat/testing/ForgeEventBusAgent*.class' }
+    archiveFileName = 'forge-eventbus-agent.jar'
+    destinationDirectory = layout.buildDirectory.dir('test-agent')
+    manifest { attributes 'Premain-Class': 'com.atom.chat.testing.ForgeEventBusAgent' }
+}
+tasks.named('test', Test) {
+    dependsOn forgeTestAgent
+    jvmArgs "-javaagent:${layout.buildDirectory.file('test-agent/forge-eventbus-agent.jar').get().asFile}"
+}
+
+// A fresh JVM is necessary: the regular suite can load the parent event first
+// and accidentally hide recursive class-loading gaps in the test agent.
+def forgeEventAgentSmoke = tasks.register('forgeEventAgentSmoke', JavaExec) {
+    dependsOn forgeTestAgent
+    javaLauncher = javaToolchains.launcherFor { languageVersion = JavaLanguageVersion.of(17) }
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.atom.chat.testing.ForgeEventBusAgentProbe'
+    jvmArgs "-javaagent:${layout.buildDirectory.file('test-agent/forge-eventbus-agent.jar').get().asFile}"
+}
+tasks.named('check') { dependsOn forgeEventAgentSmoke }
+
 
 publishing {
     publications {

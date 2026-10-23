@@ -1,0 +1,46 @@
+diff --git a/src/main/java/com/atom/chat/render/ItemIconRenderer.java b/src/main/java/com/atom/chat/render/ItemIconRenderer.java
+index dea03ba..581edb7 100644
+--- a/src/main/java/com/atom/chat/render/ItemIconRenderer.java
++++ b/src/main/java/com/atom/chat/render/ItemIconRenderer.java
+@@ -6,7 +6,7 @@ import net.minecraft.client.gl.ShaderProgram;
+ import com.atom.chat.text.RichText;
+ import com.mojang.blaze3d.platform.GlStateManager;
+ import com.mojang.blaze3d.systems.RenderSystem;
+-import com.mojang.blaze3d.systems.VertexSorter;
++import com.mojang.blaze3d.systems.ProjectionType;
+ import io.github.humbleui.skija.BackendTexture;
+ import io.github.humbleui.skija.Canvas;
+ import io.github.humbleui.skija.ColorAlphaType;
+@@ -99,7 +99,7 @@ public final class ItemIconRenderer {
+             ItemIconModelView.pushIdentity();
+             try {
+                 RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 16, 16, 0, -1000, 1000),
+-                        VertexSorter.BY_Z);
++                        ProjectionType.ORTHOGRAPHIC);
+                 RenderSystem.resetTextureMatrix();
+                 RenderSystem.setShaderColor(1, 1, 1, 1);
+                 for (HoverEvent.ItemStackContent info : requests) {
+@@ -275,7 +275,7 @@ public final class ItemIconRenderer {
+         private final float[] clearColor = new float[4];
+         private final double clearDepth = GL11C.glGetDouble(GL11C.GL_DEPTH_CLEAR_VALUE);
+         private final Matrix4f projection = new Matrix4f(RenderSystem.getProjectionMatrix());
+-        private final VertexSorter sorting = RenderSystem.getVertexSorting();
++        private final ProjectionType projectionType = RenderSystem.getProjectionType();
+         private final Matrix4f modelView = new Matrix4f(RenderSystem.getModelViewMatrix());
+         private final Matrix4f textureMatrix = new Matrix4f(RenderSystem.getTextureMatrix());
+         private final float[] color = RenderSystem.getShaderColor().clone();
+@@ -293,12 +293,12 @@ public final class ItemIconRenderer {
+         }
+ 
+         @Override public void close() {
+-            RenderSystem.setProjectionMatrix(projection, sorting);
++            RenderSystem.setProjectionMatrix(projection, projectionType);
+             RenderSystem.getModelViewMatrix().set(modelView);
+             RenderSystem.setTextureMatrix(textureMatrix);
+             RenderSystem.setShaderColor(color[0], color[1], color[2], color[3]);
+             RenderSystem.setShaderLights(lights[0], lights[1]);
+-            RenderSystem.setShader(() -> shader);
++            RenderSystem.setShader(shader);
+             for (int i = 0; i < shaderTextures.length; i++) RenderSystem.setShaderTexture(i, shaderTextures[i]);
+             GL30C.glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, drawFbo);
+             GL30C.glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, readFbo);

@@ -15,7 +15,13 @@ public final class UiTokens {
     public static final float SETTINGS_SWATCH_RADIUS = s(9);
     public static final float SETTINGS_SWATCH_BOTTOM = s(22);
     public static final float SETTINGS_VALUE_BAND = s(24);
+    public static final float SETTINGS_STEPPER_ARROW = s(28);
+    public static final float SETTINGS_STEPPER_GAP = s(4);
+    public static final float SETTINGS_STEPPER_VALUE_MAX = s(160);
+    public static final float SETTINGS_STEPPER_CHEVRON = s(5);
     public static final float HEADER_TEXT_GAP = s(8);
+    public static final float INLINE_ITEM_GAP = s(2);
+    public static final float NOTIFICATION_STACK_GAP = s(6);
 
     /** Reference size and scaled font size for decorative chat emoji. */
     public static final float CHAT_EFFECT_EMOJI_BASE_SIZE = 24F;
@@ -95,8 +101,8 @@ public final class UiTokens {
 
     /**
      * Card/chrome surface fill: the configured card colour with its alpha
-     * driven by the card-tint slider (60 at 0% → 255 at 100%). The default
-     * white at 0% reproduces the shipped frosted wash exactly; a dark colour
+     * driven by the card-tint slider (0 at 0% → 255 at 100%). The default
+     * white at about 24% gives the frosted wash; a dark colour
      * at 100% is the modern flat "black background, white text". Hover is a
      * separate language ({@link #cardHover(float)}) that follows the accent
      * at both ends of the axis.
@@ -111,6 +117,14 @@ public final class UiTokens {
         return io.github.humbleui.skija.Color.makeARGB(Math.round(255.0F * t),
                 (rgb >> 16) & 0xFF, (rgb >> 8) & 0xFF, rgb & 0xFF);
     }
+
+    /** Notifications share card RGB/opacity, with a 50% readability floor. */
+    public static int notificationFill() {
+        int card = cardFill();
+        return (Math.max(128, card >>> 24) << 24) | (card & 0x00FFFFFF);
+    }
+
+    public static final float NOTIFICATION_BLUR = s(6);
 
     /** Hover uses the configured accent RGB; only its fade opacity changes. */
     public static int cardHover(float weight) {
@@ -158,19 +172,8 @@ public final class UiTokens {
     }
 
     /**
-     * The fill of a surface that floats above message content — the notification
-     * banner and the action toast. Opaque by design: a translucent fill would let
-     * message text bleed through the card.
-     *
-     * <p>One token so the two floaters cannot drift apart, which is exactly what
-     * happened: the toast used {@link #cardCutout()} while the banner hard-coded
-     * {@code 0xFF000000 | cardColor}. The latter is opaque white for the default
-     * (and every light) card colour, so a banner drew a white card under text
-     * picked for the panel's polarity — white on white, sender invisible. This
-     * mixes the configured card colour through the card-tint slider over the
-     * panel colour, so it follows the theme the same way the rest of the card
-     * family does, and a light theme yields a dark-enough panel-toned float
-     * instead of white.</p>
+     * Opaque, panel-composited fill for action feedback. Notifications instead
+     * use {@link #notificationFill()} over a locally blurred backdrop.
      */
     public static int floatSurfaceFill() {
         return cardCutout();
@@ -441,6 +444,8 @@ public final class UiTokens {
     public static final float BUTTON_W = s(56);
     public static final float BUTTON_H = s(30);
     public static final float BUTTON_GAP = s(6);
+    /** Maximum width of the HUD layout editor's floating control tray. */
+    public static final float HUD_EDITOR_TOOLBAR_W = s(640);
     public static final float COMPOSER_KEY_GAP = s(4);
 
     // Input bar. INPUT_HEIGHT is the one-line baseline; the bar grows upward by
