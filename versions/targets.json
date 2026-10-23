@@ -68,6 +68,49 @@
     "note": "Java 17 与 Gradle 8.8 是硬约束（ForgeGradle 6 不吃 Gradle 9）。运行时是 SRG 名，refmap 由 ForgeGradle 生成。只挂 official 映射层，不挂 1.21+ 版本层。"
   },
 
+  "1.21.4-fabric": {
+    "minecraft": "1.21.4",
+    "loader": "Fabric",
+    "loader_version": "0.19.5",
+    "server_config_sync": true,
+    "mappings": "yarn",
+    "java": 21,
+    "gradle": "8.8",
+    "project": "platforms/1.21.4-fabric",
+    "buildable": true,
+    "layers": ["1.21+", "fabric"],
+    "overlay_base": "platforms/1.21.1-fabric",
+    "note": "增量目标：目录里只有 8 个 1.21.4 差异补丁，源码树在构建期从 1.21.1-fabric 复制后应用补丁，上游改动可直接流进来。已构建并在 Linux x64 实机验收：首次打开、模糊着色器、表情面板正常。上游 0.4.0-preview 合入后补齐物品图标渲染的 RenderSystem 差异。"
+  },
+  "1.21.4-neoforge": {
+    "minecraft": "1.21.4",
+    "loader": "NeoForge",
+    "loader_version": null,
+    "server_config_sync": true,
+    "mappings": "official",
+    "java": 21,
+    "gradle": "9.2.1",
+    "project": "platforms/1.21.4-neoforge",
+    "buildable": false,
+    "layers": ["1.21+", "official", "neoforge"],
+    "unverified": ["loader_version", "java", "gradle"],
+    "note": "没做：1.21.4 的 NeoForge 还要先把 official 映射层的 1.21.4 API 差异接住（AvatarRenderer 的 setColorArgb、SoundEvent.id() 等），不在本次 Fabric 增量里。工程目录建起来 CI 就会编；届时按实测定 loader_version / java / gradle 并清掉 unverified。"
+  },
+  "1.21.4-forge": {
+    "minecraft": "1.21.4",
+    "loader": "Forge",
+    "loader_version": null,
+    "server_config_sync": true,
+    "mappings": "official",
+    "java": 21,
+    "gradle": "8.8",
+    "project": "platforms/1.21.4-forge",
+    "buildable": false,
+    "layers": ["1.21+", "official", "forge"],
+    "unverified": ["loader_version", "java", "gradle"],
+    "note": "没做，与 1.21.4-neoforge 同一个卡点：official 映射层的 1.21.4 API 差异还没接。工程目录建起来 CI 就会编；届时按实测定 loader_version / java / gradle 并清掉 unverified。"
+  },
+
   "1.21.1-forge": {
     "minecraft": "1.21.1",
     "loader": "Forge",

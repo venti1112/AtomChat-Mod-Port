@@ -83,6 +83,14 @@
 - 用户确认崩溃来自旧版 0.3.2 报告：直接崩溃点为 JVM C1 编译线程，字体日志不能证明因果；没有修改当前字体代码或 Java 配置，也不声称修复了 JVM。
 - 详见 [横幅验证与验收](verification/2026-10-23-notification-banners.md)、[包指纹](verification/2026-10-23-notification-banners-packages.json)、[安装记录](verification/2026-10-23-notification-banners-deployment.json)。本轮临时证据收工时归档到 `D:/AtomChat-Backups/2026-10-23-notification-banners/closeout-evidence/` 后移入回收站；部署备份与长期视觉证据保留。用户整体验收不扩大为多人专项、不同 GPU 整合包帧耗或 ARM64/Linux 实机验收。
 
+## 1.21.4 Fabric 增量移植
+
+- 新增 `platforms/1.21.4-fabric` 增量目标：目录里只有 8 个差异补丁，构建期从 `platforms/1.21.1-fabric` 复制源码树后应用；shared/ 与基础平台的后续改动可直接流入。旧 main 分支上的整树移植随本分支合并删除。
+- 三系统/架构包已构建；Linux x64 包实机验收通过（首次打开、模糊着色器、表情面板）。矩阵中 `buildable` 已打开。
+- 1.21.4 的 shader JSON 必须写完整资源 id（`minecraft:core/...`），`resources-shader-identifiers.patch` 修复了模糊着色器加载失败。
+- 1.21.4 NeoForge / Forge 仍缺 official 映射层的 1.21.4 API 差异，矩阵中保持 `buildable: false`。
+- 上游 0.4.0-preview 已合并入本分支，增量补丁随之上推：新增 `ItemIconRenderer` / `ItemIconModelView` 两个补丁适配 `ProjectionType`、按绘制上传矩阵的 `RenderSystem`，测试侧补上基础平台的 package-access agent。合并后 Fabric 1.21.4 跑满 1488 项测试（0 失败/错误，2 项原有跳过），三包产物断言通过。
+
 ## 历史基线：0.4.0-preview 实时模糊与四组目录
 
 - HUD 与面板横幅保留原有不透明浮动通知材质、下落动画和共享队列；仅修复跳转图标的强调色对比色。

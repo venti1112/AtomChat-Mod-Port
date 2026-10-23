@@ -108,6 +108,36 @@ def check_targets(targets: dict, layers: dict, aliases: dict) -> None:
         project = ROOT / t["project"]
         exists = project.is_dir()
 
+        # 增量目标：目录里没有源码树，构建期从 overlay_base 复制后再打补丁。
+        # 基础平台必须也在矩阵里、且是实体目标 —— 否则源码树没有来源，或者来源本身也没人校验。
+        overlay_base = t.get("overlay_base")
+        if overlay_base is not None:
+            if not isinstance(overlay_base, str) or not overlay_base.strip():
+                fail(f"目标 {name} 的 overlay_base 必须是非空字符串（基础平台的工程路径）")
+            else:
+                base_name = next((k for k, bt in targets.items()
+                                  if isinstance(bt, dict) and bt.get("project") == overlay_base), None)
+                if overlay_base == t["project"]:
+                    fail(f"目标 {name} 的 overlay_base 不能指向自己")
+                elif base_name is None:
+                    fail(f"目标 {name} 的 overlay_base={overlay_base} 不在矩阵里 —— "
+                         f"增量目标的源码树必须有来源，且来源也要由同一份矩阵校验")
+                else:
+                    base = targets[base_name]
+                    if base.get("overlay_base"):
+                        fail(f"目标 {name} 的 overlay_base 指向 {base_name}，但 {base_name} 自己也是"
+                             f"增量目标 —— 装配脚本只复制实体平台的 src/，不支持链式增量")
+                    if base.get("mappings") != t["mappings"]:
+                        fail(f"目标 {name}（mappings={t['mappings']}）的 overlay_base 是 {base_name}"
+                             f"（mappings={base.get('mappings')}）—— 复制过来的源码用的是另一套映射名，编不过")
+                    if base.get("loader") != t["loader"]:
+                        fail(f"目标 {name}（loader={t['loader']}）的 overlay_base 是 {base_name}"
+                             f"（loader={base.get('loader')}）—— 复制过来的平台代码绑的是另一个加载器")
+                    if not (ROOT / overlay_base).is_dir():
+                        fail(f"目标 {name} 的 overlay_base 工程目录 {overlay_base} 不存在")
+            if exists and not (project / "patches").is_dir():
+                fail(f"目标 {name} 是增量目标，但工程目录里没有 patches/ —— 差异没有落点")
+
         if t["buildable"] and not exists:
             fail(f"目标 {name} 声明 buildable: true，但工程目录 {t['project']} 不存在")
         if t["buildable"] and t.get("unverified"):
@@ -125,7 +155,11 @@ def check_targets(targets: dict, layers: dict, aliases: dict) -> None:
     # 层存在时，未挂该层的目标要在自己平台目录里保留同路径副本，那份副本由孪生检查盯着。
     if len(mappings) > 1:
         for family in sorted(mappings):
-            built = [n for n in mappings[family] if (ROOT / targets[n]["project"]).is_dir()]
+            # 增量目标不保留自己的物理副本：它在构建期复制 overlay_base 的源码树，
+            # 所以同一映射家族里多一个增量目标并没有多出一份手抄副本。
+            built = [n for n in mappings[family]
+                     if (ROOT / targets[n]["project"]).is_dir()
+                     and not targets[n].get("overlay_base")]
             declared = [n for n, d in layers.items()
                         if layer_axes(d) == ["mappings"] and d.get("mappings") == family]
             if len(built) > 1 and not declared:
@@ -256,6 +290,11 @@ def check_mapping_twins(layer_name: str, d: dict, targets: dict, family: str, al
         twin_rel = aliases.get(rel, rel)
         for name, t in targets.items():
             if t.get("mappings") == family:
+                continue
+            if t.get("overlay_base"):
+                # 增量目标没有自己的源码树，它用的孪生副本就是 overlay_base 平台里那一份。
+                # base 必须是矩阵里同映射家族的实体目标（见 check_targets），那一轮已经
+                # 按同一批路径查过「存在且不是逐字相同」，这里不重复报。
                 continue
             project = ROOT / t["project"]
             if not project.is_dir():
