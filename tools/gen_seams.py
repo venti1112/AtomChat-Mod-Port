@@ -33,14 +33,18 @@ SHARED_ROOTS = ["shared/src", "layers"]
 
 
 def java_files(base: pathlib.Path):
-    """只认源码根 `src/<...>/java` 下的 .java。
+    """只认源码根 `src/<...>/java` 下的 .java，并跳过任何 `build/` 目录。
 
     不这样过滤的话，`platforms/<目标>/build/` 里生成出来的 .java（ForgeGradle 会写、
     本机有而 CI 全新检出时没有）也会进清单 —— 表现是「本地过、CI 红」。
+    增量目标的生成树同样长成 `build/generated/atomchatOverlay/src/main/java`，
+    只按 `src/<x>/java` 过滤拦不住它，所以这里显式排除 `build/`。
     """
     out = []
     for p in base.rglob("*.java"):
         parts = p.parts
+        if "build" in parts:
+            continue
         if any(parts[i] == "src" and parts[i + 2] == "java" for i in range(len(parts) - 2)):
             out.append(p)
     return out

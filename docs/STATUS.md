@@ -1,6 +1,13 @@
 # AtomChat 当前状态
 
-> 截至 2026-10-21。这里只维护当前快照，提交及推送事实以 Git 查询为准。
+> 截至 2026-10-23。这里只维护当前快照，提交及推送事实以 Git 查询为准。
+
+## 1.21.4 Fabric 增量移植
+
+- 新增 `platforms/1.21.4-fabric` 增量目标：目录里只有 6 个差异补丁，构建期从 `platforms/1.21.1-fabric` 复制源码树后应用；shared/ 与基础平台的后续改动可直接流入。旧 main 分支上的整树移植随本分支合并删除。
+- 三系统/架构包已构建；Linux x64 包实机验收通过（首次打开、模糊着色器、表情面板）。矩阵中 `buildable` 已打开。
+- 1.21.4 的 shader JSON 必须写完整资源 id（`minecraft:core/...`），`resources-shader-identifiers.patch` 修复了模糊着色器加载失败。
+- 1.21.4 NeoForge / Forge 仍缺 official 映射层的 1.21.4 API 差异，矩阵中保持 `buildable: false`。
 
 ## Skija / Windows ARM64 迁移
 

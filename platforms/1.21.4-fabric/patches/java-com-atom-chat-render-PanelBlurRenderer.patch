@@ -1,0 +1,67 @@
+diff --git a/src/main/java/com/atom/chat/render/PanelBlurRenderer.java b/src/main/java/com/atom/chat/render/PanelBlurRenderer.java
+index 3afd89f..f1886b5 100644
+--- a/src/main/java/com/atom/chat/render/PanelBlurRenderer.java
++++ b/src/main/java/com/atom/chat/render/PanelBlurRenderer.java
+@@ -4,13 +4,16 @@ import com.atom.chat.AtomChat;
+ import com.mojang.blaze3d.platform.GlStateManager;
+ import com.mojang.blaze3d.systems.RenderSystem;
+ import net.minecraft.client.MinecraftClient;
++import net.minecraft.client.gl.Defines;
+ import net.minecraft.client.gl.GlUniform;
+ import net.minecraft.client.gl.ShaderProgram;
++import net.minecraft.client.gl.ShaderProgramKey;
+ import net.minecraft.client.render.BufferBuilder;
+ import net.minecraft.client.render.BufferRenderer;
+ import net.minecraft.client.render.Tessellator;
+ import net.minecraft.client.render.VertexFormat;
+ import net.minecraft.client.render.VertexFormats;
++import net.minecraft.util.Identifier;
+ import org.joml.Matrix4f;
+ import org.joml.Vector4f;
+ import org.lwjgl.opengl.GL11C;
+@@ -196,10 +199,9 @@ public final class PanelBlurRenderer {
+         if (!roundedLoadAttempted) {
+             roundedLoadAttempted = true;
+             try {
+-                roundedShader = new ShaderProgram(
+-                        MinecraftClient.getInstance().getResourceManager(),
+-                        ROUNDED_SHADER_NAME,
+-                        VertexFormats.POSITION_TEXTURE_COLOR);
++                roundedShader = MinecraftClient.getInstance().getShaderLoader().getOrCreateProgram(
++                        new ShaderProgramKey(Identifier.ofVanilla("core/" + ROUNDED_SHADER_NAME),
++                                VertexFormats.POSITION_TEXTURE_COLOR, Defines.EMPTY));
+             } catch (Throwable t) {
+                 AtomChat.LOGGER.warn(com.atom.chat.diagnostics.AtomChatLog.message("render", "AtomChat panel blur shader failed to load; blur disabled"), t);
+                 roundedShader = null;
+@@ -212,10 +214,9 @@ public final class PanelBlurRenderer {
+         if (!kawaseLoadAttempted) {
+             kawaseLoadAttempted = true;
+             try {
+-                kawaseShader = new ShaderProgram(
+-                        MinecraftClient.getInstance().getResourceManager(),
+-                        KAWASE_SHADER_NAME,
+-                        VertexFormats.POSITION);
++                kawaseShader = MinecraftClient.getInstance().getShaderLoader().getOrCreateProgram(
++                        new ShaderProgramKey(Identifier.ofVanilla("core/" + KAWASE_SHADER_NAME),
++                                VertexFormats.POSITION, Defines.EMPTY));
+             } catch (Throwable t) {
+                 AtomChat.LOGGER.warn(com.atom.chat.diagnostics.AtomChatLog.message("render", "AtomChat Kawase blur shader failed to load; blur disabled"), t);
+                 kawaseShader = null;
+@@ -256,7 +257,7 @@ public final class PanelBlurRenderer {
+         RenderSystem.enableBlend();
+         RenderSystem.defaultBlendFunc();
+         RenderSystem.setShaderTexture(0, texture);
+-        RenderSystem.setShader(() -> sh);
++        RenderSystem.setShader(sh);
+ 
+         BufferBuilder bb = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
+         bb.vertex(pose, x, y, 0).texture(0.0F, 0.0F).color(1.0F, 1.0F, 1.0F, alpha);
+@@ -419,7 +420,7 @@ public final class PanelBlurRenderer {
+         RenderSystem.disableBlend();
+         RenderSystem.setShaderTexture(0, srcTex);
+         uSpacing.set(0, spacing);
+-        RenderSystem.setShader(() -> sh);
++        RenderSystem.setShader(sh);
+ 
+         BufferBuilder bb = Tessellator.getInstance().begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION);
+         bb.vertex(-1.0F, -1.0F, 0.0F);

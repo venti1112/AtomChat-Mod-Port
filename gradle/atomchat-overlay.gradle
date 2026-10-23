@@ -1,0 +1,80 @@
+// ============================================================
+//  AtomChat 增量目标装配（由带 overlay_base 的目标在 layers 之后 apply）
+// ============================================================
+//
+// 增量目标自己不放源码树，只放差异补丁：
+//   1. 把 overlay_base 平台的 src/main、src/test 复制到 build/generated/atomchatOverlay
+//   2. 按文件名顺序应用 patches/*.patch
+//   3. 把生成树接进 main / test 源集
+//
+// 上游对基础平台 src/ 的改动会直接流进来；一旦改到补丁上下文，git apply 失败并指名补丁，
+// 不会静默漏掉某个差异。build.gradle / gradle.properties 不参与复制，仍是各目标专有的，
+// 上游改依赖或打包配置时要手动同步。
+// overlay_base 是谁、是否合法由 versions/targets.json 声明、tools/verify_targets.py 校验，
+// 本脚本不含目标名硬编码。
+//
+// 补丁格式：git diff --no-index --src-prefix= --dst-prefix= a/<rel> b/<rel>，
+// 在生成树根目录按默认 -p1 应用。
+
+def overlayBaseDir = project.ext.atomchatOverlayBaseDir as File
+if (overlayBaseDir == null) {
+    throw new GradleException(
+        "目标 ${project.ext.atomchatTargetName} 应用了 atomchat-overlay.gradle，" +
+        "但 versions/targets.json 里没有 overlay_base —— 增量目标的源码树没有来源")
+}
+if (!overlayBaseDir.isDirectory()) {
+    throw new GradleException(
+        "目标 ${project.ext.atomchatTargetName} 的 overlay_base 不存在：${overlayBaseDir.path}")
+}
+
+def overlayBaseLabel = project.relativePath(overlayBaseDir)
+def patchFiles = project.fileTree('patches') { include '*.patch' }.files.sort { it.name }
+if (patchFiles.isEmpty()) {
+    throw new GradleException(
+        "目标 ${project.ext.atomchatTargetName} 的 patches/ 里没有补丁 —— " +
+        "增量目标至少要有一个差异补丁；没有差异就不该是增量目标")
+}
+
+def overlayDir = project.layout.buildDirectory.dir('generated/atomchatOverlay')
+def atomchatOverlay = project.tasks.register('atomchatOverlay', Sync) {
+    group = 'atomchat'
+    description = '复制 overlay_base 的源码树并应用 patches/*.patch'
+    from(overlayBaseDir) {
+        include 'src/main/java/**'
+        include 'src/main/resources/**'
+        include 'src/test/java/**'
+        include 'src/test/resources/**'
+    }
+    into(overlayDir)
+    inputs.files(patchFiles)
+    outputs.upToDateWhen { false }
+    doLast {
+        def root = overlayDir.get().asFile
+        patchFiles.each { patch ->
+            def pb = new ProcessBuilder('git', 'apply', '--whitespace=nowarn', patch.absolutePath)
+            pb.directory(root)
+            // 生成树在仓库工作区内；停掉 git 的仓库发现，否则 git apply 会按仓库根解析路径，
+            // 表现是补丁被静默跳过（退出码还是 0）。
+            pb.environment().put('GIT_CEILING_DIRECTORIES', root.parentFile.absolutePath)
+            pb.redirectErrorStream(true)
+            def process = pb.start()
+            def output = process.inputStream.getText('UTF-8')
+            if (process.waitFor() != 0) {
+                throw new GradleException("补丁 ${patch.name} 应用失败：上游改到了补丁上下文。\n" +
+                        "请把 ${overlayBaseLabel} 的新改动重新应用到该补丁，或删除该补丁。\n${output}")
+            }
+        }
+    }
+}
+
+project.sourceSets.main.java.srcDir(overlayDir.map { it.dir('src/main/java') })
+project.sourceSets.main.resources.srcDir(overlayDir.map { it.dir('src/main/resources') })
+project.sourceSets.test.java.srcDir(overlayDir.map { it.dir('src/test/java') })
+project.sourceSets.test.resources.srcDir(overlayDir.map { it.dir('src/test/resources') })
+['compileJava', 'processResources', 'compileTestJava', 'processTestResources'].each {
+    project.tasks.named(it).configure { dependsOn atomchatOverlay }
+}
+// sourcesJar 由 withSourcesJar() 在配置后期注册，不能用 tasks.named 提前取。
+project.tasks.withType(org.gradle.api.tasks.bundling.Jar).configureEach {
+    if (name == 'sourcesJar') { dependsOn atomchatOverlay }
+}
