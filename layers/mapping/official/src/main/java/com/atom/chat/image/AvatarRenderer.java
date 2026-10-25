@@ -12,7 +12,6 @@ import io.github.humbleui.skija.Bitmap;
 import io.github.humbleui.skija.Image;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.AbstractTexture;
-import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.resources.ResourceLocation;
 
@@ -21,12 +20,13 @@ import com.atom.chat.config.AtomChatConfig;
 
 import java.nio.file.Path;
 
-import org.lwjgl.opengl.GL11C;
 
 /**
- * Samples the 8x8 face (plus semi-transparent hat layer) from a 64x64 player
- * skin texture on the GPU and turns it into a small Skia image that the UI can
- * draw as a circular avatar. One GL read per skin, cached forever after.
+ * Samples the 8x8 face (plus semi-transparent hat layer) from a standard or HD
+ * player skin on the GPU and turns it into a small Skia image that the UI can
+ * draw as a circular avatar. SkinTextureReader normalizes 64x64, legacy 64x32,
+ * and scaled HD textures to the 64x64 grid used below. One GL read per skin,
+ * cached forever after.
  */
 public final class AvatarRenderer {
     private AvatarRenderer() {
@@ -89,16 +89,8 @@ public final class AvatarRenderer {
             AbstractTexture texture = client.getTextureManager().getTexture(skin);
             int glId = texture.getId();
 
-            ByteBuffer buf = ByteBuffer.allocateDirect(SKIN_SIZE * SKIN_SIZE * 4);
-            int previous = GL11C.glGetInteger(GL11C.GL_TEXTURE_BINDING_2D);
-            GL11C.glBindTexture(GL11C.GL_TEXTURE_2D, glId);
-            // Driver write first, then mirror: GlStateManager caches the binding
-            // per unit and its setter no-ops when the cache already matches, so
-            // the raw call is what guarantees the read hits the skin texture.
-            GlStateManager._bindTexture(glId);
-            GL11C.glGetTexImage(GL11C.GL_TEXTURE_2D, 0, GL11C.GL_RGBA, GL11C.GL_UNSIGNED_BYTE, buf);
-            GL11C.glBindTexture(GL11C.GL_TEXTURE_2D, previous);
-            GlStateManager._bindTexture(previous);
+            ByteBuffer buf = SkinTextureReader.read(glId);
+            if (buf == null) return null;
 
             // MC uploads skin images top-down without flipping, so buffer row v IS
             // skin row v - no GL flip here. Face blend (hat over face), then a CPU

@@ -13,11 +13,12 @@
 - 横幅跳转图标改用发送按钮的强调色对比色规则，不再被主文字色染色后融入按钮。
 - 关于页作者卡片恢复为两张独立圆角卡片，中缝不再显示连接底色。
 - 当前连接内关闭重开保留输入草稿；关闭常用语编辑时不会覆盖原草稿。
+- 修复使用高清皮肤时打开聊天界面后可能闪退的问题；头像读取按纹理实际尺寸分配，并归一化标准、legacy 与高清皮肤。
 
 **更改**
 
 - 面板背景模糊取消旧的两帧/500ms 缓存节流，改为每帧读取当前画面。
-- 横幅沿用原有不透明浮动通知材质和下落动画，只保留跳转图标颜色修复。
+- HUD、面板与编辑器横幅复用卡片材质，继承卡片 RGB/透明度，底色最低 50%，并使用局部背景模糊；入退场跟随全局 zoom/slide，旧横幅滑动让位。
 - 个人目录收为 `client/`、`cache/`、`server/`、`backups/` 四个顶层组；个人素材首次启动即创建，缓存、托管和备份只在需要时出现。
 - 新配置默认关闭防刷屏、开启紧凑消息、采用单尖角气泡并使用 100% 反馈音效音量；保存过的选项不受影响。
 
@@ -34,11 +35,12 @@
 - Derive the banner jump icon from the accent contrast rule used by the composer send button instead of the primary text colour.
 - Keep About-page author cards independent, with no connecting fill in the gap.
 - Preserve composer drafts across panel reopenings and avoid overwriting the original draft when leaving phrase editing.
+- Fix crashes after opening chat with HD skins by sizing skin readback to the real texture and normalizing standard, legacy and HD skins.
 
 **Changed**
 
 - Refresh panel background blur from the current frame instead of the old two-frame/500 ms cadence.
-- Keep the banner's existing opaque floating-notification material and drop-in animation; only the jump-icon colour rule changes.
+- Reuse card materials for HUD, panel and editor banners, inheriting card RGB and alpha with a 50% minimum fill and local background blur; entrance and exit follow the global zoom/slide motion while older banners slide aside.
 - Reduce the personal-data root to four top-level groups: `client/`, `cache/`, `server/` and `backups/`; client asset folders are created on first launch, while cache, hosting and backup folders appear only when used.
 - Default new configurations to anti-spam off, compact messages on, single-corner bubbles and 100% interaction volume; saved choices are preserved.
 

@@ -1,6 +1,21 @@
 # AtomChat 当前状态
 
-> 截至 2026-10-23。这里只维护当前快照，提交及推送事实以 Git 查询为准。
+> 截至 2026-10-25。这里只维护当前快照，提交及推送事实以 Git 查询为准。
+
+## 0.4.0：高清皮肤读回修复
+
+- 2026-10-25 快照：版本由 0.4.0-preview 收口为 0.4.0，基线 main@e8a6aca4f0d750daf285747b9f3ac47972a9a735。源码、测试、九包和三个 Windows x64 实例部署已完成；用户已要求提交、推送并清理临时文件，交付分支为 main、推送目标为 origin/main，实际同步事实以 Git 查询为准，不打 tag 或公开发布。
+- 证据指向旧头像读取：固定分配 64x64 RGBA 客户端缓冲，却按 GL 实际纹理尺寸写回；实际实例有 1024x512 皮肤，脱敏 dbgeng 栈在 RtlFreeHeap 上层出现 Skija Bitmap installPixels/finalizer。字体、Skija 版本、驱动、Java 与启动器均未修改，也不声称全部原生崩溃已解决。
+- 共享 SkinTextureReader 现按实际宽高分配，接受 64 整数倍且不超过 4096 的正方形或 legacy 2:1 纹理并归一为 64x64；读取期间隔离并恢复 PACK alignment/rowlength/skips、PBO 和纹理绑定。两份 AvatarRenderer 已统一接入，裁脸、帽层和颜色处理未变。
+- 新增 Windows 隐藏 GLFW 真实读回回归，覆盖 64x64、64x32、128x128、1024x512 的脸/帽层/alpha、畸形几何、污染 PACK/PBO、纹理绑定与 GL error；Linux 无显示环境明确跳过。静态守卫扫描全仓，产品源码只有读取器直接调用 glGetTexImage。
+- 旧接线变异已实际变红，随后按字节恢复，AvatarRenderer 源文件 SHA-256 前后均为 5447c4ec19915a821dbd4ab54d2ffc8899cd0d2ce2041eb8323811b24dacc2da。
+- 三端完整 test build 使用 JDK 17/21 和离线参数：Forge 1481、Fabric 1493、NeoForge 1481 项，失败/错误 0，各 2 项既有 golden/benchmark 跳过；真实 GL 子套件在三端各 3 项均执行。Windows ARM64/Linux x64 以 build -x test 生成剩余六包。
+- 九包通过 native 唯一性、PE/ELF 架构、Skija 0.143.18、FlatLaf/types 登记、版本、资源与重定位校验；同加载器三 OS 的 612–628 个应用 class/assets 条目逐字节一致，均无 JUnit、测试 agent 或本轮探针类。
+- 静态门禁：seams 139/71、目标矩阵通过、孪生 75 对未归类/陈旧 0、日志 269 条违规 0、裸值 469/505、git diff --check 通过。
+- 已备份并部署 Forge 1.20.1-main、Fabric 1.21.1-CCB、NeoForge Mechanomania-航空学：最终 SHA-256 分别 4ce2836e…、43ac102d…、8c6117db…；旧包分别 8765ebfc…、f1ebe063…、119d47f3…。其他顶层文件 157/73/201 个的哈希、大小、mtime 未变，各只有一个活动 AtomChat 元数据；未启动或关闭游戏。Forge 最终包重装前的 878a3787… 也单独备份。
+- CHANGELOG 与 RELEASE_NOTES 的 v0.4.0 段已同步横幅卡片材质、50% 最低透明度、局部模糊和全局 zoom/slide 事实，并新增高清皮肤闪退修复，中英双语一致。
+- 香草纪元：食旅纪行 的 1024x512 实机场景尚未复测；隐藏 GL 测试不等同于整局游戏验收。详见 [验证记录](verification/2026-10-25-0.4.0.md)、[包指纹](verification/2026-10-25-0.4.0-packages.json)、[部署记录](verification/2026-10-25-0.4.0-deployment.json)。
+- 本轮 `.work/` 中的 1300 个临时文件（180233348 字节，含测试生成图、XML、过程日志和九包副本）已逐文件校验归档至 `D:/AtomChat-Backups/2026-10-25-0.4.0/closeout-20261025-160835/`；按用户要求在推送后移入回收站，执行结果见归档目录的 `recycle-receipt.json`。各平台 build 产物、安装包、部署备份和长期验证记录保留。
 
 ## 0.4.0-preview：横幅专项已验收
 
@@ -28,7 +43,7 @@
 - 最终三端 `test build --offline --no-daemon`：Forge/NeoForge 各 1435 项，Fabric 1447 项，0 失败/错误，各 2 项原有跳过；Windows junction 隔离回归实际通过。独立审查发现 5 项 P2，已补回归并修正；后续独立复核因 429 重试耗尽未完成，不声称二次复核通过。
 - 三加载器 × Windows x64 / Windows ARM64 / Linux x64 九包通过 native/版本/资源、测试代码未入包及同加载器应用 class/assets 一致性校验；构建临时目录已在收尾时移入回收站，见 [指纹](verification/2026-10-23-mod-compatibility-packages.json) 和 [验证记录](verification/2026-10-22-mod-compatibility.md)。
 - 已依用户自动部署授权替换 `D:/Myworld/.minecraft/versions/1.20.1-main/mods/atomchat-Forge-1.20.1-0.3.3-windows-x64.jar`，SHA-256 `a3acee0b1a0d8f49166210b0675a95fd25188db0a35e482e3ecf43fbbc11555e`；旧包备份为 `D:/AtomChat-Backups/2026-10-23-forge-compat/20261023-004808-462887/atomchat-Forge-1.20.1-0.3.3-windows-x64.jar`（旧 SHA-256 `6213407c68082b065ee65818fff09fcc06c779fd074ebdbd137608ee7852d258`），其他 193 文件哈希/大小/修改时间不变，modId=atomchat 只有一份。
-- 代理未启动游戏、未修改玩家图片或聊天记录；迁移在下次启动新版时发生。Quark/FTB 共装实机与 GPU 验收仍待用户复测。该轮记录形成时未提交、推送或发布，相关源码已随当前 `0.4.0-preview` 提交归档；2026-10-22 初始候选和 0.3.2 基线材料不代表当前续修已实机验收。
+- 代理未启动游戏、未修改玩家图片或聊天记录；迁移在下次启动新版时发生。Quark/FTB 共装实机与 GPU 验收仍待用户复测。该轮记录形成时未提交、推送或发布，相关源码已随 0.4.0-preview 提交归档；2026-10-22 初始候选和 0.3.2 基线材料不代表当前续修已实机验收。
 
 ## Skija / Windows ARM64 迁移
 
@@ -41,7 +56,7 @@
 
 ## 项目与验收
 
-- 仓库 `D:/AtomChat-Main`，分支 `main`，远端 `origin` 为 `NoWordz/AtomChat-Mod`；三端为 Fabric 1.21.1、NeoForge 1.21.1、Forge 1.20.1，源码版本为 0.4.0-preview，下文旧版本记录为历史基线。
+- 仓库 `D:/AtomChat-Main`，分支 `main`，远端 `origin` 为 `NoWordz/AtomChat-Mod`；三端为 Fabric 1.21.1、NeoForge 1.21.1、Forge 1.20.1，源码版本为 0.4.0，下文旧版本记录为历史基线。
 - 用户已确认图片预览/过滤、半屏与面板外关闭均验收通过，授权提交、推送和清理旧轮次材料；本次不打 tag 或发布。
 - 图片预览支持平滑淡入、鼠标锚点滚轮缩放与左键拖动；三种弹层统一裁切，保存预设与默认主题单一选中，公屏系统/玩家过滤持久化。见 [预览与过滤验证](verification/2026-10-20-preview-and-filter.md)。
 - 半屏模式位于外观→调整→布局，左、上、下贴边，顶底栏贴边并去掉手机外环。原宽度滑条分别保存手机/半屏宽度，切换及重载后恢复；内部卡片、气泡和主题保留。

@@ -1,0 +1,115 @@
+{
+  "version": "0.4.0",
+  "sourceHead": "e8a6aca4f0d750daf285747b9f3ac47972a9a735",
+  "packages": [
+    {
+      "target": "1.20.1-forge",
+      "platform": "windows-x64",
+      "path": "platforms/1.20.1-forge/build/libs/atomchat-Forge-1.20.1-0.4.0-windows-x64.jar",
+      "sha256": "4ce2836e959b8c6dae1090a158b11d30d38ff75a0154b3f03921bab2cc1d791b",
+      "bytes": 19142717,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.20.1-forge",
+      "platform": "windows-arm64",
+      "path": "platforms/1.20.1-forge/build/windows-arm64/libs/atomchat-Forge-1.20.1-0.4.0-windows-arm64.jar",
+      "sha256": "828f9041bddefdec081e85749dc55f2afb89d9dd3b9a498cb5c259c5aac6fb21",
+      "bytes": 18519006,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.20.1-forge",
+      "platform": "linux-x64",
+      "path": "platforms/1.20.1-forge/build/linux-x64/libs/atomchat-Forge-1.20.1-0.4.0-linux-x64.jar",
+      "sha256": "299accc056903fbc129e6521a00f1b6e815fcdb5715b14e27938b42a89d04f64",
+      "bytes": 20269905,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.21.1-fabric",
+      "platform": "windows-x64",
+      "path": "platforms/1.21.1-fabric/build/libs/atomchat-Fabric-1.21.1-0.4.0-windows-x64.jar",
+      "sha256": "43ac102d91f8b58613a95b91b3acaa697a915ad07c2674e179a6db0df124be01",
+      "bytes": 19163054,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.21.1-fabric",
+      "platform": "windows-arm64",
+      "path": "platforms/1.21.1-fabric/build/windows-arm64/libs/atomchat-Fabric-1.21.1-0.4.0-windows-arm64.jar",
+      "sha256": "b090f864f1a07251294fe104cd74f19835364635c943019b6419576bca00c41b",
+      "bytes": 18539339,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.21.1-fabric",
+      "platform": "linux-x64",
+      "path": "platforms/1.21.1-fabric/build/linux-x64/libs/atomchat-Fabric-1.21.1-0.4.0-linux-x64.jar",
+      "sha256": "ca7905c4f30d5ff2a12be42cd31725361f74e8c9438bb135fc17b44d69ec9d11",
+      "bytes": 20290241,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.21.1-neoforge",
+      "platform": "windows-x64",
+      "path": "platforms/1.21.1-neoforge/build/libs/atomchat-NeoForge-1.21.1-0.4.0-windows-x64.jar",
+      "sha256": "8c6117db5a2a2f3c287b12b0dea7b3946bc019fa095ff2563c6232c14d1f61a2",
+      "bytes": 19155785,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.21.1-neoforge",
+      "platform": "windows-arm64",
+      "path": "platforms/1.21.1-neoforge/build/windows-arm64/libs/atomchat-NeoForge-1.21.1-0.4.0-windows-arm64.jar",
+      "sha256": "7f0241790d566c86ac63b04313749cf0b86c4f4dfaee3c79753f6e67b2e4e2ad",
+      "bytes": 18532076,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.21.1-neoforge",
+      "platform": "linux-x64",
+      "path": "platforms/1.21.1-neoforge/build/linux-x64/libs/atomchat-NeoForge-1.21.1-0.4.0-linux-x64.jar",
+      "sha256": "43b0b7389cb359332d78027670f2bf309d4167d19dbc9257070b42bd84565351",
+      "bytes": 20282973,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    }
+  ],
+  "tests": {
+    "1.20.1-forge": {
+      "tests": 1481,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 2
+    },
+    "1.21.1-fabric": {
+      "tests": 1493,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 2
+    },
+    "1.21.1-neoforge": {
+      "tests": 1481,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 2
+    }
+  },
+  "verification": {
+    "junit": "Windows x64 host; full test build; XML archived under .work/native/test-results-archive-20261025-final",
+    "crossBuilds": "Windows ARM64 and Linux x64 built with build -x test in isolated build directories",
+    "jarChecks": "verify_jars.py passed for all nine packages",
+    "loaderConsistency": "Forge 617, Fabric 612, NeoForge 628 application class/assets entries byte-identical across OS variants",
+    "testClasses": "no JUnit, test-agent or round-specific probe classes in any package; 210 test source types checked",
+    "realGl": "hidden-window GL readback executed on Windows for all three loaders; Linux skips by assumption"
+  }
+}
