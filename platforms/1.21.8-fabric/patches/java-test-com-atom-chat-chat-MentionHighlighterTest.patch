@@ -1,0 +1,22 @@
+diff --git a/src/test/java/com/atom/chat/chat/MentionHighlighterTest.java b/src/test/java/com/atom/chat/chat/MentionHighlighterTest.java
+index d1f896f..d60a82c 100644
+--- a/src/test/java/com/atom/chat/chat/MentionHighlighterTest.java
++++ b/src/test/java/com/atom/chat/chat/MentionHighlighterTest.java
+@@ -6,6 +6,8 @@ import net.minecraft.text.Style;
+ import net.minecraft.text.Text;
+ import org.junit.jupiter.api.Test;
+ 
++import java.net.URI;
++
+ import static org.junit.jupiter.api.Assertions.assertEquals;
+ import static org.junit.jupiter.api.Assertions.assertFalse;
+ import static org.junit.jupiter.api.Assertions.assertTrue;
+@@ -102,7 +104,7 @@ class MentionHighlighterTest {
+     @Test
+     void leavesClickableLinkMentionsAlone() {
+         Style link = Style.EMPTY.withColor(0x8888FF).withClickEvent(
+-                new ClickEvent(ClickEvent.Action.OPEN_URL, "https://example.com/@E33EPUS"));
++                new ClickEvent.OpenUrl(URI.create("https://example.com/@E33EPUS")));
+         RichText content = RichText.of(Text.literal("see https://example.com/@E33EPUS now").setStyle(link));
+         RichText result = MentionHighlighter.highlightLocal(content, "E33EPUS", decorated());
+         assertEquals("see https://example.com/@E33EPUS now", result.getString());

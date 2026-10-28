@@ -8,10 +8,13 @@
   * 工程目录存在就必须在矩阵里，反之亦然（不许有"没有任何地方编"的源码）
   * 各平台不许自己定义身份键（mod_version 等只在仓库根那一份）
   * 矩阵里写的 java / gradle 与工程里实际的 toolchain / wrapper 一致（防止两边各写一份然后漂移）
+  * overlay_exclude 只排除基础平台真实存在、构建期会复制的文件；Java 文件必须有同路径的
+    本地实现，补丁不许再碰它；versions/overlay-baselines.json 记录上游基线，漂移即失败
 
 用法：
   python3 tools/verify_targets.py                       # 只校验，打印摘要
   python3 tools/verify_targets.py --matrix-out m.json   # 顺便把 CI 矩阵写成 JSON
+  python3 tools/verify_targets.py --update-overlay-baselines  # 人工确认本地实现后接受上游新基线
 """
 from __future__ import annotations
 
@@ -29,6 +32,10 @@ IDENTITY_KEYS = [
     "mod_id", "mod_name", "mod_license", "mod_group_id",
     "mod_authors", "mod_description", "mod_version",
 ]
+OVERLAY_BASELINES = "versions/overlay-baselines.json"
+# 与 gradle/atomchat-overlay.gradle 的复制集合一致：只有这些前缀下的文件才可能被排除。
+OVERLAY_COPY_ROOTS = ("src/main/java/", "src/main/resources/",
+                      "src/test/java/", "src/test/resources/")
 
 errors: list[str] = []
 notes: list[str] = []
@@ -197,6 +204,106 @@ def check_targets(targets: dict, layers: dict, aliases: dict) -> None:
             rel = f"platforms/{child.name}"
             if rel not in declared:
                 fail(f"{rel} 存在但不在 targets.json 里 —— 那样它是一份没有任何地方编的源码")
+
+
+def _patch_paths(patch: pathlib.Path) -> set:
+    """补丁头里的文件路径：生成树根相对，与 overlay_exclude 同一坐标系。"""
+    paths = set()
+    for line in patch.read_text(encoding="utf-8", errors="replace").splitlines():
+        if line.startswith("+++ b/") or line.startswith("--- a/"):
+            paths.add(line[6:].split("\t", 1)[0].strip())
+    return paths
+
+
+def check_overlay_exclusions(targets: dict, baselines_raw: dict, update: bool):
+    """overlay_exclude 的两条硬约束：文件确实来自基础平台，且目标真的拿本地实现顶上。
+
+    排除不是删除：被排除的 Java 文件若没有目标本地实现，上游调用方按类名引用时编不过。
+    资源文件允许只排除不替换（例如新版本已不再读取的着色器定义 JSON），所以本地实现检查
+    只针对 .java。
+
+    基线哈希盯的是另一半：本地实现是对着基础平台当时那份源码写的。上游一改，两者就可能
+    悄悄对不上，所以漂移默认失败；人工确认后用 --update-overlay-baselines 接受新基线 ——
+    这个动作本身要留下评审痕迹，不能是构建时自动放行。
+
+    返回 update 模式下要写入的完整基线表；只校验时返回 None。
+    """
+    baselines = {k: v for k, v in baselines_raw.items() if not k.startswith("_")}
+    current_all = {}
+    excluded_targets = set()
+
+    for name, t in targets.items():
+        if not isinstance(t, dict) or "overlay_exclude" not in t:
+            continue
+        excluded_targets.add(name)
+        if not isinstance(t.get("project"), str):
+            continue  # 缺字段由 check_targets 报，这里不重复也不崩
+        excludes = t.get("overlay_exclude")
+        base_rel = t.get("overlay_base")
+        if not isinstance(base_rel, str) or not base_rel:
+            fail(f"目标 {name} 有 overlay_exclude，但没有 overlay_base —— "
+                 f"只有增量目标才有「哪些基础文件不复制」这回事")
+            continue
+        if not isinstance(excludes, list) or not excludes:
+            fail(f"目标 {name} 的 overlay_exclude 必须是非空数组 —— 空表就该删掉这个键")
+            continue
+        project = ROOT / t["project"]
+        seen = set()
+        current = {}
+        for entry in excludes:
+            if not isinstance(entry, str) or not entry.strip():
+                fail(f"目标 {name} 的 overlay_exclude 含空值或非字符串项")
+                continue
+            rel = entry.strip().replace("\\", "/")
+            if rel.startswith("/") or ".." in rel.split("/"):
+                fail(f"目标 {name} 的 overlay_exclude 必须是基础平台工程内的相对路径：{rel}")
+                continue
+            if rel in seen:
+                fail(f"目标 {name} 的 overlay_exclude 有重复项：{rel}")
+                continue
+            seen.add(rel)
+            if not rel.startswith(OVERLAY_COPY_ROOTS):
+                fail(f"目标 {name} 的 overlay_exclude 只能排除构建期会复制的那四类路径"
+                     f"（src/main|test 下的 java / resources）：{rel}")
+                continue
+            base_file = ROOT / base_rel / rel
+            if not base_file.is_file():
+                fail(f"目标 {name} 的 overlay_exclude 指向基础平台不存在的文件：{base_rel}/{rel}")
+                continue
+            current[rel] = digest(base_file)
+            if rel.endswith(".java") and project.is_dir() and not (project / rel).is_file():
+                fail(f"目标 {name} 排除了 {rel}，但工程目录里没有同路径的本地实现 —— "
+                     f"排除不是删除：类名与公开 API 仍要对上游调用方成立")
+
+        patches = project / "patches"
+        if patches.is_dir():
+            for patch in sorted(patches.glob("*.patch")):
+                for rel in sorted(seen & _patch_paths(patch)):
+                    fail(f"补丁 {patch.relative_to(ROOT).as_posix()} 修改了被 overlay_exclude 排除的"
+                         f"文件 {rel} —— 它根本不在生成树里；该文件应由目标本地实现维护")
+
+        current_all[name] = current
+        if update:
+            continue
+        declared = baselines.get(name)
+        if not isinstance(declared, dict):
+            fail(f"目标 {name} 声明了 overlay_exclude，但 {OVERLAY_BASELINES} 里没有它的基线 —— "
+                 f"跑 python3 tools/verify_targets.py --update-overlay-baselines 生成")
+            continue
+        for rel in sorted(set(declared) - set(current)):
+            fail(f"{OVERLAY_BASELINES} 里 {name} 记录了已不在 overlay_exclude 的文件：{rel} —— "
+                 f"删掉这条基线，或把它放回排除表")
+        for rel in sorted(set(current) & set(declared)):
+            if current[rel] != declared[rel]:
+                fail(f"基础平台的上游文件变了：{base_rel}/{rel}（目标 {name} 的本地实现以旧版本"
+                     f"为基准）。先人工确认本地实现仍然对得上，再跑 "
+                     f"python3 tools/verify_targets.py --update-overlay-baselines 接受新基线")
+
+    if not update:
+        for name in sorted(set(baselines) - excluded_targets):
+            fail(f"{OVERLAY_BASELINES} 里有目标 {name} 的基线，但 targets.json 里它没有 "
+                 f"overlay_exclude —— 删掉这条基线")
+    return current_all if update else None
 
 
 def check_platform_identity(name: str, project: pathlib.Path) -> None:
@@ -608,7 +715,15 @@ def check_aliases(aliases: dict) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--matrix-out", help="把 CI 矩阵写成 JSON 到这个路径")
+    parser.add_argument("--update-overlay-baselines", action="store_true",
+                        help="人工确认目标本地实现与基础平台新版本一致后，接受新的上游基线")
     args = parser.parse_args()
+
+    baselines_path = ROOT / OVERLAY_BASELINES
+    if baselines_path.is_file() or not args.update_overlay_baselines:
+        baselines_raw = load_json(OVERLAY_BASELINES)
+    else:
+        baselines_raw = {}
 
     targets_raw = load_json("versions/targets.json")
     layers_raw = load_json("versions/layers.json")
@@ -631,6 +746,8 @@ def main() -> int:
     check_server_side(server_raw)
     check_seams_doc()
     check_targets(targets, layers, aliases)
+    updated_baselines = check_overlay_exclusions(targets, baselines_raw,
+                                                 args.update_overlay_baselines)
 
     # 摘要（CI 日志里看这一份）
     print(f"目标 {len(targets)} 条：")
@@ -639,18 +756,34 @@ def main() -> int:
             continue
         mark = "发" if t.get("buildable") else "不发"
         exists = "有工程" if (ROOT / t["project"]).is_dir() else "无工程"
+        excluded = t.get("overlay_exclude") or []
+        excl = f" excl={len(excluded)}" if excluded else ""
         print(f"  {name:18} mc={t.get('minecraft'):7} loader={t.get('loader'):9} "
-              f"java={t.get('java')} gradle={t.get('gradle')} {mark}/{exists} layers={t.get('layers')}")
+              f"java={t.get('java')} gradle={t.get('gradle')} {mark}/{exists} "
+              f"layers={t.get('layers')}{excl}")
 
     if errors:
         print("\n校验未通过：", file=sys.stderr)
         for e in errors:
             print(f"  ✘ {e}", file=sys.stderr)
+        if args.update_overlay_baselines:
+            print(f"\n{OVERLAY_BASELINES} 未写入：先修掉上面的问题。", file=sys.stderr)
         return 1
 
     print("\n校验通过。")
     for n in notes:
         print(f"  · {n}")
+
+    if args.update_overlay_baselines:
+        payload = {}
+        if isinstance(baselines_raw.get("_comment"), list):
+            payload["_comment"] = baselines_raw["_comment"]
+        for name in sorted(updated_baselines or {}):
+            payload[name] = dict(sorted(updated_baselines[name].items()))
+        baselines_path.write_text(
+            json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        count = sum(len(v) for v in (updated_baselines or {}).values())
+        print(f"\n{OVERLAY_BASELINES} 已更新：{len(updated_baselines or {})} 个目标，{count} 条基线。")
 
     if args.matrix_out:
         # 产物名后缀在这里算好，不交给工作流里的表达式：

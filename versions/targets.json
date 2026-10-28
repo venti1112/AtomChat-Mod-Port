@@ -25,7 +25,13 @@
     "",
     "【unverified：这一行里哪些字段是猜的】还没真正建起来的目标，只能靠推断填占位值，而填出来的东西",
     "跟实测值长得一模一样。把猜的字段名列出来，接手的人一眼就知道哪几个要自己查过再改；",
-    "buildable: true 的目标不许留 unverified（CI 会拦）。"
+    "buildable: true 的目标不许留 unverified（CI 会拦）。",
+    "",
+    "【overlay_exclude：增量目标不复制哪些基础文件】路径相对基础平台的工程根（与补丁里的 src/... 同形），",
+    "列出的文件由目标在本工程目录里自己实现，类名与公开 API 必须和基础平台一致，上游调用方不必改。",
+    "适用于「整份实现都绑死在该版本渲染管线上、逐行补丁等于重写」的文件；普通 API 差异仍走 patches/。",
+    "被排除文件的上游内容哈希记在 versions/overlay-baselines.json：基础平台一改，校验就红，",
+    "要求人工确认本地实现是否仍然对得上；确认无误后跑 tools/verify_targets.py --update-overlay-baselines 接受新基线。"
   ],
 
   "1.21.1-fabric": {
@@ -109,6 +115,55 @@
     "layers": ["1.21+", "official", "forge"],
     "unverified": ["loader_version", "java", "gradle"],
     "note": "没做，与 1.21.4-neoforge 同一个卡点：official 映射层的 1.21.4 API 差异还没接。工程目录建起来 CI 就会编；届时按实测定 loader_version / java / gradle 并清掉 unverified。"
+  },
+
+  "1.21.8-fabric": {
+    "minecraft": "1.21.8",
+    "loader": "Fabric",
+    "loader_version": "0.20.1",
+    "server_config_sync": true,
+    "mappings": "yarn",
+    "java": 21,
+    "gradle": "9.7.1",
+    "project": "platforms/1.21.8-fabric",
+    "buildable": true,
+    "layers": ["1.21+", "fabric"],
+    "overlay_base": "platforms/1.21.1-fabric",
+    "overlay_exclude": [
+      "src/main/java/com/atom/chat/render/SkiaGraphics.java",
+      "src/main/java/com/atom/chat/render/PanelBlurRenderer.java",
+      "src/main/java/com/atom/chat/render/ItemIconRenderer.java",
+      "src/main/java/com/atom/chat/render/GlStateMirror.java"
+    ],
+    "note": "1.21.5 起原版改为 GpuDevice/RenderPass 管线，渲染桥与 GL 状态镜像整份绑死在新 API 上，逐行补丁等于重写，所以走 overlay_exclude 由目标本地实现（类名与公开 API 与基础平台一致）；AtomChatScreen 的渲染调用点仍用补丁改，不整份复制。其余差异（API 适配、AtomChatScreen 渲染调用点、资源登记）共 20 个补丁，测试侧 1488 项 0 失败 0 错误 2 跳过。2026-10-24 用户在 Linux x64 实机确认功能正常，buildable 已打开。"
+  },
+  "1.21.8-neoforge": {
+    "minecraft": "1.21.8",
+    "loader": "NeoForge",
+    "loader_version": null,
+    "server_config_sync": true,
+    "mappings": "official",
+    "java": 21,
+    "gradle": "9.2.1",
+    "project": "platforms/1.21.8-neoforge",
+    "buildable": false,
+    "layers": ["1.21+", "official", "neoforge"],
+    "unverified": ["loader_version", "java", "gradle"],
+    "note": "没做，也先不做：与 1.21.8-fabric 同一套新渲染管线，先等 Fabric 侧把渲染桥与 API 差异走通。工程目录建起来 CI 就会编；届时按实测定 loader_version / java / gradle 并清掉 unverified。"
+  },
+  "1.21.8-forge": {
+    "minecraft": "1.21.8",
+    "loader": "Forge",
+    "loader_version": null,
+    "server_config_sync": true,
+    "mappings": "official",
+    "java": 21,
+    "gradle": "8.8",
+    "project": "platforms/1.21.8-forge",
+    "buildable": false,
+    "layers": ["1.21+", "official", "forge"],
+    "unverified": ["loader_version", "java", "gradle"],
+    "note": "没做：1.21.8 的 Forge 目标现在没有需求，且同样要等新增渲染管线在 Fabric 侧走通。此条目的意义是让「这个组合没做」在这里看得见。"
   },
 
   "1.21.1-forge": {

@@ -4,14 +4,15 @@
 //
 // 增量目标自己不放源码树，只放差异补丁：
 //   1. 把 overlay_base 平台的 src/main、src/test 复制到 build/generated/atomchatOverlay
+//      （targets.json 的 overlay_exclude 列出的文件不复制，由目标自己的工程目录提供）
 //   2. 按文件名顺序应用 patches/*.patch
 //   3. 把生成树接进 main / test 源集
 //
 // 上游对基础平台 src/ 的改动会直接流进来；一旦改到补丁上下文，git apply 失败并指名补丁，
 // 不会静默漏掉某个差异。build.gradle / gradle.properties 不参与复制，仍是各目标专有的，
 // 上游改依赖或打包配置时要手动同步。
-// overlay_base 是谁、是否合法由 versions/targets.json 声明、tools/verify_targets.py 校验，
-// 本脚本不含目标名硬编码。
+// overlay_base 是谁、是否合法、overlay_exclude 的路径是否存在，由 versions/targets.json
+// 声明、tools/verify_targets.py 校验，本脚本不含目标名硬编码，也不维护第二份判据。
 //
 // 补丁格式：git diff --no-index --src-prefix= --dst-prefix= a/<rel> b/<rel>，
 // 在生成树根目录按默认 -p1 应用。
@@ -28,6 +29,7 @@ if (!overlayBaseDir.isDirectory()) {
 }
 
 def overlayBaseLabel = project.relativePath(overlayBaseDir)
+def overlayExclude = (project.ext.atomchatTarget?.get('overlay_exclude') ?: []) as List
 def patchFiles = project.fileTree('patches') { include '*.patch' }.files.sort { it.name }
 if (patchFiles.isEmpty()) {
     throw new GradleException(
@@ -35,6 +37,7 @@ if (patchFiles.isEmpty()) {
         "增量目标至少要有一个差异补丁；没有差异就不该是增量目标")
 }
 
+def overlayExcludeLabels = overlayExclude.collect { it.toString() }
 def overlayDir = project.layout.buildDirectory.dir('generated/atomchatOverlay')
 def atomchatOverlay = project.tasks.register('atomchatOverlay', Sync) {
     group = 'atomchat'
@@ -44,12 +47,19 @@ def atomchatOverlay = project.tasks.register('atomchatOverlay', Sync) {
         include 'src/main/resources/**'
         include 'src/test/java/**'
         include 'src/test/resources/**'
+        if (!overlayExclude.isEmpty()) {
+            exclude overlayExclude
+        }
     }
     into(overlayDir)
     inputs.files(patchFiles)
     outputs.upToDateWhen { false }
     doLast {
         def root = overlayDir.get().asFile
+        if (!overlayExcludeLabels.isEmpty()) {
+            logger.lifecycle("overlay_exclude：${overlayExcludeLabels.size()} 个基础文件未复制，" +
+                    "由目标本地实现：${overlayExcludeLabels.join(', ')}")
+        }
         patchFiles.each { patch ->
             def pb = new ProcessBuilder('git', 'apply', '--whitespace=nowarn', patch.absolutePath)
             pb.directory(root)

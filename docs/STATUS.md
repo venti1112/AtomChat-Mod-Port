@@ -91,6 +91,14 @@
 - 1.21.4 NeoForge / Forge 仍缺 official 映射层的 1.21.4 API 差异，矩阵中保持 `buildable: false`。
 - 上游 0.4.0-preview 已合并入本分支，增量补丁随之上推：新增 `ItemIconRenderer` / `ItemIconModelView` 两个补丁适配 `ProjectionType`、按绘制上传矩阵的 `RenderSystem`，测试侧补上基础平台的 package-access agent。合并后 Fabric 1.21.4 跑满 1488 项测试（0 失败/错误，2 项原有跳过），三包产物断言通过。
 
+## 1.21.8 Fabric 增量移植
+
+- 新增 `platforms/1.21.8-fabric` 增量目标：`overlay_base` 为 `platforms/1.21.1-fabric`，目录里只有 20 个差异补丁；工具链 Gradle 9.7.1 / Loom 1.17.21 / Loader 0.20.1 / Yarn 1.21.8+build.1 / Fabric API 0.136.1+1.21.8 / Java 21。
+- 1.21.5 起 GUI 改为 `DrawContext.state` 的批处理管线，渲染桥无法逐行打补丁，因此新增 `overlay_exclude`：`SkiaGraphics`、`PanelBlurRenderer`、`ItemIconRenderer`、`GlStateMirror` 四个文件不进 overlay，由目标本地实现并保持与基础平台一致的公开 API；基线哈希记在 `versions/overlay-baselines.json`，上游改动会由校验工具报出。
+- `SkiaGraphics` 改为离屏 RGBA8 纹理绘制，再以 `TexturedQuadGuiElementRenderState` 合成；`GlStateUtil` 的原始 GL 调用会清空 `GlCommandEncoder` 的管线/程序缓存（accessor mixin），`GlStateMirror` 按 1.21.8 的 12 个纹理单元镜像缓存状态。
+- `test build` 通过：1488 项测试 0 失败/错误、2 项原有跳过；`verify_targets.py` 与 seams 校验通过。产物默认 windows-x64，Linux 实机用 `-Patomchat.nativePlatform=linux-x64` 运行。
+- 2026-10-24 用户在 Linux x64 实机确认功能正常，矩阵中 `buildable` 已打开。1.21.8 NeoForge / Forge 仍受 official 映射层 1.21.8 API 差异阻塞，保持 `buildable: false`。
+
 ## 历史基线：0.4.0-preview 实时模糊与四组目录
 
 - HUD 与面板横幅保留原有不透明浮动通知材质、下落动画和共享队列；仅修复跳转图标的强调色对比色。

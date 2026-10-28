@@ -1,0 +1,15 @@
+{
+  "_comment": [
+    "【overlay_exclude 的上游基线】记录每个增量目标排除掉的基础平台文件，是以哪一版内容为基准写的本地实现。",
+    "路径相对基础平台的工程根（与补丁里的 src/... 同形），哈希是内容 sha1（比较前折叠行尾）。",
+    "基础平台一改，tools/verify_targets.py 就失败：先人工确认目标本地实现仍然对得上，再跑",
+    "python3 tools/verify_targets.py --update-overlay-baselines 接受新基线。",
+    "不要手改这个文件 —— 它由 --update-overlay-baselines 生成。"
+  ],
+  "1.21.8-fabric": {
+    "src/main/java/com/atom/chat/render/GlStateMirror.java": "17f440412ab2bee5a974056daad3970e27df3fc9",
+    "src/main/java/com/atom/chat/render/ItemIconRenderer.java": "3bb0de33f6b6ec5496568e70ac14d7d3db0e5dd4",
+    "src/main/java/com/atom/chat/render/PanelBlurRenderer.java": "b143c22acc5ebf0d935c92bcafeafd995763cd28",
+    "src/main/java/com/atom/chat/render/SkiaGraphics.java": "9ed86c11d8e55a1676dece71e5a1ca9f53e22fa8"
+  }
+}

@@ -1,6 +1,5 @@
 package com.atom.chat.render;
 
-import com.mojang.blaze3d.platform.GlStateManager;
 import org.lwjgl.opengl.GL11C;
 import org.lwjgl.opengl.GL13C;
 import org.lwjgl.opengl.GL14C;
@@ -19,7 +18,7 @@ import java.nio.IntBuffer;
  * Ported from the Tuui mod's GlStateUtil (Kotlin -> Java).
  *
  * <p>Every value is written straight to the driver <em>and</em> mirrored through
- * {@link GlStateManager}, because Blaze3D keeps process-wide caches for blend /
+ * {@link GlStateMirror}, because Blaze3D keeps process-wide caches for blend /
  * depth / cull / scissor / colour mask / active texture unit / per-unit texture
  * bindings and its setters are cache-gated: an equal cached value means no
  * driver call at all. Skia and the raw-GL blur pass move the driver behind that
@@ -55,13 +54,13 @@ public final class GlStateUtil {
     /**
      * Mirrors the active texture unit into Blaze3D's cache. The setter is
      * cache-gated and its per-unit binding array only covers the first
-     * {@link GlStateManager#TEXTURE_COUNT} units, so an out-of-range unit is left
+     * {@link GlStateMirror#textureCount()} units, so an out-of-range unit is left
      * to the raw GL writes rather than parked in the cache, where a later
      * {@code _bindTexture} would index past the array.
      */
     private static void mirrorActiveTexture(int texture) {
-        if (texture >= GL13C.GL_TEXTURE0 && texture < GL13C.GL_TEXTURE0 + GlStateManager.TEXTURE_COUNT) {
-            GlStateManager._activeTexture(texture);
+        if (texture >= GL13C.GL_TEXTURE0 && texture < GL13C.GL_TEXTURE0 + GlStateMirror.textureCount()) {
+            GlStateMirror.activeTexture(texture);
         }
     }
 
@@ -170,32 +169,32 @@ public final class GlStateUtil {
 
             if (blendEnabled) {
                 GL11C.glEnable(GL11C.GL_BLEND);
-                GlStateManager._enableBlend();
+                GlStateMirror.enableBlend();
             } else {
                 GL11C.glDisable(GL11C.GL_BLEND);
-                GlStateManager._disableBlend();
+                GlStateMirror.disableBlend();
             }
             GL14C.glBlendFuncSeparate(blendSrcRgb, blendDstRgb, blendSrcAlpha, blendDstAlpha);
-            GlStateManager._blendFuncSeparate(blendSrcRgb, blendDstRgb, blendSrcAlpha, blendDstAlpha);
+            GlStateMirror.blendFuncSeparate(blendSrcRgb, blendDstRgb, blendSrcAlpha, blendDstAlpha);
 
             if (depthTestEnabled) {
                 GL11C.glEnable(GL11C.GL_DEPTH_TEST);
-                GlStateManager._enableDepthTest();
+                GlStateMirror.enableDepthTest();
             } else {
                 GL11C.glDisable(GL11C.GL_DEPTH_TEST);
-                GlStateManager._disableDepthTest();
+                GlStateMirror.disableDepthTest();
             }
             GL11C.glDepthMask(depthMask);
-            GlStateManager._depthMask(depthMask);
+            GlStateMirror.depthMask(depthMask);
             GL11C.glDepthFunc(depthFunc);
-            GlStateManager._depthFunc(depthFunc);
+            GlStateMirror.depthFunc(depthFunc);
 
             if (cullEnabled) {
                 GL11C.glEnable(GL11C.GL_CULL_FACE);
-                GlStateManager._enableCull();
+                GlStateMirror.enableCull();
             } else {
                 GL11C.glDisable(GL11C.GL_CULL_FACE);
-                GlStateManager._disableCull();
+                GlStateMirror.disableCull();
             }
             // 1.20.1 exposes no cached setter for the cull *mode* (GlStateManager
             // only tracks the capability), so the raw call is the full restore.
@@ -205,7 +204,7 @@ public final class GlStateUtil {
             // while the driver usually exposes 32, so the units past that get the
             // raw write only: mirroring them would walk its binding array out of
             // bounds on the next _bindTexture.
-            int mirroredUnits = Math.min(textureBindings2D.length, GlStateManager.TEXTURE_COUNT);
+            int mirroredUnits = Math.min(textureBindings2D.length, GlStateMirror.textureCount());
             for (int i = 0; i < textureBindings2D.length; i++) {
                 GL13C.glActiveTexture(GL13C.GL_TEXTURE0 + i);
                 GL11C.glBindTexture(GL11C.GL_TEXTURE_2D, textureBindings2D[i]);
@@ -214,8 +213,8 @@ public final class GlStateUtil {
                     // Re-point the caches at what the driver now holds. The unit
                     // has to be mirrored before the binding: _bindTexture indexes
                     // TEXTURES[] by the cached active unit.
-                    GlStateManager._activeTexture(GL13C.GL_TEXTURE0 + i);
-                    GlStateManager._bindTexture(textureBindings2D[i]);
+                    GlStateMirror.activeTexture(GL13C.GL_TEXTURE0 + i);
+                    GlStateMirror.bindTexture(textureBindings2D[i]);
                 }
             }
             GL13C.glActiveTexture(activeTexture);
@@ -224,7 +223,7 @@ public final class GlStateUtil {
             GL20C.glUseProgram(program);
             GL30C.glBindVertexArray(vaoBinding);
             GL11C.glColorMask(colorMaskR, colorMaskG, colorMaskB, colorMaskA);
-            GlStateManager._colorMask(colorMaskR, colorMaskG, colorMaskB, colorMaskA);
+            GlStateMirror.colorMask(colorMaskR, colorMaskG, colorMaskB, colorMaskA);
             GL11C.glPixelStorei(GL11C.GL_UNPACK_ALIGNMENT, unpackAlignment);
             GL11C.glPixelStorei(GL11C.GL_UNPACK_ROW_LENGTH, unpackRowLength);
             GL11C.glPixelStorei(GL11C.GL_UNPACK_SKIP_PIXELS, unpackSkipPixels);
@@ -233,27 +232,30 @@ public final class GlStateUtil {
 
             if (scissorTestEnabled) {
                 GL11C.glEnable(GL11C.GL_SCISSOR_TEST);
-                GlStateManager._enableScissorTest();
+                GlStateMirror.enableScissorTest();
             } else {
                 GL11C.glDisable(GL11C.GL_SCISSOR_TEST);
-                GlStateManager._disableScissorTest();
+                GlStateMirror.disableScissorTest();
             }
             GL11C.glScissor(scissorBox[0], scissorBox[1], scissorBox[2], scissorBox[3]);
 
-            GlStateManager._glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, framebuffer);
-            GlStateManager._glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, readFramebuffer);
-            GlStateManager._viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
+            GlStateMirror.bindDrawFramebuffer(framebuffer);
+            GlStateMirror.bindReadFramebuffer(readFramebuffer);
+            GlStateMirror.viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 
             GL20C.glBlendEquationSeparate(blendEquationRgb, blendEquationAlpha);
             // Same rule as the texture units below: Blaze3D's setter takes one
             // mode for both channels, so mirroring a split equation would plant a
             // value that is wrong for one of them.
             if (blendEquationRgb == blendEquationAlpha) {
-                GlStateManager._blendEquation(blendEquationRgb);
+                GlStateMirror.blendEquation(blendEquationRgb);
             }
             GL14C.glBlendColor(blendColor[0], blendColor[1], blendColor[2], blendColor[3]);
             GL11C.glFrontFace(frontFace);
             stencil.restore();
+            // Raw GL moved the program behind Blaze3D's command encoder; on
+            // 1.21.8 its cached program/pipeline must be dropped (no-op before).
+            GlStateMirror.afterRawGl();
         }
 
         static State capture() {
@@ -394,13 +396,13 @@ public final class GlStateUtil {
             GL20C.glStencilMaskSeparate(GL11C.GL_FRONT, writeMaskFront);
             GL20C.glStencilMaskSeparate(GL11C.GL_BACK, writeMaskBack);
             if (funcFront == funcBack && refFront == refBack && valueMaskFront == valueMaskBack) {
-                GlStateManager._stencilFunc(funcFront, refFront, valueMaskFront);
+                GlStateMirror.stencilFunc(funcFront, refFront, valueMaskFront);
             }
             if (sfailFront == sfailBack && dpfailFront == dpfailBack && dppassFront == dppassBack) {
-                GlStateManager._stencilOp(sfailFront, dpfailFront, dppassFront);
+                GlStateMirror.stencilOp(sfailFront, dpfailFront, dppassFront);
             }
             if (writeMaskFront == writeMaskBack) {
-                GlStateManager._stencilMask(writeMaskFront);
+                GlStateMirror.stencilMask(writeMaskFront);
             }
         }
 

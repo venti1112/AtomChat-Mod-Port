@@ -1,0 +1,15 @@
+diff --git a/src/main/java/com/atom/chat/notification/NotificationHudEditorScreen.java b/src/main/java/com/atom/chat/notification/NotificationHudEditorScreen.java
+index 9c6b3db..ed1616c 100644
+--- a/src/main/java/com/atom/chat/notification/NotificationHudEditorScreen.java
++++ b/src/main/java/com/atom/chat/notification/NotificationHudEditorScreen.java
+@@ -18,8 +18,8 @@ public final class NotificationHudEditorScreen extends Screen {
+     private float vx(double x) { return ScreenMetrics.toVirtualX(client.getWindow(),x); }
+     private float vy(double y) { return ScreenMetrics.toVirtualY(client.getWindow(),y); }
+     @Override public void render(DrawContext gui,int mx,int my,float delta) {
+-        gui.draw(); graphics.checkFrameBufferId();
+-        graphics.draw(null,ScreenMetrics.uiDensity(client.getWindow()),
++        graphics.checkFrameBufferId();
++        graphics.draw(gui, null,ScreenMetrics.uiDensity(client.getWindow()),
+                 (canvas,snapshot)->editor.render(canvas,vx(width),vy(height),vx(mx),vy(my)));
+     }
+     @Override public boolean mouseClicked(double x,double y,int button) {

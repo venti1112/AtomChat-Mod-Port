@@ -11,8 +11,8 @@ class NotificationRenderWiringTest {
         String s = Files.readString(root().resolve("shared/src/main/java/com/atom/chat/render/GlStateUtil.java"));
         assertTrue(s.contains("GL_READ_FRAMEBUFFER_BINDING"));
         assertTrue(s.contains("GL_DRAW_FRAMEBUFFER_BINDING"));
-        assertTrue(s.contains("_glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, readFramebuffer)"));
-        assertTrue(s.contains("_glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, framebuffer)"));
+        assertTrue(s.contains("GlStateMirror.bindReadFramebuffer(readFramebuffer)"));
+        assertTrue(s.contains("GlStateMirror.bindDrawFramebuffer(framebuffer)"));
     }
     private Path root() {
         Path p = Path.of("").toAbsolutePath();
