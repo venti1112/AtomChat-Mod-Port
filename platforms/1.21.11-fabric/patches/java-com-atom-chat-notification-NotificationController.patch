@@ -1,0 +1,40 @@
+diff --git a/src/main/java/com/atom/chat/notification/NotificationController.java b/src/main/java/com/atom/chat/notification/NotificationController.java
+index c1eb4db..0a5b7bd 100644
+--- a/src/main/java/com/atom/chat/notification/NotificationController.java
++++ b/src/main/java/com/atom/chat/notification/NotificationController.java
+@@ -41,7 +41,7 @@ public final class NotificationController {
+      */
+     public static void registerSound() {
+         Registry.register(Registries.SOUND_EVENT,
+-                NOTIFICATION_SOUND.getId(), NOTIFICATION_SOUND);
++                NOTIFICATION_SOUND.id(), NOTIFICATION_SOUND);
+     }
+ 
+     /** Plays the cue directly, bypassing the gate — the settings "test sound" card. */
+@@ -56,7 +56,7 @@ public final class NotificationController {
+         // the second float is pitch and the third is volume. Passing notifyVolume
+         // as the second float made the slider change pitch at full volume.
+         debug("playTestSound volume=" + volume);
+-        client.getSoundManager().play(PositionedSoundInstance.master(NOTIFICATION_SOUND, 1.0F, volume));
++        client.getSoundManager().play(PositionedSoundInstance.ui(NOTIFICATION_SOUND, 1.0F, volume));
+     }
+ 
+     /**
+@@ -74,7 +74,7 @@ public final class NotificationController {
+         }
+         float volume = com.atom.chat.audio.FeedbackSoundPolicy.volume(AtomChatConfig.get().notificationSoundEnabled, true, AtomChatConfig.get().notifyVolume);
+         if (volume <= 0) return;
+-        client.getSoundManager().play(PositionedSoundInstance.master(NOTIFICATION_SOUND, 1.25F, volume));
++        client.getSoundManager().play(PositionedSoundInstance.ui(NOTIFICATION_SOUND, 1.25F, volume));
+     }
+ 
+     public static void onMention(ChatMessage message) {
+@@ -167,7 +167,7 @@ public final class NotificationController {
+         debug("playSound playing type=" + type + " volume=" + volume);
+         // PositionedSoundInstance.master(SoundEvent, pitch, volume) — see
+         // playTestSound() for the same parameter-order note.
+-        client.getSoundManager().play(PositionedSoundInstance.master(NOTIFICATION_SOUND, 1.0F, volume));
++        client.getSoundManager().play(PositionedSoundInstance.ui(NOTIFICATION_SOUND, 1.0F, volume));
+     }
+ 
+     /** Debug-only diagnostics; silent unless the About-page debug switch is on. */

@@ -1,0 +1,35 @@
+diff --git a/src/main/java/net/minecraft/client/gui/screen/SuggestorWiring.java b/src/main/java/net/minecraft/client/gui/screen/SuggestorWiring.java
+index 3e3145c..a2b6624 100644
+--- a/src/main/java/net/minecraft/client/gui/screen/SuggestorWiring.java
++++ b/src/main/java/net/minecraft/client/gui/screen/SuggestorWiring.java
+@@ -6,8 +6,11 @@ import com.atom.chat.ui.UiLayout;
+ import com.atom.chat.ui.UiTokens;
+ import net.minecraft.client.MinecraftClient;
+ import net.minecraft.client.font.TextRenderer;
++import net.minecraft.client.gui.Click;
+ import net.minecraft.client.gui.DrawContext;
+ import net.minecraft.client.gui.widget.TextFieldWidget;
++import net.minecraft.client.input.KeyInput;
++import net.minecraft.client.input.MouseInput;
+ 
+ /**
+  * The command/mention suggestion popup (D8): the anchored suggestor itself, the
+@@ -123,7 +126,8 @@ public final class SuggestorWiring {
+      * click-through). Returns whether the popup consumed the click.
+      */
+     public boolean mouseClicked(int mouseX, int mouseY, int button) {
+-        return chatInputSuggestor != null && chatInputSuggestor.mouseClicked(mouseX, mouseY, button);
++        return chatInputSuggestor != null
++                && chatInputSuggestor.mouseClicked(new Click(mouseX, mouseY, new MouseInput(button, 0)));
+     }
+ 
+     /** Actual GUI-space popup bounds; paint and foreign-widget input share this layer order. */
+@@ -143,6 +147,7 @@ public final class SuggestorWiring {
+ 
+     /** Vanilla suggestion layer gets first pick (Tab/arrows over the popup). */
+     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+-        return chatInputSuggestor != null && chatInputSuggestor.keyPressed(keyCode, scanCode, modifiers);
++        return chatInputSuggestor != null
++                && chatInputSuggestor.keyPressed(new KeyInput(keyCode, scanCode, modifiers));
+     }
+ }

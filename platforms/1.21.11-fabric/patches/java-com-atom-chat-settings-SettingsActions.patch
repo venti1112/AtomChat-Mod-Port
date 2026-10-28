@@ -1,0 +1,31 @@
+diff --git a/src/main/java/com/atom/chat/settings/SettingsActions.java b/src/main/java/com/atom/chat/settings/SettingsActions.java
+index b64e7f2..4849ed0 100644
+--- a/src/main/java/com/atom/chat/settings/SettingsActions.java
++++ b/src/main/java/com/atom/chat/settings/SettingsActions.java
+@@ -283,7 +283,7 @@ public final class SettingsActions {
+     public void pickWallpaperFile() {
+         KeyBinding.unpressAll();
+         if (host.client().mouse != null) {
+-            ((MouseHandlerAccessor) host.client().mouse).atomchat$setActiveButton(0);
++            ((MouseHandlerAccessor) host.client().mouse).atomchat$setActiveButton(null);
+         }
+         Thread worker = new Thread(() -> {
+             Path file = FilePicker.pickImage(host.dialogs()::suppressAutoIconify,
+@@ -306,7 +306,7 @@ public final class SettingsActions {
+     public void pickAvatarFile() {
+         KeyBinding.unpressAll();
+         if (host.client().mouse != null) {
+-            ((MouseHandlerAccessor) host.client().mouse).atomchat$setActiveButton(0);
++            ((MouseHandlerAccessor) host.client().mouse).atomchat$setActiveButton(null);
+         }
+         Thread worker = new Thread(() -> {
+             Path file = FilePicker.pickImage(host.dialogs()::suppressAutoIconify,
+@@ -333,7 +333,7 @@ public final class SettingsActions {
+     public void pickBannerFile() {
+         KeyBinding.unpressAll();
+         if (host.client().mouse != null) {
+-            ((MouseHandlerAccessor) host.client().mouse).atomchat$setActiveButton(0);
++            ((MouseHandlerAccessor) host.client().mouse).atomchat$setActiveButton(null);
+         }
+         Thread worker = new Thread(() -> {
+             Path file = FilePicker.pickImage(host.dialogs()::suppressAutoIconify,

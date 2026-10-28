@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/atom/chat/image/AvatarRenderer.java b/src/main/java/com/atom/chat/image/AvatarRenderer.java
+index 69a628d..da164b6 100644
+--- a/src/main/java/com/atom/chat/image/AvatarRenderer.java
++++ b/src/main/java/com/atom/chat/image/AvatarRenderer.java
+@@ -13,6 +13,7 @@ import io.github.humbleui.skija.Image;
+ import net.fabricmc.loader.api.FabricLoader;
+ import net.minecraft.client.MinecraftClient;
+ import net.minecraft.client.texture.AbstractTexture;
++import net.minecraft.client.texture.GlTexture;
+ import net.minecraft.client.texture.NativeImage;
+ import net.minecraft.util.Identifier;
+ 
+@@ -88,7 +89,10 @@ public final class AvatarRenderer {
+         try {
+             MinecraftClient client = MinecraftClient.getInstance();
+             AbstractTexture texture = client.getTextureManager().getTexture(skin);
+-            int glId = texture.getGlId();
++            if (!(texture.getGlTexture() instanceof GlTexture glTexture)) {
++                return null;
++            }
++            int glId = glTexture.getGlId();
+ 
+             ByteBuffer buf = ByteBuffer.allocateDirect(SKIN_SIZE * SKIN_SIZE * 4);
+             int previous = GL11C.glGetInteger(GL11C.GL_TEXTURE_BINDING_2D);

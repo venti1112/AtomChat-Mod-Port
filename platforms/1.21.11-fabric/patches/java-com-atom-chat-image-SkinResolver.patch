@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/atom/chat/image/SkinResolver.java b/src/main/java/com/atom/chat/image/SkinResolver.java
+index dfc7af7..5baa2d3 100644
+--- a/src/main/java/com/atom/chat/image/SkinResolver.java
++++ b/src/main/java/com/atom/chat/image/SkinResolver.java
+@@ -7,7 +7,6 @@ import java.util.UUID;
+ import net.minecraft.client.MinecraftClient;
+ import net.minecraft.client.network.PlayerListEntry;
+ import net.minecraft.client.util.DefaultSkinHelper;
+-import net.minecraft.client.util.SkinTextures;
+ import net.minecraft.util.Identifier;
+ 
+ import com.mojang.authlib.GameProfile;
+@@ -69,7 +68,7 @@ public final class SkinResolver {
+         if (client != null && client.getNetworkHandler() != null && uuid != null && !uuid.equals(NIL_UUID)) {
+             PlayerListEntry info = client.getNetworkHandler().getPlayerListEntry(uuid);
+             if (info != null) {
+-                Identifier tex = info.getSkinTextures().texture();
++                Identifier tex = info.getSkinTextures().body().texturePath();
+                 rememberSkin(uuid, name, tex);
+                 return tex;
+             }
+@@ -98,7 +97,7 @@ public final class SkinResolver {
+             try {
+                 GameProfile profile = new GameProfile(
+                         uuid != null && !uuid.equals(NIL_UUID) ? uuid : NIL_UUID, name);
+-                return client.getSkinProvider().getSkinTextures(profile).texture();
++                return client.getSkinProvider().supplySkinTextures(profile, false).get().body().texturePath();
+             } catch (Exception ignored) {
+             }
+         }

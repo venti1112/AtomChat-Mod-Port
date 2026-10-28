@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/atom/chat/net/MediaCompanionServer.java b/src/main/java/com/atom/chat/net/MediaCompanionServer.java
+index 7b81df8..fed1e0a 100644
+--- a/src/main/java/com/atom/chat/net/MediaCompanionServer.java
++++ b/src/main/java/com/atom/chat/net/MediaCompanionServer.java
+@@ -123,7 +123,7 @@ public final class MediaCompanionServer {
+             return;
+         }
+         byte[] content = pending.buffer.bytes();
+-        var server = player.getServer();
++        var server = player.getEntityWorld().getServer();
+         if (server == null) {
+             return;
+         }
+@@ -164,7 +164,7 @@ public final class MediaCompanionServer {
+             missing(player, mediaId);
+             return;
+         }
+-        var server = player.getServer();
++        var server = player.getEntityWorld().getServer();
+         if (server == null) {
+             return;
+         }

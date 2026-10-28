@@ -166,6 +166,55 @@
     "note": "没做：1.21.8 的 Forge 目标现在没有需求，且同样要等新增渲染管线在 Fabric 侧走通。此条目的意义是让「这个组合没做」在这里看得见。"
   },
 
+  "1.21.11-fabric": {
+    "minecraft": "1.21.11",
+    "loader": "Fabric",
+    "loader_version": "0.20.1",
+    "server_config_sync": true,
+    "mappings": "yarn",
+    "java": 21,
+    "gradle": "9.8.2",
+    "project": "platforms/1.21.11-fabric",
+    "buildable": true,
+    "layers": ["1.21+", "fabric"],
+    "overlay_base": "platforms/1.21.1-fabric",
+    "overlay_exclude": [
+      "src/main/java/com/atom/chat/render/SkiaGraphics.java",
+      "src/main/java/com/atom/chat/render/PanelBlurRenderer.java",
+      "src/main/java/com/atom/chat/render/ItemIconRenderer.java",
+      "src/main/java/com/atom/chat/render/GlStateMirror.java"
+    ],
+    "note": "1.21.11 节点：延续 1.21.8 的增量结构，4 个渲染桥文件继续 overlay_exclude 由目标本地实现。工具链 Gradle 9.8.2 / Loom 1.17.21（1.18 起要求 JVM 25）/ Yarn 1.21.11+build.6 / Fabric API 0.141.6+1.21.11 / Loader 0.20.1。1.21.11 把输入回调换成 Click/KeyInput/CharInput 记录、GameProfile 改成 record、聊天 HUD 的点击命中测试并入渲染流程，补丁相应调整：共 43 个——1.21.8 的 20 个里 5 个随 API 变更重生成，另新增 23 个。compileJava / compileTestJava、1488 项测试 0 失败 0 错误 2 跳过、test build 均通过。2026-10-28 用户在 Linux x64 实机确认功能正常，buildable 已打开。"
+  },
+  "1.21.11-neoforge": {
+    "minecraft": "1.21.11",
+    "loader": "NeoForge",
+    "loader_version": null,
+    "server_config_sync": true,
+    "mappings": "official",
+    "java": 21,
+    "gradle": "9.2.1",
+    "project": "platforms/1.21.11-neoforge",
+    "buildable": false,
+    "layers": ["1.21+", "official", "neoforge"],
+    "unverified": ["loader_version", "java", "gradle"],
+    "note": "没做，也先不做：1.21.9 起的新渲染管线与 official 映射层差异要先在 Fabric 侧走通。NeoForge 1.21.11 线为 21.11.x。工程目录建起来 CI 就会编；届时按实测定 loader_version / java / gradle 并清掉 unverified。"
+  },
+  "1.21.11-forge": {
+    "minecraft": "1.21.11",
+    "loader": "Forge",
+    "loader_version": null,
+    "server_config_sync": true,
+    "mappings": "official",
+    "java": 21,
+    "gradle": "8.8",
+    "project": "platforms/1.21.11-forge",
+    "buildable": false,
+    "layers": ["1.21+", "official", "forge"],
+    "unverified": ["loader_version", "java", "gradle"],
+    "note": "没做：Forge 1.21.11 线存在（61.2.x），但当前没有需求，且 official 映射层的 1.21.9+ API 差异未接。此条目的意义是让「这个组合没做」在这里看得见。"
+  },
+
   "1.21.1-forge": {
     "minecraft": "1.21.1",
     "loader": "Forge",

@@ -99,6 +99,14 @@
 - `test build` 通过：1488 项测试 0 失败/错误、2 项原有跳过；`verify_targets.py` 与 seams 校验通过。产物默认 windows-x64，Linux 实机用 `-Patomchat.nativePlatform=linux-x64` 运行。
 - 2026-10-24 用户在 Linux x64 实机确认功能正常，矩阵中 `buildable` 已打开。1.21.8 NeoForge / Forge 仍受 official 映射层 1.21.8 API 差异阻塞，保持 `buildable: false`。
 
+## 1.21.11 Fabric 增量移植
+
+- 新增 `platforms/1.21.11-fabric` 增量目标：`overlay_base` 同为 `platforms/1.21.1-fabric`，4 个渲染桥文件继续 `overlay_exclude`；工具链 Gradle 9.8.2 / Loom 1.17.21（1.18 起要求 JVM 25）/ Loader 0.20.1 / Yarn 1.21.11+build.6 / Fabric API 0.141.6+1.21.11 / Java 21。共 43 个补丁：1.21.8 的 20 个沿用（其中 5 个随 1.21.11 API 重生成），另新增 23 个。
+- 输入与聊天 API 变动最大：`Element` 的鼠标/键盘回调换成 `Click` / `KeyInput` / `CharInput` 记录，`GameProfile` 改为 record，皮肤走 `PlayerSkinProvider.supplySkinTextures`，权限改为 `Permission.Level`，按键分类由 `KeyBinding.Category` 承载（语言键随之新增）；聊天 HUD 的点击命中测试并入渲染流程，`getTextStyleAt` / `mouseClicked` 不再存在，隐藏历史行的静音补丁改挂到 `ChatHud.render(DrawnTextConsumer,…)`，`Mouse.activeButton` 由 int 改为可空的 `MouseInput`（清理即置 null）。
+- 物品图标改为 `ItemRenderState.render` + `RenderDispatcher` 回放，特殊模型（头颅、潜影盒）同样落到离屏纹理；`GpuTexture.setTextureFilter` 移除后按 `GpuSampler` 走 `TextureSetup.of`。
+- `compileJava` / `compileTestJava`、`test build` 均通过：1488 项测试 0 失败/错误、2 项原有跳过；`verify_targets.py`、seams 校验通过，基线已登记。
+- 2026-10-28 用户在 Linux x64 实机确认功能正常（面板、模糊、表情、物品图标、通知与图片上传），矩阵中 `buildable` 已打开。1.21.11 NeoForge / Forge 仍受 official 映射层 1.21.9+ 渲染 API 差异阻塞，保持 `buildable: false`。
+
 ## 历史基线：0.4.0-preview 实时模糊与四组目录
 
 - HUD 与面板横幅保留原有不透明浮动通知材质、下落动画和共享队列；仅修复跳转图标的强调色对比色。

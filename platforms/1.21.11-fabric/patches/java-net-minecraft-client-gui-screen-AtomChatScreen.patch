@@ -1,0 +1,288 @@
+diff --git a/src/main/java/net/minecraft/client/gui/screen/AtomChatScreen.java b/src/main/java/net/minecraft/client/gui/screen/AtomChatScreen.java
+index bf1ab8e..01d710c 100644
+--- a/src/main/java/net/minecraft/client/gui/screen/AtomChatScreen.java
++++ b/src/main/java/net/minecraft/client/gui/screen/AtomChatScreen.java
+@@ -102,10 +102,17 @@ import io.github.humbleui.types.Rect;
+ import io.github.humbleui.types.RRect;
+ import io.github.humbleui.skija.SamplingMode;
+ import net.minecraft.client.MinecraftClient;
++import net.minecraft.client.gui.Click;
+ import net.minecraft.client.gui.DrawContext;
+ import net.minecraft.client.gui.widget.TextFieldWidget;
++import net.minecraft.client.input.CharInput;
++import net.minecraft.client.input.KeyInput;
++import net.minecraft.client.input.MouseInput;
+ import net.minecraft.client.network.PlayerListEntry;
+ import net.minecraft.client.option.KeyBinding;
++import net.minecraft.command.permission.Permission;
++import net.minecraft.command.permission.PermissionLevel;
++import net.minecraft.text.ClickEvent;
+ import net.minecraft.text.Style;
+ import net.minecraft.text.Text;
+ import net.minecraft.util.Identifier;
+@@ -366,7 +373,8 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+ 
+         @Override
+         public boolean localPlayerHasPermissions(int level) {
+-            return client.player.hasPermissionLevel(level);
++            return client.player.getPermissions()
++                    .hasPermission(new Permission.Level(PermissionLevel.fromLevel(level)));
+         }
+ 
+         @Override
+@@ -581,8 +589,9 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+                 boolean covered = available && suggestorWiring.hovered(x, y);
+                 if (!available) return false;
+                 if (covered) return suggestorWiring.mouseClicked((int) x, (int) y, button);
++                Click click = new Click(x, y, new MouseInput(button, 0));
+                 for (var child : children()) {
+-                    if (child != chatField && child.isMouseOver(x, y) && child.mouseClicked(x, y, button)) {
++                    if (child != chatField && child.isMouseOver(x, y) && child.mouseClicked(click, false)) {
+                         setFocused(child);
+                         foreignPointerHeld = true;
+                         foreignPointerButton = button;
+@@ -600,8 +609,9 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+             }
+             @Override public boolean onDrag(double x, double y, int button, double dx, double dy) {
+                 if (!foreignPointerHeld || button != foreignPointerButton) return false;
++                Click click = new Click(x, y, new MouseInput(button, 0));
+                 for (var child : children()) {
+-                    if (child != chatField) child.mouseDragged(x, y, button, dx, dy);
++                    if (child != chatField) child.mouseDragged(click, dx, dy);
+                 }
+                 return true;
+             }
+@@ -609,8 +619,9 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+                 if (!foreignPointerHeld || button != foreignPointerButton) return false;
+                 foreignPointerHeld = false;
+                 foreignPointerButton = -1;
++                Click click = new Click(x, y, new MouseInput(button, 0));
+                 for (var child : children()) {
+-                    if (child != chatField) child.mouseReleased(x, y, button);
++                    if (child != chatField) child.mouseReleased(click);
+                 }
+                 return true;
+             }
+@@ -1279,8 +1290,8 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+             }
+             java.util.List<ContextMenuActions.OnlinePlayer> out = new java.util.ArrayList<>();
+             for (PlayerListEntry entry : client.getNetworkHandler().getPlayerList()) {
+-                out.add(ContextMenuActions.OnlinePlayer.of(entry.getProfile().getId(),
+-                        entry.getProfile().getName()));
++                out.add(ContextMenuActions.OnlinePlayer.of(entry.getProfile().id(),
++                        entry.getProfile().name()));
+             }
+             return out;
+         }
+@@ -1555,7 +1566,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+     }
+ 
+     public AtomChatScreen(String originalChatText, AtomChatOpenMode mode) {
+-        super(originalChatText);
++        super(originalChatText, false);
+         this.originalChatText = originalChatText;
+         // Screen objects are constructed fresh on every open (init() re-runs on
+         // resize), so this is the right hook for picking up hand-edited config
+@@ -1614,7 +1625,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+     }
+ 
+     private boolean isVanillaChatKey(int keyCode, int scanCode) {
+-        return client != null && client.options.chatKey.matchesKey(keyCode, scanCode);
++        return client != null && client.options.chatKey.matchesKey(new KeyInput(keyCode, scanCode, 0));
+     }
+ 
+     /** Filter button: the back button's recipe, one slot to its right. */
+@@ -1956,11 +1967,9 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+             this.client.setScreen(null);
+             return;
+         }
+-        // The blur pre-pass is raw GL and must run before Skia paints the panel.
+-        // Load the shader first so drawPanel knows whether it may use the
+-        // translucent tint or must keep the solid fallback. The actual draw
+-        // result is tracked in blurDrawnThisFrame so a silent shader no-op can
+-        // never strip the solid background again.
++        // The blur is a request painted inside the Skia frame on 1.21.8: this
++        // pass only records the rect, and drawPanel asks whether it landed
++        // before choosing the translucent tint over the solid fallback.
+         blurDrawnThisFrame = false;
+         boolean blurWanted = AtomChatConfig.get().blurEnabled && !WallpaperStore.isSet();
+         if (blurWanted) {
+@@ -1976,12 +1985,10 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+                     // The capture rect must be the rect drawPhone paints: the
+                     // inset panel rect carried through the same open transform
+                     // (zoom around the panel centre, then the slide offset).
+-                    PanelOpenMotion.PanelRect capture = PanelOpenMotion.blurCapture(
++                    PanelOpenMotion.PanelRect capture = PanelOpenMotion.paintedPanelRect(
+                             panelProgress, AtomChatConfig.get().pageNavStyle,
+-                            panelX(), panelY(), panelWidth(), panelHeight(), strokeWidth,
+-                            uiDensity(), this.client.getWindow().getScaleFactor());
++                            panelX(), panelY(), panelWidth(), panelHeight(), strokeWidth);
+                     blurDrawnThisFrame = PanelBlurRenderer.render(
+-                            context.getMatrices().peek().getPositionMatrix(),
+                             capture.x(), capture.y(), capture.w(), capture.h(), capture.radius(),
+                             panelProgress);
+                 } catch (Throwable t) {
+@@ -2001,7 +2008,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+         // No super.render: ChatScreen/Screen would draw the vanilla input box and
+         // widget chrome; our UI is fully Skia-drawn, the suggestor renders explicitly.
+         Runnable blurPreUi = preUi;
+-        graphics.draw(() -> {
++        graphics.draw(context, () -> {
+             if (blurPreUi != null) blurPreUi.run();
+             com.atom.chat.render.ItemIconRenderer.prepare(context, graphics);
+         }, uiDensity(), (canvas, worldSnapshot) -> drawPhone(canvas, worldSnapshot, mouseX, mouseY, delta));
+@@ -2401,15 +2408,16 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+                 canvas.restore();
+             }
+         } else {
+-            // The raw-GL blur pre-pass already painted the rounded blurred image
+-            // on the main framebuffer, so this layer is only the tint over it.
+-            // Both paths use the configured panel colour — the blur branch used
+-            // to hardcode 0xFF16191F, which made the background impossible to
+-            // recolour with blur enabled (0.2.5 report). A blur that was asked
+-            // for but did not land this frame falls back to an OPAQUE panel; see
+-            // PanelBackground for why the translucent tint is only safe when the
+-            // blur is deliberately off.
+-            int tint = PanelBackground.tintFor(AtomChatConfig.get().blurEnabled, blurDrawnThisFrame,
++            // The Skia blur already painted the rounded blurred image into this
++            // canvas, so this layer is only the tint over it. Both paths use the
++            // configured panel colour — the blur branch used to hardcode
++            // 0xFF16191F, which made the background impossible to recolour with
++            // blur enabled (0.2.5 report). A blur that was asked for but did not
++            // land this frame falls back to an OPAQUE panel; see PanelBackground
++            // for why the translucent tint is only safe when the blur is
++            // deliberately off.
++            boolean blurLanded = blurDrawnThisFrame && PanelBlurRenderer.landedThisFrame();
++            int tint = PanelBackground.tintFor(AtomChatConfig.get().blurEnabled, blurLanded,
+                     AtomChatConfig.get().panelBgColor, AtomChatConfig.get().panelOpacity);
+             try (Paint bg = new Paint().setColor(tint)) {
+                 canvas.drawRRect(RRect.makeXYWH(innerX, innerY, innerW, innerH, innerRadius), bg);
+@@ -3006,7 +3014,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+     private void pickEmoteFile() {
+         KeyBinding.unpressAll();
+         if (this.client.mouse != null) {
+-            ((MouseHandlerAccessor) this.client.mouse).atomchat$setActiveButton(0);
++            ((MouseHandlerAccessor) this.client.mouse).atomchat$setActiveButton(null);
+         }
+         emojiWiring.pickEmoteFile();
+     }
+@@ -3042,7 +3050,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+             net.minecraft.client.network.PlayerListEntry entry =
+                     client.getNetworkHandler().getPlayerListEntry(uuid);
+             if (entry != null) {
+-                return entry.getProfile().getName();
++                return entry.getProfile().name();
+             }
+         }
+         return uuid.toString();
+@@ -3067,7 +3075,10 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+     }
+ 
+     @Override
+-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
++    public boolean mouseClicked(Click click, boolean doubled) {
++        double mouseX = click.x();
++        double mouseY = click.y();
++        int button = click.button();
+         // Completes the input trio next to keyPressed:/charTyped:. The whole UI is
+         // Skia-drawn, so without this line a "the button does nothing" report has
+         // no way to tell "the click never arrived" from "it arrived somewhere
+@@ -3085,47 +3096,53 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+         try {
+             Boolean direct = gate.click(mouseX, mouseY, button);
+             if (direct != null) return direct;
+-            return super.mouseClicked(mouseX, mouseY, button);
++            return super.mouseClicked(click, doubled);
+         } finally {
+             com.atom.chat.audio.FeedbackSoundController.endAction();
+         }
+     }
+ 
+     @Override
+-    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
++    public boolean mouseDragged(Click click, double dragX, double dragY) {
++        double mouseX = click.x();
++        double mouseY = click.y();
++        int button = click.button();
+         Boolean direct = gate.drag(mouseX, mouseY, button, dragX, dragY);
+         if (direct != null) {
+             return direct;
+         }
+-        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
++        return super.mouseDragged(click, dragX, dragY);
+     }
+ 
+     @Override
+-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
++    public boolean mouseReleased(Click click) {
++        double mouseX = click.x();
++        double mouseY = click.y();
++        int button = click.button();
+         foreignPointer.release(button);
+         Boolean direct = gate.release(mouseX, mouseY, button);
+         if (direct != null) {
+             return direct;
+         }
+-        return super.mouseReleased(mouseX, mouseY, button);
++        return super.mouseReleased(click);
+     }
+ 
+     @Override
+-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+-        Boolean direct = gate.key(keyCode, scanCode, modifiers);
++    public boolean keyPressed(KeyInput input) {
++        Boolean direct = gate.key(input.key(), input.scancode(), input.modifiers());
+         if (direct != null) {
+             return direct;
+         }
+-        return super.keyPressed(keyCode, scanCode, modifiers);
++        return super.keyPressed(input);
+     }
+ 
+     @Override
+-    public boolean charTyped(char chr, int modifiers) {
+-        Boolean direct = gate.charTyped(chr, modifiers);
++    public boolean charTyped(CharInput input) {
++        Boolean direct = gate.charTyped((char) input.codepoint(), input.modifiers());
+         if (direct != null) {
+             return direct;
+         }
+-        return super.charTyped(chr, modifiers);
++        return super.charTyped(input);
+     }
+ 
+ 
+@@ -3134,7 +3151,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+         // the UI does not think the image button is still pressed when it returns.
+         KeyBinding.unpressAll();
+         if (this.client.mouse != null) {
+-            ((MouseHandlerAccessor) this.client.mouse).atomchat$setActiveButton(0);
++            ((MouseHandlerAccessor) this.client.mouse).atomchat$setActiveButton(null);
+         }
+         Thread worker = new Thread(() -> {
+             Path file = FilePicker.pickImage(this::suppressAutoIconify, this::restoreAutoIconify);
+@@ -4041,7 +4058,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+                 // map the virtual point to a text index ourselves (the hidden
+                 // EditBox geometry is caret-shifted and single-line, useless here).
+                 int idx = composerPointer.caretIndexAt(layout, (float) mx, (float) my);
+-                if (hasShiftDown() && composerPointer.dragAnchor() >= 0) {
++                if (client.isShiftPressed() && composerPointer.dragAnchor() >= 0) {
+                     chatField.setSelectionEnd(idx);
+                 } else {
+                     composerPointer.setDragAnchor(idx);
+@@ -4223,6 +4240,15 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+             return false;
+         }
+ 
++        /** A rich-text click runs through vanilla's dispatcher; a span without an event does nothing. */
++        private boolean handleTextClick(Style style) {
++            if (style == null) return false;
++            ClickEvent clickEvent = style.getClickEvent();
++            if (clickEvent == null) return false;
++            AtomChatScreen.handleClickEvent(clickEvent, client, AtomChatScreen.this);
++            return true;
++        }
++
+         @Override
+         public boolean onScroll(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+             if (!isWorldChatPage()) {

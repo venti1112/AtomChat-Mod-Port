@@ -1,0 +1,31 @@
+diff --git a/src/main/java/com/atom/chat/page/ConversationListPage.java b/src/main/java/com/atom/chat/page/ConversationListPage.java
+index 2c27a06..bbd42e3 100644
+--- a/src/main/java/com/atom/chat/page/ConversationListPage.java
++++ b/src/main/java/com/atom/chat/page/ConversationListPage.java
+@@ -257,11 +257,11 @@ public final class ConversationListPage {
+         }
+         List<PlayerRef> out = new ArrayList<>();
+         for (PlayerListEntry entry : client.getNetworkHandler().getPlayerList()) {
+-            String name = entry.getProfile().getName();
++            String name = entry.getProfile().name();
+             if (name == null || name.isBlank()) {
+                 continue;
+             }
+-            out.add(PlayerRef.of(entry.getProfile().getId(), name));
++            out.add(PlayerRef.of(entry.getProfile().id(), name));
+         }
+         return out;
+     }
+@@ -275,10 +275,10 @@ public final class ConversationListPage {
+             return false;
+         }
+         for (PlayerListEntry entry : client.getNetworkHandler().getPlayerList()) {
+-            if (player.uuid() != null && player.uuid().equals(entry.getProfile().getId())) {
++            if (player.uuid() != null && player.uuid().equals(entry.getProfile().id())) {
+                 return true;
+             }
+-            if (player.realName() != null && player.realName().equalsIgnoreCase(entry.getProfile().getName())) {
++            if (player.realName() != null && player.realName().equalsIgnoreCase(entry.getProfile().name())) {
+                 return true;
+             }
+         }

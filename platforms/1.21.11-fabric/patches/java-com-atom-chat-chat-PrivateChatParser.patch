@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/atom/chat/chat/PrivateChatParser.java b/src/main/java/com/atom/chat/chat/PrivateChatParser.java
+index 540ba8b..395e664 100644
+--- a/src/main/java/com/atom/chat/chat/PrivateChatParser.java
++++ b/src/main/java/com/atom/chat/chat/PrivateChatParser.java
+@@ -27,8 +27,8 @@ public final class PrivateChatParser {
+             Text content = asText(args[1]);
+             String display = clean(name.getString());
+             PlayerListEntry info = display == null ? null : ChatClassifier.resolveOnlinePlayer(display);
+-            String profile = info != null ? info.getProfile().getName() : display;
+-            UUID uuid = info != null ? info.getProfile().getId() : null;
++            String profile = info != null ? info.getProfile().name() : display;
++            UUID uuid = info != null ? info.getProfile().id() : null;
+             return new SenderMeta(uuid, display, profile, content.getString(), false, true,
+                     profile, name, content);
+         }
+@@ -40,7 +40,7 @@ public final class PrivateChatParser {
+                 return null;
+             }
+             PlayerListEntry info = ChatClassifier.resolveOnlinePlayer(display);
+-            String partner = info != null ? info.getProfile().getName() : display;
++            String partner = info != null ? info.getProfile().name() : display;
+             if (PrivateEchoTracker.consumeIfMatch(PlayerRef.of(null, partner))) {
+                 // Local bubble already exists; tell ChatHudMixin to drop it.
+                 return new SenderMeta(null, null, null, null, true, true, partner,

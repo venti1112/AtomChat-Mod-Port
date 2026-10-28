@@ -1,0 +1,31 @@
+diff --git a/src/main/java/com/atom/chat/net/AvatarCompanionServer.java b/src/main/java/com/atom/chat/net/AvatarCompanionServer.java
+index 03e6d16..6c6fdc4 100644
+--- a/src/main/java/com/atom/chat/net/AvatarCompanionServer.java
++++ b/src/main/java/com/atom/chat/net/AvatarCompanionServer.java
+@@ -76,7 +76,7 @@ public final class AvatarCompanionServer {
+         }
+         lastUploadMs.put(uuid, now);
+         // File IO belongs off the netty thread.
+-        player.getServer().execute(() -> {
++        player.getEntityWorld().getServer().execute(() -> {
+             try {
+                 Path dir = storageDir;
+                 Files.createDirectories(dir);
+@@ -99,7 +99,7 @@ public final class AvatarCompanionServer {
+      * skips receivers that did not register the channel.
+      */
+     private static void broadcastChanged(ServerPlayerEntity uploader, UUID uuid) {
+-        var server = uploader.getServer();
++        var server = uploader.getEntityWorld().getServer();
+         if (server == null) {
+             return;
+         }
+@@ -120,7 +120,7 @@ public final class AvatarCompanionServer {
+         if (last != null && now - last < REQUEST_INTERVAL_MS) {
+             return;
+         }
+-        player.getServer().execute(() -> {
++        player.getEntityWorld().getServer().execute(() -> {
+             byte[] data = new byte[0];
+             try {
+                 Path file = storageDir.resolve(uuid + ".png");

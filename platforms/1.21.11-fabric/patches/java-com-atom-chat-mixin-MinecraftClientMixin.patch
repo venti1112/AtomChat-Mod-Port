@@ -1,0 +1,30 @@
+diff --git a/src/main/java/com/atom/chat/mixin/MinecraftClientMixin.java b/src/main/java/com/atom/chat/mixin/MinecraftClientMixin.java
+index 959faed..5f20714 100644
+--- a/src/main/java/com/atom/chat/mixin/MinecraftClientMixin.java
++++ b/src/main/java/com/atom/chat/mixin/MinecraftClientMixin.java
+@@ -1,6 +1,7 @@
+ package com.atom.chat.mixin;
+ 
+ import net.minecraft.client.MinecraftClient;
++import net.minecraft.client.gui.hud.ChatHud;
+ import net.minecraft.client.gui.screen.AtomChatScreen;
+ import net.minecraft.client.gui.screen.AtomChatScreen.AtomChatOpenMode;
+ import com.atom.chat.render.SkiaSupport;
+@@ -12,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+ @Mixin(MinecraftClient.class)
+ public class MinecraftClientMixin {
+     @Inject(method = "openChatScreen", at = @At("HEAD"), cancellable = true)
+-    private void atomchat$openChatScreen(String text, CallbackInfo ci) {
++    private void atomchat$openChatScreen(ChatHud.ChatMethod method, CallbackInfo ci) {
+         // 原生库不在就不接管这一下：cancel 掉等于连原版聊天都不给开。
+         // 面板在这个平台上开不了 —— Skija 的失败落在原生层，开出来是必崩而不是难看 ——
+         // 而"失败得干净"的意思正是原版照常。
+@@ -20,7 +21,7 @@ public class MinecraftClientMixin {
+             return;
+         }
+         MinecraftClient client = (MinecraftClient) (Object) this;
+-        client.setScreen(new AtomChatScreen(text, AtomChatOpenMode.DIRECT_WORLD));
++        client.setScreen(new AtomChatScreen(method.getReplacement(), AtomChatOpenMode.DIRECT_WORLD));
+         ci.cancel();
+     }
+ }

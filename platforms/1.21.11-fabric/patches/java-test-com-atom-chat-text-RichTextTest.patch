@@ -1,0 +1,40 @@
+diff --git a/src/test/java/com/atom/chat/text/RichTextTest.java b/src/test/java/com/atom/chat/text/RichTextTest.java
+index 897673b..acec784 100644
+--- a/src/test/java/com/atom/chat/text/RichTextTest.java
++++ b/src/test/java/com/atom/chat/text/RichTextTest.java
+@@ -5,6 +5,8 @@ import net.minecraft.text.Style;
+ import net.minecraft.text.Text;
+ import org.junit.jupiter.api.Test;
+ 
++import java.net.URI;
++
+ import static org.junit.jupiter.api.Assertions.assertEquals;
+ import static org.junit.jupiter.api.Assertions.assertFalse;
+ import static org.junit.jupiter.api.Assertions.assertTrue;
+@@ -12,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
+ class RichTextTest {
+     @Test
+     void flattenPreservesRunStyles() {
+-        Style click = Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/x"));
++        Style click = Style.EMPTY.withClickEvent(new ClickEvent.RunCommand("/x"));
+         Text text = Text.literal("a").setStyle(click).append(Text.literal("b"));
+         RichText rich = RichText.of(text);
+         assertEquals("ab", rich.getString());
+@@ -59,7 +61,7 @@ class RichTextTest {
+ 
+     @Test
+     void linkifyLeavesExistingClickRunsUntouched() {
+-        Style click = Style.EMPTY.withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, "https://already.example"));
++        Style click = Style.EMPTY.withClickEvent(new ClickEvent.OpenUrl(URI.create("https://already.example")));
+         RichText rich = RichText.of(Text.literal("https://example.com").setStyle(click));
+         RichText linked = rich.linkifyUrls();
+         assertEquals(1, linked.runs().size());
+@@ -188,7 +190,7 @@ class RichTextTest {
+         // /msg click never turns the name into a misleading link. The explicit
+         // colour is part of the wire's styling and must survive that strip.
+         Style link = Style.EMPTY.withColor(0x55FF55).withUnderline(true)
+-                .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/msg Steve "));
++                .withClickEvent(new ClickEvent.SuggestCommand("/msg Steve "));
+         RichText stripped = RichText.of(Text.literal("Steve").setStyle(link)).stripInteractions();
+         assertEquals("Steve", stripped.getString());
+         assertEquals(0x55FF55, stripped.runs().get(0).style().getColor().getRgb());

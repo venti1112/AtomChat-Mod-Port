@@ -1,0 +1,40 @@
+diff --git a/src/main/java/com/atom/chat/history/ChatHistory.java b/src/main/java/com/atom/chat/history/ChatHistory.java
+index 0107053..9b1a1b3 100644
+--- a/src/main/java/com/atom/chat/history/ChatHistory.java
++++ b/src/main/java/com/atom/chat/history/ChatHistory.java
+@@ -7,9 +7,13 @@ import com.atom.chat.chat.PlayerRef;
+ import com.atom.chat.chat.PrivateChatStore;
+ import com.atom.chat.config.AtomChatConfig;
+ import com.atom.chat.history.HistoryStore.Entry;
++import com.google.gson.JsonParser;
++import com.mojang.serialization.JsonOps;
+ import net.minecraft.client.MinecraftClient;
++import net.minecraft.registry.RegistryOps;
+ import net.minecraft.registry.RegistryWrapper;
+ import net.minecraft.text.Text;
++import net.minecraft.text.TextCodecs;
+ 
+ import java.io.IOException;
+ import java.nio.charset.StandardCharsets;
+@@ -274,7 +278,9 @@ public final class ChatHistory {
+         String comp = null;
+         if (lookup != null && m.getComponent() != null) {
+             try {
+-                comp = Text.Serialization.toJsonString(m.getComponent(), lookup);
++                comp = TextCodecs.CODEC
++                        .encodeStart(RegistryOps.of(JsonOps.INSTANCE, lookup), m.getComponent())
++                        .getOrThrow().toString();
+             } catch (Exception e) {
+                 comp = null;
+             }
+@@ -290,7 +296,9 @@ public final class ChatHistory {
+         Text component = null;
+         if (e.componentJson != null && lookup != null) {
+             try {
+-                component = Text.Serialization.fromJson(e.componentJson, lookup);
++                component = TextCodecs.CODEC
++                        .parse(RegistryOps.of(JsonOps.INSTANCE, lookup), JsonParser.parseString(e.componentJson))
++                        .getOrThrow();
+             } catch (Exception ignored) {
+                 component = null;
+             }

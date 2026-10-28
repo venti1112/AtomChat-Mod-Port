@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/atom/chat/chat/ChatClassifier.java b/src/main/java/com/atom/chat/chat/ChatClassifier.java
+index 2b134c8..5049039 100644
+--- a/src/main/java/com/atom/chat/chat/ChatClassifier.java
++++ b/src/main/java/com/atom/chat/chat/ChatClassifier.java
+@@ -28,7 +28,7 @@ public final class ChatClassifier {
+ 
+     public static String[] nameCandidates(PlayerListEntry info) {
+         Set<String> out = new LinkedHashSet<>();
+-        String profile = info.getProfile().getName();
++        String profile = info.getProfile().name();
+         addNameVariants(out, profile);
+         Text tab = info.getDisplayName();
+         if (tab != null) {
+@@ -167,7 +167,7 @@ public final class ChatClassifier {
+     public static UUID resolveUuid(String displayName) {
+         PlayerListEntry info = resolveOnlinePlayer(displayName);
+         if (info != null) {
+-            return info.getProfile().getId();
++            return info.getProfile().id();
+         }
+         // Offline player: recover the UUID from the once-seen memory so their
+         // bubbles keep the real identity (and skin via the name cache).
