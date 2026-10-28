@@ -1,5 +1,5 @@
 diff --git a/src/main/java/com/atom/chat/image/AvatarRenderer.java b/src/main/java/com/atom/chat/image/AvatarRenderer.java
-index 69a628d..da164b6 100644
+index b7c57a1..db4d235 100644
 --- a/src/main/java/com/atom/chat/image/AvatarRenderer.java
 +++ b/src/main/java/com/atom/chat/image/AvatarRenderer.java
 @@ -13,6 +13,7 @@ import io.github.humbleui.skija.Image;
@@ -20,5 +20,5 @@ index 69a628d..da164b6 100644
 +            }
 +            int glId = glTexture.getGlId();
  
-             ByteBuffer buf = ByteBuffer.allocateDirect(SKIN_SIZE * SKIN_SIZE * 4);
-             int previous = GL11C.glGetInteger(GL11C.GL_TEXTURE_BINDING_2D);
+             ByteBuffer buf = SkinTextureReader.read(glId);
+             if (buf == null) return null;

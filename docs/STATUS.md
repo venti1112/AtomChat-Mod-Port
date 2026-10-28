@@ -58,6 +58,13 @@
 - CCB 带状态 JFR 捕获到 Emoji 开关慢帧，独立动态缩放 GL 探针复现字形生成／提交开销；共享 Emoji 字形缓存已通过像素、容量与缩放回归。最终新包在 CCB 的开关、稳定帧率和观感仍待用户实测。
 - 早期独立审查问题已修；本轮最新补全／缓存修改的独立复审因 429 未完成，不能当作审查通过。代理未启动或关闭游戏，未提交／推送／发布。
 
+## 上游 0.4.0 同步（2026-10-28）
+
+- 用 rebase 把本地 1.21.4 / 1.21.8 / 1.21.11 三个提交重放到上游 `93f58a1`，丢弃重复的 0.4.0-preview 合并提交并保留其内容（1.21.4 的 `ItemIconRenderer` / `ItemIconModelView` 补丁、测试 agent、矩阵备注）；三个提交重新签名，作者与提交时间不变，尚未推送。
+- 上游把头像读回收进共享 `SkinTextureReader`（按实际纹理尺寸分配、归一 64x64、隔离并恢复 PACK/PBO/绑定），两份 `AvatarRenderer` 不再直接调用 `glGetTexImage`；1.21.8 / 1.21.11 的 `GlTexture` 取 id 补丁按新基线重生成，1.21.4 补丁无需调整。
+- 六端 `test build`：Fabric 1.21.1 / 1.21.4 / 1.21.8 / 1.21.11 各 1493 项，NeoForge 1.21.1 与 Forge 1.20.1 各 1481 项，失败/错误均为 0；各端 5 项跳过 = 2 项原有 + 3 项真实 GL 读回在当前 Linux 无显示环境按设计跳过。本轮未跑 Windows GL 或实机。
+- 静态门禁：seams 150/75、目标矩阵、孪生 75 对（未归类/陈旧 0）、日志 361 出口 0 违规、裸值扫描 0 拦截、`git diff --check` 通过。
+
 ## 0.4.0：高清皮肤读回修复（10 月 25 日基线）
 
 - 2026-10-25 快照：版本由 0.4.0-preview 收口为 0.4.0，基线 main@e8a6aca4f0d750daf285747b9f3ac47972a9a735。源码、测试、九包和三个 Windows x64 实例部署已完成；用户已要求提交、推送并清理临时文件，交付分支为 main、推送目标为 origin/main，实际同步事实以 Git 查询为准，不打 tag 或公开发布。
@@ -90,6 +97,7 @@
 - 1.21.4 的 shader JSON 必须写完整资源 id（`minecraft:core/...`），`resources-shader-identifiers.patch` 修复了模糊着色器加载失败。
 - 1.21.4 NeoForge / Forge 仍缺 official 映射层的 1.21.4 API 差异，矩阵中保持 `buildable: false`。
 - 上游 0.4.0-preview 已合并入本分支，增量补丁随之上推：新增 `ItemIconRenderer` / `ItemIconModelView` 两个补丁适配 `ProjectionType`、按绘制上传矩阵的 `RenderSystem`，测试侧补上基础平台的 package-access agent。合并后 Fabric 1.21.4 跑满 1488 项测试（0 失败/错误，2 项原有跳过），三包产物断言通过。
+- 2026-10-28 同步上游 0.4.0：共享 `SkinTextureReader` 自动流入，`AvatarRenderer` 补丁无需调整；同步后 `test build` 1493 项测试 0 失败/错误、5 项跳过（2 项原有 + 3 项真实 GL 读回在 Linux 跳过）。
 
 ## 1.21.8 Fabric 增量移植
 
@@ -98,6 +106,7 @@
 - `SkiaGraphics` 改为离屏 RGBA8 纹理绘制，再以 `TexturedQuadGuiElementRenderState` 合成；`GlStateUtil` 的原始 GL 调用会清空 `GlCommandEncoder` 的管线/程序缓存（accessor mixin），`GlStateMirror` 按 1.21.8 的 12 个纹理单元镜像缓存状态。
 - `test build` 通过：1488 项测试 0 失败/错误、2 项原有跳过；`verify_targets.py` 与 seams 校验通过。产物默认 windows-x64，Linux 实机用 `-Patomchat.nativePlatform=linux-x64` 运行。
 - 2026-10-24 用户在 Linux x64 实机确认功能正常，矩阵中 `buildable` 已打开。1.21.8 NeoForge / Forge 仍受 official 映射层 1.21.8 API 差异阻塞，保持 `buildable: false`。
+- 2026-10-28 同步上游 0.4.0：`SkinTextureReader` 经 shared 自动流入，`AvatarRenderer` 补丁按新基线重生成（仅保留 `GlTexture` 取 id）；同步后 `test build` 1493 项测试 0 失败/错误、5 项跳过（2 项原有 + 3 项真实 GL 读回在 Linux 跳过）。
 
 ## 1.21.11 Fabric 增量移植
 
@@ -106,6 +115,7 @@
 - 物品图标改为 `ItemRenderState.render` + `RenderDispatcher` 回放，特殊模型（头颅、潜影盒）同样落到离屏纹理；`GpuTexture.setTextureFilter` 移除后按 `GpuSampler` 走 `TextureSetup.of`。
 - `compileJava` / `compileTestJava`、`test build` 均通过：1488 项测试 0 失败/错误、2 项原有跳过；`verify_targets.py`、seams 校验通过，基线已登记。
 - 2026-10-28 用户在 Linux x64 实机确认功能正常（面板、模糊、表情、物品图标、通知与图片上传），矩阵中 `buildable` 已打开。1.21.11 NeoForge / Forge 仍受 official 映射层 1.21.9+ 渲染 API 差异阻塞，保持 `buildable: false`。
+- 2026-10-28 同步上游 0.4.0：`SkinTextureReader` 经 shared 自动流入，`AvatarRenderer` 补丁按新基线重生成（仅保留 `GlTexture` 取 id）；同步后 `test build` 1493 项测试 0 失败/错误、5 项跳过（2 项原有 + 3 项真实 GL 读回在 Linux 跳过）。
 
 ## 历史基线：0.4.0-preview 实时模糊与四组目录
 

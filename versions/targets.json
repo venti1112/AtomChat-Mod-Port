@@ -86,7 +86,7 @@
     "buildable": true,
     "layers": ["1.21+", "fabric"],
     "overlay_base": "platforms/1.21.1-fabric",
-    "note": "增量目标：目录里只有 8 个 1.21.4 差异补丁，源码树在构建期从 1.21.1-fabric 复制后应用补丁，上游改动可直接流进来。已构建并在 Linux x64 实机验收：首次打开、模糊着色器、表情面板正常。上游 0.4.0-preview 合入后补齐物品图标渲染的 RenderSystem 差异。"
+    "note": "增量目标：目录里只有 8 个 1.21.4 差异补丁，源码树在构建期从 1.21.1-fabric 复制后应用补丁，上游改动可直接流进来。已构建并在 Linux x64 实机验收：首次打开、模糊着色器、表情面板正常。上游 0.4.0-preview 合入后补齐物品图标渲染的 RenderSystem 差异；2026-10-28 同步上游 0.4.0 后 AvatarRenderer 补丁无需调整。"
   },
   "1.21.4-neoforge": {
     "minecraft": "1.21.4",
@@ -135,7 +135,7 @@
       "src/main/java/com/atom/chat/render/ItemIconRenderer.java",
       "src/main/java/com/atom/chat/render/GlStateMirror.java"
     ],
-    "note": "1.21.5 起原版改为 GpuDevice/RenderPass 管线，渲染桥与 GL 状态镜像整份绑死在新 API 上，逐行补丁等于重写，所以走 overlay_exclude 由目标本地实现（类名与公开 API 与基础平台一致）；AtomChatScreen 的渲染调用点仍用补丁改，不整份复制。其余差异（API 适配、AtomChatScreen 渲染调用点、资源登记）共 20 个补丁，测试侧 1488 项 0 失败 0 错误 2 跳过。2026-10-24 用户在 Linux x64 实机确认功能正常，buildable 已打开。"
+    "note": "1.21.5 起原版改为 GpuDevice/RenderPass 管线，渲染桥与 GL 状态镜像整份绑死在新 API 上，逐行补丁等于重写，所以走 overlay_exclude 由目标本地实现（类名与公开 API 与基础平台一致）；AtomChatScreen 的渲染调用点仍用补丁改，不整份复制。其余差异（API 适配、AtomChatScreen 渲染调用点、资源登记）共 20 个补丁，测试侧 1493 项 0 失败 0 错误 5 跳过（3 项真实 GL 读回在 Linux 跳过）。2026-10-24 用户在 Linux x64 实机确认功能正常，buildable 已打开；2026-10-28 同步上游 0.4.0 高清皮肤修复，AvatarRenderer 补丁按新基线重生成。"
   },
   "1.21.8-neoforge": {
     "minecraft": "1.21.8",
@@ -184,7 +184,7 @@
       "src/main/java/com/atom/chat/render/ItemIconRenderer.java",
       "src/main/java/com/atom/chat/render/GlStateMirror.java"
     ],
-    "note": "1.21.11 节点：延续 1.21.8 的增量结构，4 个渲染桥文件继续 overlay_exclude 由目标本地实现。工具链 Gradle 9.8.2 / Loom 1.17.21（1.18 起要求 JVM 25）/ Yarn 1.21.11+build.6 / Fabric API 0.141.6+1.21.11 / Loader 0.20.1。1.21.11 把输入回调换成 Click/KeyInput/CharInput 记录、GameProfile 改成 record、聊天 HUD 的点击命中测试并入渲染流程，补丁相应调整：共 43 个——1.21.8 的 20 个里 5 个随 API 变更重生成，另新增 23 个。compileJava / compileTestJava、1488 项测试 0 失败 0 错误 2 跳过、test build 均通过。2026-10-28 用户在 Linux x64 实机确认功能正常，buildable 已打开。"
+    "note": "1.21.11 节点：延续 1.21.8 的增量结构，4 个渲染桥文件继续 overlay_exclude 由目标本地实现。工具链 Gradle 9.8.2 / Loom 1.17.21（1.18 起要求 JVM 25）/ Yarn 1.21.11+build.6 / Fabric API 0.141.6+1.21.11 / Loader 0.20.1。1.21.11 把输入回调换成 Click/KeyInput/CharInput 记录、GameProfile 改成 record、聊天 HUD 的点击命中测试并入渲染流程，补丁相应调整：共 43 个——1.21.8 的 20 个里 5 个随 API 变更重生成，另新增 23 个。compileJava / compileTestJava、1493 项测试 0 失败 0 错误 5 跳过（3 项真实 GL 读回在 Linux 跳过）、test build 均通过；2026-10-28 同步上游 0.4.0 高清皮肤修复，AvatarRenderer 补丁按新基线重生成。2026-10-28 用户在 Linux x64 实机确认功能正常，buildable 已打开。"
   },
   "1.21.11-neoforge": {
     "minecraft": "1.21.11",
