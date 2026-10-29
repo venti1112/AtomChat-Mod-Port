@@ -1,0 +1,12 @@
+diff --git a/src/main/resources/atomchat.client.mixins.json b/src/main/resources/atomchat.client.mixins.json
+--- a/src/main/resources/atomchat.client.mixins.json
++++ b/src/main/resources/atomchat.client.mixins.json
+@@ -8,6 +8,8 @@
+     "MinecraftClientMixin",
+     "ChatHudMixin",
+     "MessageHandlerMixin",
++    "RenderPhaseTargetMixin",
++    "GlResourceManagerAccessor",
+     "MouseHandlerAccessor",
+     "SuggestionWindowAccessor"
+   ],

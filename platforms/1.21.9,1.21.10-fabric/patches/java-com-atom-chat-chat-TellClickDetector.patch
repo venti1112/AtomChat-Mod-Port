@@ -1,0 +1,39 @@
+diff --git a/src/main/java/com/atom/chat/chat/TellClickDetector.java b/src/main/java/com/atom/chat/chat/TellClickDetector.java
+index c1a9c3d..1b5f28a 100644
+--- a/src/main/java/com/atom/chat/chat/TellClickDetector.java
++++ b/src/main/java/com/atom/chat/chat/TellClickDetector.java
+@@ -48,10 +48,10 @@ public final class TellClickDetector {
+             int e = s + str.length();
+             pos[0] = e;
+             var click = style.getClickEvent();
+-            if (tellName[0] == null && click != null
+-                    && click.getAction() == net.minecraft.text.ClickEvent.Action.SUGGEST_COMMAND
+-                    && click.getValue() != null) {
+-                String cmd = click.getValue();
++            if (tellName[0] == null
++                    && click instanceof net.minecraft.text.ClickEvent.SuggestCommand suggest
++                    && suggest.command() != null) {
++                String cmd = suggest.command();
+                 for (String prefix : TELL_PREFIXES) {
+                     if (cmd.startsWith(prefix)) {
+                         String n = cmd.substring(prefix.length()).trim();
+@@ -79,7 +79,7 @@ public final class TellClickDetector {
+ 
+         PlayerListEntry sender = null;
+         for (var info : player.networkHandler.getPlayerList()) {
+-            String profile = info.getProfile().getName();
++            String profile = info.getProfile().name();
+             if (profile.equals(tellName[0]) || profile.replaceAll("§.", "").equals(tellName[0])) {
+                 sender = info;
+                 break;
+@@ -117,8 +117,8 @@ public final class TellClickDetector {
+             return null;
+         }
+ 
+-        String profile = sender != null ? sender.getProfile().getName() : tellName[0];
+-        UUID id = sender != null ? sender.getProfile().getId() : cachedId;
++        String profile = sender != null ? sender.getProfile().name() : tellName[0];
++        UUID id = sender != null ? sender.getProfile().id() : cachedId;
+         // The clicked segment is the decorated sender display ("[VIP]Steve"):
+         // AtomChat's text-layer meta carries it as the display label.
+         String display = clickedText[0].replaceAll("§.", "").trim();

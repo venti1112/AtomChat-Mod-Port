@@ -13,12 +13,17 @@
     "两边的路径必须一一对应 —— 少一个、或者其实逐字相同（那它本该进 shared/）都由 CI 揪出来。",
     "（要改回 mcphone 那条路线也可以：把 Fabric 迁到官方名，然后删掉这个层。）",
     "",
-    "【layers：这个目标挂哪几层共享代码】层的定义在 versions/layers.json，三个轴：since / loader / mappings。",
+    "【layers：这个目标挂哪几层共享代码】层的定义在 versions/layers.json，四个轴：since / until / loader / mappings。",
     "层名是「这套 API 从哪个 Minecraft 版本开始有」或「哪套映射」，所以 1.21.1 与将来的更高版本都挂",
-    "1.21+，而 1.20.1 在它之前，不挂任何版本层。",
+    "1.21+，而 1.20.1 在它之前，不挂任何版本层。同一个映射家族里某个文件在版本之间换了 API 时，",
+    "映射层按版本区间再切一刀（official-legacy = 1.21.4 之前，official-modern = 1.21.4 这一代），",
+    "满足某个区间谓词的目标必须挂对应的那一层 —— 没有「排除层里这个文件」的口子。",
     "",
-    "【buildable 管的是「发不发」，不是「编不编」】工程目录存在 = CI 就编它。代码进了仓库却没有任何地方编，",
-    "等于躺着一份没人验证的源码 —— 正是这套结构要消掉的静默。buildable: true 另外表示产物进 Release。",
+    "【buildable 管的是「发不发」，ci 管的是「编不编」】工程目录存在 = CI 就编它，唯一的例外是",
+    "ci: false —— 上游基线，源码仍是增量目标的 overlay_base、也是映射孪生的对照副本，每一条都由",
+    "校验器盯着，但不再随每次推送重复构建。代码进了仓库却没有任何地方编，等于躺着一份没人验证的",
+    "源码 —— 正是这套结构要消掉的静默。buildable: true 表示产物进 Release，因此它必须由 CI 构建，",
+    "不许与 ci: false 同时出现。",
     "",
     "【java / gradle 各目标可以不同】它们是硬约束（1.20.1 要 Java 17 与 Gradle 8.8，NeoForge 要 Gradle 9.2.1），",
     "所以不强行统一；各目标在自己的工程目录里各建各的。",
@@ -36,6 +41,7 @@
 
   "1.21.1-fabric": {
     "minecraft": "1.21.1",
+    "minecraft_until": "1.21.2",
     "loader": "Fabric",
     "loader_version": "0.16.9",
     "server_config_sync": true,
@@ -43,9 +49,10 @@
     "java": 21,
     "gradle": "8.8",
     "project": "platforms/1.21.1-fabric",
-    "buildable": true,
+    "buildable": false,
+    "ci": false,
     "layers": ["1.21+", "fabric"],
-    "note": "唯一用 Yarn 映射的目标：不挂 layers/mapping/official/，自己保留 33 个 main + 12 个 test 的 Yarn 名副本（与官方名那份路径一一对应）。"
+    "note": "上游基线，不再由 CI 构建：源码仍是全部 Fabric 增量目标的 overlay_base，也是 official 映射层的 Yarn 孪生对照副本。唯一用 Yarn 映射的目标：不挂 layers/mapping/official/，自己保留 33 个 main + 12 个 test 的 Yarn 名副本（与官方名那份路径一一对应）。"
   },
   "1.21.1-neoforge": {
     "minecraft": "1.21.1",
@@ -56,9 +63,10 @@
     "java": 21,
     "gradle": "9.2.1",
     "project": "platforms/1.21.1-neoforge",
-    "buildable": true,
-    "layers": ["1.21+", "official", "neoforge"],
-    "note": "ModDevGradle。未挂 Parchment（它只补参数名，不影响能不能编过）。配置缓存已开。"
+    "buildable": false,
+    "ci": false,
+    "layers": ["1.21+", "official", "official-legacy", "neoforge"],
+    "note": "上游基线，不再由 CI 构建：源码仍是 official 映射层与 NeoForge 胶水的官方名对照副本。ModDevGradle。未挂 Parchment（它只补参数名，不影响能不能编过）。配置缓存已开。"
   },
   "1.20.1-forge": {
     "minecraft": "1.20.1",
@@ -69,13 +77,88 @@
     "java": 17,
     "gradle": "8.8",
     "project": "platforms/1.20.1-forge",
-    "buildable": true,
-    "layers": ["official", "forge"],
-    "note": "Java 17 与 Gradle 8.8 是硬约束（ForgeGradle 6 不吃 Gradle 9）。运行时是 SRG 名，refmap 由 ForgeGradle 生成。只挂 official 映射层，不挂 1.21+ 版本层。"
+    "buildable": false,
+    "ci": false,
+    "layers": ["official", "official-legacy", "forge"],
+    "note": "上游基线，不再由 CI 构建：源码仍是 official 映射层与 Forge 胶水的 SRG 对照副本。Java 17 与 Gradle 8.8 是硬约束（ForgeGradle 6 不吃 Gradle 9）。运行时是 SRG 名，refmap 由 ForgeGradle 生成。只挂 official 映射层（含 1.21.4 之前的 legacy 渲染 API），不挂 1.21+ 版本层。"
+  },
+
+  "1.21.2,1.21.3-fabric": {
+    "minecraft": "1.21.2",
+    "minecraft_until": "1.21.4",
+    "covers": ["1.21.3"],
+    "loader": "Fabric",
+    "loader_version": "0.16.9",
+    "server_config_sync": true,
+    "mappings": "yarn",
+    "java": 21,
+    "gradle": "8.8",
+    "project": "platforms/1.21.2,1.21.3-fabric",
+    "buildable": false,
+    "layers": ["1.21+", "fabric"],
+    "overlay_base": "platforms/1.21.1-fabric",
+    "note": "在建：1.21.2 与 1.21.3 共用一个 jar，目标名与产物名都列全两个版本（1.21.2,1.21.3-fabric）；对着区间最低版本 1.21.2 编译，fabric.mod.json 的 depends.minecraft 由 minecraft + minecraft_until 生成（>=1.21.2 <1.21.4）。增量目标，源码树从 1.21.1-fabric 复制后应用 1.21.2 差异补丁；尚未实机验收，buildable 保持关闭。"
+  },
+  "1.21.2-neoforge": {
+    "minecraft": "1.21.2",
+    "loader": "NeoForge",
+    "loader_version": null,
+    "server_config_sync": true,
+    "mappings": "official",
+    "java": 21,
+    "gradle": "9.2.1",
+    "project": "platforms/1.21.2-neoforge",
+    "buildable": false,
+    "layers": ["1.21+", "official", "official-legacy", "neoforge"],
+    "unverified": ["loader_version", "java", "gradle"],
+    "note": "没做：1.21.2 的 NeoForge 没有需求，且 official-legacy 的 1.21.2 API 差异未接。此条目的意义是让「这个组合没做」在这里看得见。"
+  },
+  "1.21.2-forge": {
+    "minecraft": "1.21.2",
+    "loader": "Forge",
+    "loader_version": null,
+    "server_config_sync": true,
+    "mappings": "official",
+    "java": 21,
+    "gradle": "8.8",
+    "project": "platforms/1.21.2-forge",
+    "buildable": false,
+    "layers": ["1.21+", "official", "official-legacy", "forge"],
+    "unverified": ["loader_version", "java", "gradle"],
+    "note": "没做：1.21.2 的 Forge 没有需求。此条目的意义是让「这个组合没做」在这里看得见。"
+  },
+  "1.21.3-neoforge": {
+    "minecraft": "1.21.3",
+    "loader": "NeoForge",
+    "loader_version": null,
+    "server_config_sync": true,
+    "mappings": "official",
+    "java": 21,
+    "gradle": "9.2.1",
+    "project": "platforms/1.21.3-neoforge",
+    "buildable": false,
+    "layers": ["1.21+", "official", "official-legacy", "neoforge"],
+    "unverified": ["loader_version", "java", "gradle"],
+    "note": "没做：1.21.3 的 NeoForge 没有需求。Fabric 侧由 1.21.2,1.21.3-fabric 的区间 jar 覆盖（>=1.21.2 <1.21.4）。"
+  },
+  "1.21.3-forge": {
+    "minecraft": "1.21.3",
+    "loader": "Forge",
+    "loader_version": null,
+    "server_config_sync": true,
+    "mappings": "official",
+    "java": 21,
+    "gradle": "8.8",
+    "project": "platforms/1.21.3-forge",
+    "buildable": false,
+    "layers": ["1.21+", "official", "official-legacy", "forge"],
+    "unverified": ["loader_version", "java", "gradle"],
+    "note": "没做：1.21.3 的 Forge 没有需求。Fabric 侧由 1.21.2,1.21.3-fabric 的区间 jar 覆盖（>=1.21.2 <1.21.4）。"
   },
 
   "1.21.4-fabric": {
     "minecraft": "1.21.4",
+    "minecraft_until": "1.21.5",
     "loader": "Fabric",
     "loader_version": "0.19.5",
     "server_config_sync": true,
@@ -98,9 +181,9 @@
     "gradle": "9.2.1",
     "project": "platforms/1.21.4-neoforge",
     "buildable": false,
-    "layers": ["1.21+", "official", "neoforge"],
+    "layers": ["1.21+", "official", "official-modern", "neoforge"],
     "unverified": ["loader_version", "java", "gradle"],
-    "note": "没做：1.21.4 的 NeoForge 还要先把 official 映射层的 1.21.4 API 差异接住（AvatarRenderer 的 setColorArgb、SoundEvent.id() 等），不在本次 Fabric 增量里。工程目录建起来 CI 就会编；届时按实测定 loader_version / java / gradle 并清掉 unverified。"
+    "note": "没做：official 映射层已经按版本拆好（official-modern 就是 1.21.4 那代渲染 API），卡点只剩 NeoForge 1.21.4 的加载器胶水。工程目录建起来 CI 就会编；届时按实测定 loader_version / java / gradle 并清掉 unverified。"
   },
   "1.21.4-forge": {
     "minecraft": "1.21.4",
@@ -112,13 +195,141 @@
     "gradle": "8.8",
     "project": "platforms/1.21.4-forge",
     "buildable": false,
-    "layers": ["1.21+", "official", "forge"],
+    "layers": ["1.21+", "official", "official-modern", "forge"],
     "unverified": ["loader_version", "java", "gradle"],
-    "note": "没做，与 1.21.4-neoforge 同一个卡点：official 映射层的 1.21.4 API 差异还没接。工程目录建起来 CI 就会编；届时按实测定 loader_version / java / gradle 并清掉 unverified。"
+    "note": "没做：2026-10-29 暂时移除了 Forge 1.21.4 的移植 —— ForgeGradle 7 的加载器胶水（payload 通道、JarJar 内嵌、FML 测试引导、AT）比 Fabric / NeoForge 复杂得多，维护成本高，不便跟随上游更新。工程源码已归档在仓库外；移除前实测起点是 Forge 54.1.22 / Java 21 / Gradle 9.3.1，恢复时按 1.21.4-neoforge 的 official-modern 路线重建并清掉 unverified。"
   },
 
+  "1.21.5-fabric": {
+    "minecraft": "1.21.5",
+    "minecraft_until": "1.21.6",
+    "loader": "Fabric",
+    "loader_version": "0.20.1",
+    "server_config_sync": true,
+    "mappings": "yarn",
+    "java": 21,
+    "gradle": "9.7.1",
+    "project": "platforms/1.21.5-fabric",
+    "buildable": false,
+    "layers": ["1.21+", "fabric"],
+    "overlay_base": "platforms/1.21.1-fabric",
+    "overlay_exclude": [
+      "src/main/java/com/atom/chat/render/SkiaGraphics.java",
+      "src/main/java/com/atom/chat/render/PanelBlurRenderer.java",
+      "src/main/java/com/atom/chat/render/ItemIconRenderer.java",
+      "src/main/java/com/atom/chat/render/GlStateMirror.java"
+    ],
+    "note": "在建：1.21.5 单独一个 jar，对着 1.21.5 编译，fabric.mod.json 的 depends.minecraft 由 minecraft + minecraft_until 生成（>=1.21.5 <1.21.6）。增量目标，源码树从 1.21.1-fabric 复制后应用 1.21.5 差异补丁。1.21.5 已有 GpuDevice/RenderPass 但还没有 GUI 渲染批次接口，渲染桥把 Skia 直接画进主帧缓冲，物品图标用 RenderPhase.Target 覆盖渲染到离屏帧缓冲再借给 Skia —— 与 1.21.6+ 的桥不是一份代码，所以 4 个渲染桥文件 overlay_exclude。尚未实机验收，buildable 保持关闭。"
+  },
+  "1.21.5-neoforge": {
+    "minecraft": "1.21.5",
+    "loader": "NeoForge",
+    "loader_version": null,
+    "server_config_sync": true,
+    "mappings": "official",
+    "java": 21,
+    "gradle": "9.2.1",
+    "project": "platforms/1.21.5-neoforge",
+    "buildable": false,
+    "layers": ["1.21+", "official", "neoforge"],
+    "unverified": ["loader_version", "java", "gradle"],
+    "note": "没做，也先不做：与 1.21.5-fabric 同一套 GpuDevice 管线，先等 Fabric 侧走通。official-modern 的上界是 1.21.5，这个目标建工程时同样要另开 1.21.5+ 的渲染桥版本层。"
+  },
+  "1.21.5-forge": {
+    "minecraft": "1.21.5",
+    "loader": "Forge",
+    "loader_version": null,
+    "server_config_sync": true,
+    "mappings": "official",
+    "java": 21,
+    "gradle": "8.8",
+    "project": "platforms/1.21.5-forge",
+    "buildable": false,
+    "layers": ["1.21+", "official", "forge"],
+    "unverified": ["loader_version", "java", "gradle"],
+    "note": "没做：1.21.5 的 Forge 目标现在没有需求。此条目的意义是让「这个组合没做」在这里看得见。"
+  },
+  "1.21.6,1.21.7-fabric": {
+    "minecraft": "1.21.6",
+    "minecraft_until": "1.21.8",
+    "covers": ["1.21.7"],
+    "loader": "Fabric",
+    "loader_version": "0.20.1",
+    "server_config_sync": true,
+    "mappings": "yarn",
+    "java": 21,
+    "gradle": "9.7.1",
+    "project": "platforms/1.21.6,1.21.7-fabric",
+    "buildable": false,
+    "layers": ["1.21+", "fabric"],
+    "overlay_base": "platforms/1.21.1-fabric",
+    "overlay_exclude": [
+      "src/main/java/com/atom/chat/render/SkiaGraphics.java",
+      "src/main/java/com/atom/chat/render/PanelBlurRenderer.java",
+      "src/main/java/com/atom/chat/render/ItemIconRenderer.java",
+      "src/main/java/com/atom/chat/render/GlStateMirror.java"
+    ],
+    "note": "在建：1.21.6 与 1.21.7 共用一个 jar，目标名与产物名都列全两个版本（1.21.6,1.21.7-fabric）；对着区间最低版本 1.21.6 编译，fabric.mod.json 的 depends.minecraft 由 minecraft + minecraft_until 生成（>=1.21.6 <1.21.8）。增量目标，源码树从 1.21.1-fabric 复制后应用 1.21.6 差异补丁；与 1.21.8 同属 GpuDevice/RenderPass 管线，4 个渲染桥文件继续 overlay_exclude 由目标本地实现。尚未实机验收，buildable 保持关闭。"
+  },
+  "1.21.6-neoforge": {
+    "minecraft": "1.21.6",
+    "loader": "NeoForge",
+    "loader_version": null,
+    "server_config_sync": true,
+    "mappings": "official",
+    "java": 21,
+    "gradle": "9.2.1",
+    "project": "platforms/1.21.6-neoforge",
+    "buildable": false,
+    "layers": ["1.21+", "official", "neoforge"],
+    "unverified": ["loader_version", "java", "gradle"],
+    "note": "没做，也先不做：与 1.21.6,1.21.7-fabric 同一套 GpuDevice/RenderPass 管线，先等 Fabric 侧走通。official-modern 的上界是 1.21.5，这个目标建工程时同样要另开 1.21.5+ 的渲染桥版本层。"
+  },
+  "1.21.6-forge": {
+    "minecraft": "1.21.6",
+    "loader": "Forge",
+    "loader_version": null,
+    "server_config_sync": true,
+    "mappings": "official",
+    "java": 21,
+    "gradle": "8.8",
+    "project": "platforms/1.21.6-forge",
+    "buildable": false,
+    "layers": ["1.21+", "official", "forge"],
+    "unverified": ["loader_version", "java", "gradle"],
+    "note": "没做：1.21.6 的 Forge 目标现在没有需求，且同样要等新渲染管线在 Fabric 侧走通。此条目的意义是让「这个组合没做」在这里看得见。"
+  },
+  "1.21.7-neoforge": {
+    "minecraft": "1.21.7",
+    "loader": "NeoForge",
+    "loader_version": null,
+    "server_config_sync": true,
+    "mappings": "official",
+    "java": 21,
+    "gradle": "9.2.1",
+    "project": "platforms/1.21.7-neoforge",
+    "buildable": false,
+    "layers": ["1.21+", "official", "neoforge"],
+    "unverified": ["loader_version", "java", "gradle"],
+    "note": "没做，也先不做：Fabric 侧的 1.21.7 由 1.21.6,1.21.7-fabric 区间 jar 覆盖，NeoForge 侧与 1.21.6-neoforge 同样的理由（新渲染管线要先在 Fabric 侧走通）。"
+  },
+  "1.21.7-forge": {
+    "minecraft": "1.21.7",
+    "loader": "Forge",
+    "loader_version": null,
+    "server_config_sync": true,
+    "mappings": "official",
+    "java": 21,
+    "gradle": "8.8",
+    "project": "platforms/1.21.7-forge",
+    "buildable": false,
+    "layers": ["1.21+", "official", "forge"],
+    "unverified": ["loader_version", "java", "gradle"],
+    "note": "没做：1.21.7 的 Forge 目标现在没有需求。此条目的意义是让「这个组合没做」在这里看得见。"
+  },
   "1.21.8-fabric": {
     "minecraft": "1.21.8",
+    "minecraft_until": "1.21.9",
     "loader": "Fabric",
     "loader_version": "0.20.1",
     "server_config_sync": true,
@@ -149,7 +360,7 @@
     "buildable": false,
     "layers": ["1.21+", "official", "neoforge"],
     "unverified": ["loader_version", "java", "gradle"],
-    "note": "没做，也先不做：与 1.21.8-fabric 同一套新渲染管线，先等 Fabric 侧把渲染桥与 API 差异走通。工程目录建起来 CI 就会编；届时按实测定 loader_version / java / gradle 并清掉 unverified。"
+    "note": "没做，也先不做：与 1.21.8-fabric 同一套新渲染管线，先等 Fabric 侧把渲染桥与 API 差异走通。official-modern 的上界是 1.21.5（它编不过 1.21.5+ 的 GpuDevice 管线），所以这个目标建工程时还要给 1.21.8 那代渲染桥另开版本层，不能指望挂上 official-modern 就完事。"
   },
   "1.21.8-forge": {
     "minecraft": "1.21.8",
@@ -165,9 +376,88 @@
     "unverified": ["loader_version", "java", "gradle"],
     "note": "没做：1.21.8 的 Forge 目标现在没有需求，且同样要等新增渲染管线在 Fabric 侧走通。此条目的意义是让「这个组合没做」在这里看得见。"
   },
+  "1.21.9,1.21.10-fabric": {
+    "minecraft": "1.21.9",
+    "minecraft_until": "1.21.11",
+    "covers": ["1.21.10"],
+    "loader": "Fabric",
+    "loader_version": "0.20.1",
+    "server_config_sync": true,
+    "mappings": "yarn",
+    "java": 21,
+    "gradle": "9.8.2",
+    "project": "platforms/1.21.9,1.21.10-fabric",
+    "buildable": false,
+    "layers": ["1.21+", "fabric"],
+    "overlay_base": "platforms/1.21.1-fabric",
+    "overlay_exclude": [
+      "src/main/java/com/atom/chat/render/SkiaGraphics.java",
+      "src/main/java/com/atom/chat/render/PanelBlurRenderer.java",
+      "src/main/java/com/atom/chat/render/ItemIconRenderer.java",
+      "src/main/java/com/atom/chat/render/GlStateMirror.java"
+    ],
+    "note": "在建：1.21.9 与 1.21.10 共用一个 jar，目标名与产物名都列全两个版本（1.21.9,1.21.10-fabric）；对着区间最低版本 1.21.9 编译，fabric.mod.json 的 depends.minecraft 由 minecraft + minecraft_until 生成（>=1.21.9 <1.21.11）。增量目标，源码树从 1.21.1-fabric 复制后应用 1.21.9 差异补丁（以 1.21.11 的补丁集为底，按 1.21.9 API 回退）；4 个渲染桥文件继续 overlay_exclude 由目标本地实现。尚未实机验收，buildable 保持关闭。"
+  },
+  "1.21.9-neoforge": {
+    "minecraft": "1.21.9",
+    "loader": "NeoForge",
+    "loader_version": null,
+    "server_config_sync": true,
+    "mappings": "official",
+    "java": 21,
+    "gradle": "9.2.1",
+    "project": "platforms/1.21.9-neoforge",
+    "buildable": false,
+    "layers": ["1.21+", "official", "neoforge"],
+    "unverified": ["loader_version", "java", "gradle"],
+    "note": "没做，也先不做：Fabric 侧的 1.21.9 目标刚建好、还没实机验收，NeoForge 侧等它走通。NeoForge 1.21.9 线为 21.9.x。与 1.21.8-neoforge 一样，1.21.8+ 的 official 目标需要自己的版本层（official-modern 只覆盖到 1.21.4 那代 API）。"
+  },
+  "1.21.9-forge": {
+    "minecraft": "1.21.9",
+    "loader": "Forge",
+    "loader_version": null,
+    "server_config_sync": true,
+    "mappings": "official",
+    "java": 21,
+    "gradle": "8.8",
+    "project": "platforms/1.21.9-forge",
+    "buildable": false,
+    "layers": ["1.21+", "official", "forge"],
+    "unverified": ["loader_version", "java", "gradle"],
+    "note": "没做：1.21.9 的 Forge 目标现在没有需求，且同样要等 Fabric 侧的新渲染管线走通。此条目的意义是让「这个组合没做」在这里看得见。"
+  },
+  "1.21.10-neoforge": {
+    "minecraft": "1.21.10",
+    "loader": "NeoForge",
+    "loader_version": null,
+    "server_config_sync": true,
+    "mappings": "official",
+    "java": 21,
+    "gradle": "9.2.1",
+    "project": "platforms/1.21.10-neoforge",
+    "buildable": false,
+    "layers": ["1.21+", "official", "neoforge"],
+    "unverified": ["loader_version", "java", "gradle"],
+    "note": "没做：Fabric 侧的 1.21.10 由 1.21.9,1.21.10-fabric 区间 jar 覆盖，NeoForge 侧与 1.21.9-neoforge 同样的理由（Fabric 侧还没实机验收）。此条目的意义是让「这个组合没做」在这里看得见。"
+  },
+  "1.21.10-forge": {
+    "minecraft": "1.21.10",
+    "loader": "Forge",
+    "loader_version": null,
+    "server_config_sync": true,
+    "mappings": "official",
+    "java": 21,
+    "gradle": "8.8",
+    "project": "platforms/1.21.10-forge",
+    "buildable": false,
+    "layers": ["1.21+", "official", "forge"],
+    "unverified": ["loader_version", "java", "gradle"],
+    "note": "没做：1.21.10 的 Forge 目标现在没有需求。此条目的意义是让「这个组合没做」在这里看得见。"
+  },
 
   "1.21.11-fabric": {
     "minecraft": "1.21.11",
+    "minecraft_until": "1.21.12",
     "loader": "Fabric",
     "loader_version": "0.20.1",
     "server_config_sync": true,
@@ -198,7 +488,7 @@
     "buildable": false,
     "layers": ["1.21+", "official", "neoforge"],
     "unverified": ["loader_version", "java", "gradle"],
-    "note": "没做，也先不做：1.21.9 起的新渲染管线与 official 映射层差异要先在 Fabric 侧走通。NeoForge 1.21.11 线为 21.11.x。工程目录建起来 CI 就会编；届时按实测定 loader_version / java / gradle 并清掉 unverified。"
+    "note": "没做，也先不做：1.21.9 起的新渲染管线与 official 映射层差异要先在 Fabric 侧走通。NeoForge 1.21.11 线为 21.11.x。与 1.21.8-neoforge 一样，1.21.8+ 的 official 目标需要自己的版本层（official-modern 只覆盖到 1.21.4 那代 API）。"
   },
   "1.21.11-forge": {
     "minecraft": "1.21.11",
@@ -225,12 +515,13 @@
     "gradle": "8.8",
     "project": "platforms/1.21.1-forge",
     "buildable": false,
-    "layers": ["1.21+", "official", "forge"],
+    "layers": ["1.21+", "official", "official-legacy", "forge"],
     "unverified": ["loader_version", "java", "gradle"],
     "note": "没做，也先不做：1.21.1 的 Forge 目标现在没有需求。此条目的意义是让「这个组合没做」在这里看得见。真要做时：工程目录建起来 CI 就会编它，loader_version / java / gradle 三个值按实测定，然后把 unverified 清掉。"
   },
   "1.20.1-fabric": {
     "minecraft": "1.20.1",
+    "minecraft_until": "1.21",
     "loader": "Fabric",
     "loader_version": null,
     "server_config_sync": true,
@@ -253,7 +544,7 @@
     "gradle": "8.8",
     "project": "platforms/1.20.1-neoforge",
     "buildable": false,
-    "layers": ["official", "neoforge"],
+    "layers": ["official", "official-legacy", "neoforge"],
     "unverified": ["loader_version", "java", "gradle"],
     "note": "没做，也先不做。1.20.1 的 NeoForge 是 20.4 线，与 1.21.1 的 NeoForge 不是一批 API；要做时先把这个目标的 layers 重新量一遍。"
   }

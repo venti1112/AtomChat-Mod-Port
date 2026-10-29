@@ -1,0 +1,33 @@
+diff --git a/src/main/java/com/atom/chat/mixin/ChatHudMixin.java b/src/main/java/com/atom/chat/mixin/ChatHudMixin.java
+index 370628e..93c9c90 100644
+--- a/src/main/java/com/atom/chat/mixin/ChatHudMixin.java
++++ b/src/main/java/com/atom/chat/mixin/ChatHudMixin.java
+@@ -385,7 +385,7 @@ public class ChatHudMixin {
+             return true;
+         }
+         PlayerListEntry entry = ChatClassifier.resolveOnlinePlayer(cleaned);
+-        return entry != null && ownName.equalsIgnoreCase(entry.getProfile().getName());
++        return entry != null && ownName.equalsIgnoreCase(entry.getProfile().name());
+     }
+ 
+     @Unique
+@@ -426,7 +426,7 @@ public class ChatHudMixin {
+         java.util.List<String> own = OwnIdentity.wireNameCandidates();
+         String bare = client.player.getName().getString();
+         for (PlayerListEntry info : client.player.networkHandler.getPlayerList()) {
+-            if (info.getProfile().getId().equals(client.player.getUuid())) {
++            if (info.getProfile().id().equals(client.player.getUuid())) {
+                 continue;
+             }
+             for (String cand : ChatClassifier.nameCandidates(info)) {
+@@ -502,8 +502,8 @@ public class ChatHudMixin {
+             hit = new WhisperTextParser.WhisperHit(true, tm.displayLabel(), tm.content());
+         }
+         PlayerListEntry info = ChatClassifier.resolveOnlinePlayer(hit.partnerDisplay());
+-        String profile = info != null ? info.getProfile().getName() : hit.partnerDisplay();
+-        UUID uuid = info != null ? info.getProfile().getId()
++        String profile = info != null ? info.getProfile().name() : hit.partnerDisplay();
++        UUID uuid = info != null ? info.getProfile().id()
+                 : ChatClassifier.resolveUuid(hit.partnerDisplay());
+         SenderMeta whisperMeta;
+         if (hit.incoming()) {

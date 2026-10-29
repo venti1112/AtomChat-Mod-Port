@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""孪生残差报告：`layers/mapping/official/` ↔ `platforms/1.21.1-fabric/` 的内容一致性门。
+"""孪生残差报告：映射层 ↔ `platforms/1.21.1-fabric/` 的内容一致性门。
+
+【比哪几层】`official` 与它的版本切分 `official-legacy`（1.21.4 之前）都拿
+`platforms/1.21.1-fabric/` 当 Yarn 孪生 —— 那份平台目录就是它们的同代副本。
+`official-modern` 没有静态孪生：它适用的 Fabric 目标（1.21.4+）全是增量目标，
+孪生是「基础平台的源码树 + patches / 本地实现」生成出来的，静态比对无从谈起；
+那一格由 `tools/verify_targets.py` 的「补丁或排除必须表态」检查盯着。
 
 【为什么需要它】`tools/verify_targets.py` 的孪生检查只验「副本在不在」和「有没有逐字相同」
 （逐字相同的该进 shared/）。它**不验内容一致**：fabric 孪生多一行逻辑、改一个常量、
@@ -36,8 +42,11 @@ import sys
 
 TOKEN = re.compile(r"[A-Za-z_][A-Za-z0-9_]*|\d+|.", re.S)
 IDENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
-LAYER = "layers/mapping/official"
-FABRIC_PROJECT = "platforms/1.21.1-fabric"
+# (映射层目录, 该层的 Yarn 孪生平台)。official-modern 没有静态孪生，见模块开头的说明。
+LAYER_TWINS = [
+    ("layers/mapping/official", "platforms/1.21.1-fabric"),
+    ("layers/mapping+version/official-legacy", "platforms/1.21.1-fabric"),
+]
 
 errors: list[str] = []
 
@@ -107,13 +116,22 @@ def fingerprint(a_lines: list[str], b_lines: list[str]) -> str:
 
 
 def twin_pairs(root: pathlib.Path) -> list[tuple[str, pathlib.Path, pathlib.Path]]:
-    path_alias = read_json(root / "versions/mapping-aliases.json").get(LAYER, {})
-    base = root / LAYER
+    all_aliases = read_json(root / "versions/mapping-aliases.json")
     out = []
-    for p in sorted(base.rglob("*.java")):
-        rel = p.relative_to(base).as_posix()
-        twin = root / FABRIC_PROJECT / path_alias.get(rel, rel)
-        out.append((rel, p, twin))
+    origins: dict[str, str] = {}
+    for layer, fabric in LAYER_TWINS:
+        base = root / layer
+        if not base.is_dir():
+            continue
+        path_alias = all_aliases.get(layer, {})
+        for p in sorted(base.rglob("*.java")):
+            rel = p.relative_to(base).as_posix()
+            if rel in origins:
+                # 台账按层内相对路径登记；同一路径出现在两层会让两份残差混成一份。
+                raise SystemExit(f"{rel} 同时出现在 {origins[rel]} 与 {layer} —— 台账无法区分")
+            origins[rel] = layer
+            twin = root / fabric / path_alias.get(rel, rel)
+            out.append((rel, p, twin))
     return out
 
 
@@ -162,7 +180,7 @@ def main() -> int:
     aliases = Aliases(alias_data.get("rules", []))
     pairs = twin_pairs(root)
     if not pairs:
-        raise SystemExit(f"{root} 下没有找到 {LAYER} 的孪生对")
+        raise SystemExit(f"{root} 下没有找到任何映射层的孪生对")
 
     undeclared: list[tuple[str, dict]] = []
     matched: set[tuple[str, str]] = set()
@@ -210,7 +228,8 @@ def main() -> int:
         return 0
 
     if not args.summary:
-        print(f"孪生对：{len(pairs)} 对（{LAYER} ↔ {FABRIC_PROJECT}）")
+        layers = "、".join(dict.fromkeys(layer for layer, _ in LAYER_TWINS))
+        print(f"孪生对：{len(pairs)} 对（{layers} ↔ 1.21.1-fabric）")
         print(f"alias 规则：{len(aliases.rules)} 条")
         if per_file:
             print(f"\n有残差的文件：{len(per_file)} 对")

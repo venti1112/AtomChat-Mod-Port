@@ -2,27 +2,37 @@
   "_comment": [
     "共享层的声明。【一个层就是对目标的一个谓词】：满足它的目标，才把这一层的代码编进去。",
     "",
-    "【三个轴】",
-    "  since      钉住版本：Minecraft 版本不低于它的目标才挂",
+    "【四个轴】",
+    "  since      钉住下界：Minecraft 版本不低于它的目标才挂（含端点）",
+    "  until      钉住上界：Minecraft 版本低于它的目标才挂（不含端点）",
     "  loader     钉住加载器：这个加载器的目标才挂",
     "  mappings   钉住映射家族：用这套映射名的目标才挂",
     "至少写一个。一个都不写就是「全部目标」，那是 shared/，不是层。",
     "",
     "【禁哪个轴 = 哪个轴没被钉住】",
-    "  只写 since            版本层：该批版本、各加载器共用      → 层里不许有绑加载器或绑映射的东西",
-    "  只写 loader           加载器层：该加载器、各版本共用      → 层里不许有绑版本或绑映射的东西",
-    "  只写 mappings         映射层：该映射家族、各加载器共用    → 层里不许有绑版本或绑加载器的东西",
-    "  写了多个轴            交集层：两个/三个轴都钉住，都不禁",
+    "  只写 since / until  版本层：该批版本、各加载器共用      → 层里不许有绑加载器或绑映射的东西",
+    "  只写 loader         加载器层：该加载器、各版本共用      → 层里不许有绑版本或绑映射的东西",
+    "  只写 mappings       映射层：该映射家族、各加载器共用    → 层里不许有绑版本或绑加载器的东西",
+    "  写了多个轴          交集层：写了的轴都钉住，都没禁",
     "",
     "【目录是推出来的，不是声明的】",
     "  只写一个轴 → layers/<轴名>/<层名>/      例如 layers/version/1.21+、layers/mapping/official",
     "  写了多个轴 → layers/<轴名按字母序用 + 连接>/<层名>/",
-    "本仓与 mcphone 的一处差别：它只有两个轴，所以「两个都写」叫 layers/both/；我们有三个轴，",
+    "since 与 until 都落在 version 这一段，同一个层里同时写两个也只出现一次，",
+    "所以「official × 版本区间」的目录是 layers/mapping+version/<层名>/。",
+    "本仓与 mcphone 的一处差别：它只有两个轴，所以「两个都写」叫 layers/both/；我们有四个轴，",
     "「both」会歧义（是哪两个），因此改成把轴名拼进目录名。声明得出来、编不过去的那种矛盾，",
     "就是靠「目录由声明推出来」消掉的 —— 没有第二处可以互相矛盾。",
     "",
     "【层名是「这套 API 从哪个 Minecraft 版本开始有」/「哪套映射」，不是某一个具体版本】",
     "1.21.1 与将来的 1.21.x / 更高版本都挂 1.21+，因为它们装的是同一份代码。",
+    "",
+    "【同一个类在版本之间分叉时：映射层按版本区间再切一刀】",
+    "official 映射层里放两种 official 目标都逐字可用的那一批。某个文件在 1.21.4 换了 API",
+    "（ShaderInstance → CompiledShaderProgram、setPixelRGBA → setPixelABGR 之类）时，",
+    "它被拆成 official-legacy（until 1.21.4）与 official-modern（since 1.21.4, until 1.21.5），",
+    "两个目标各挂各自的那一份 —— 不是给某个目标开「排除层里这个文件」的口子（那会回到手抄副本）。",
+    "区间必须不重叠：同一目标同时挂到两份同路径的文件，javac 会报 duplicate class。",
     "",
     "【populated：这一层现在该不该有内容】",
     "true 时层里一个文件都没有就红；声明为 false 却扫到内容也红。层可以先声明后填，",
@@ -42,7 +52,20 @@
   "official": {
     "mappings": "official",
     "populated": true,
-    "note": "映射层：写给 Mojang 官方名的那一份。Fabric 用 Yarn，同一段逻辑的两套名字就是「映射接缝」：该层由所有 official 映射的目标挂载（NeoForge 1.21.1 与 Forge 1.20.1），Fabric 不挂、保留自己那份 Yarn 名副本。两边的文件路径一一对应，由 tools/verify_targets.py 的孪生副本检查盯着（少一个就红）。"
+    "note": "映射层：写给 Mojang 官方名的那一份。Fabric 用 Yarn，同一段逻辑的两套名字就是「映射接缝」：该层由所有 official 映射的目标挂载（NeoForge 所有版本与 Forge 1.20.1 / 1.21.4），Fabric 不挂、保留自己那份 Yarn 名副本。两边的文件路径一一对应，由 tools/verify_targets.py 的孪生副本检查盯着（少一个就红）。在 1.21.4 换过 API 的两个文件不在这里，见 official-legacy / official-modern。"
+  },
+  "official-legacy": {
+    "mappings": "official",
+    "until": "1.21.4",
+    "populated": true,
+    "note": "映射+版本层：official 名、1.21.4 之前的渲染 API。AvatarRenderer（NativeImage.setPixelRGBA）与 ItemIconRenderer（ShaderInstance + VertexSorting）在这一层；1.21.4 起这两个 API 换成了 setPixelABGR / CompiledShaderProgram + ProjectionType，逐行补丁没法让同一份源码同时编过两个版本，所以按版本区间拆开。挂载它的是 1.20.1-forge 与 1.21.1-neoforge。"
+  },
+  "official-modern": {
+    "mappings": "official",
+    "since": "1.21.4",
+    "until": "1.21.5",
+    "populated": true,
+    "note": "映射+版本层：official 名、1.21.4 这一代渲染 API（CompiledShaderProgram / ProjectionType / setPixelABGR）。上限写 1.21.5 是因为 1.21.5 起换成 GpuDevice/RenderPass 新管线，这一份编不过去 —— 1.21.8+ 的 official 目标届时需要自己的版本层，不能靠「since 一直往下传」。矩阵里挂载它的是 1.21.4-forge 与 1.21.4-neoforge 两个条目，工程都还没建（Forge 的移植 2026-10-29 暂时移除）—— 这层不随工程一起删，恢复时直接挂上。"
   },
   "fabric": {
     "loader": "Fabric",
@@ -57,6 +80,6 @@
   "forge": {
     "loader": "Forge",
     "populated": false,
-    "note": "加载器层：ForgeGradle + minecraftforge 专有（SimpleChannel 载荷、Capability、SRG 运行时名）。待填。"
+    "note": "加载器层：ForgeGradle / minecraftforge 专有（模组元数据、通道与事件总线、JarJar 内嵌、AT）。1.20.1 与 1.21.4 的 Forge API 差得远（SimpleChannel + SRG 运行时名 vs payload 通道 + 官方名），真要往里填代码时多半还要按版本再切一刀。待填。"
   }
 }

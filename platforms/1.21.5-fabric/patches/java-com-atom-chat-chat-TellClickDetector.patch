@@ -1,0 +1,19 @@
+diff --git a/src/main/java/com/atom/chat/chat/TellClickDetector.java b/src/main/java/com/atom/chat/chat/TellClickDetector.java
+index c1a9c3d..81d6049 100644
+--- a/src/main/java/com/atom/chat/chat/TellClickDetector.java
++++ b/src/main/java/com/atom/chat/chat/TellClickDetector.java
+@@ -48,10 +48,10 @@ public final class TellClickDetector {
+             int e = s + str.length();
+             pos[0] = e;
+             var click = style.getClickEvent();
+-            if (tellName[0] == null && click != null
+-                    && click.getAction() == net.minecraft.text.ClickEvent.Action.SUGGEST_COMMAND
+-                    && click.getValue() != null) {
+-                String cmd = click.getValue();
++            if (tellName[0] == null
++                    && click instanceof net.minecraft.text.ClickEvent.SuggestCommand suggest
++                    && suggest.command() != null) {
++                String cmd = suggest.command();
+                 for (String prefix : TELL_PREFIXES) {
+                     if (cmd.startsWith(prefix)) {
+                         String n = cmd.substring(prefix.length()).trim();

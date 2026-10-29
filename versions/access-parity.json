@@ -1,40 +1,54 @@
 {
   "_comment": [
     "【访问扩宽的覆盖声明】Fabric 用 access widener、NeoForge/Forge 用 access transformer，",
-    "两套文件是同一件事的三种写法，而且成员名分属三套命名：",
+    "两套文件是同一件事的几种写法，而且成员名分属三套命名：",
     "  Fabric  accesswidener 的命名空间是 named（Yarn）        → TextFieldWidget selectionStart",
     "  NeoForge AT  写官方名                                    → net.minecraft.client.gui.components.EditBox cursorPos",
-    "  Forge AT     写 SRG 名（ForgeGradle 的产线名）           → net.minecraft.client.gui.components.EditBox f_94101_",
-    "所以「两份 AT 必须一致」是错的 —— 它们本来就只该在**类名**上一致、在成员名上各写各的家族。",
+    "  Forge 1.20.1 AT 写 SRG 名（ForgeGradle 的产线名）        → net.minecraft.client.gui.components.EditBox f_94101_",
+    "  1.21.4 官方名 AT 写官方名（1.20.5 起运行时无 SRG）       → net.minecraft.client.gui.components.EditBox cursorPos",
+    "所以「几份 AT 必须逐字一致」是错的 —— 它们本来就只该在**类与成员**上对应、在成员名上各写各的家族。",
     "",
-    "【这份表钉住什么】把 Fabric 的 Yarn 名与官方名一一对上，于是三份文件可以被机器对齐：",
-    "任何一侧加了成员而没进这张表，CI 就红。这挡住的是「一端扩宽了、另一端忘了」——",
-    "它的表现可能是目标编不过（还算是好情况），也可能是两端都编得过但行为不同。",
+    "【这份表钉住什么】把 Fabric 的 Yarn 名与官方名一一对上，于是几份文件可以被机器对齐：",
+    "每份文件只与自己在声明表里的那一列比，多一个少一个都红。这挡住的是「一端扩宽了、",
+    "另一端忘了」—— 它的表现可能是目标编不过（还算是好情况），也可能是两端都编得过但行为不同。",
+    "不要求跨代相等：1.21.4 的渲染桥要 NativeImage.setPixelABGR，1.21.1 那一代用的是别的 API，",
+    "没有这一条，所以 official 与 official_modern 的成员集合本来就不同。",
+    "1.21.4 官方名 AT 的归属目标（1.21.4-neoforge / 1.21.4-forge）工程都还没建起来；",
+    "与 versions/resource-paths.json 同一条约定：工程不存在时校验器跳过这一列，建起来后自动进入比对。",
     "",
     "【official 为 null 的意思】该成员只在 Fabric 侧需要。允许，但 why 里要写明理由。",
-    "本仓两条都是「官方名侧改用 accessor mixin，不扩宽原版类」。",
+    "本仓有两条是「官方名侧改用 accessor mixin，不扩宽原版类」。",
     "",
-    "【为什么不列描述符】描述符也跟着映射变（`I` / `Lnet/...`），列进来只会多一处要维护的映射。"
+    "【为什么不列字段描述符】描述符也跟着映射变（`I` / `Lnet/...`），列进来只会多一处要维护的映射。",
+    "方法是例外：accesstransformers 对方法规则只认带 JVM 描述符的写法，裸方法名会静默匹配不到，",
+    "所以表里的方法成员必须连描述符一起写。"
   ],
   "files": {
     "yarn": "platforms/1.21.1-fabric/src/main/resources/atomchat.accesswidener",
     "official": "platforms/1.21.1-neoforge/src/main/resources/META-INF/accesstransformer.cfg",
+    "official_modern": "platforms/1.21.4-neoforge/src/main/resources/META-INF/accesstransformer.cfg",
     "srg": "platforms/1.20.1-forge/src/main/resources/META-INF/accesstransformer.cfg"
   },
   "members": [
     {
       "yarn": "net/minecraft/client/gui/widget/TextFieldWidget selectionStart",
       "official": "net.minecraft.client.gui.components.EditBox cursorPos",
+      "official_modern": "net.minecraft.client.gui.components.EditBox cursorPos",
+      "srg": "net.minecraft.client.gui.components.EditBox f_94101_",
       "why": "多行输入与跨消息选择要读写输入框的光标与选区"
     },
     {
       "yarn": "net/minecraft/client/gui/widget/TextFieldWidget selectionEnd",
       "official": "net.minecraft.client.gui.components.EditBox highlightPos",
+      "official_modern": "net.minecraft.client.gui.components.EditBox highlightPos",
+      "srg": "net.minecraft.client.gui.components.EditBox f_94102_",
       "why": "同上：选区的另一端"
     },
     {
       "yarn": "net/minecraft/stat/StatHandler statMap",
       "official": "net.minecraft.stats.StatsCounter stats",
+      "official_modern": "net.minecraft.stats.StatsCounter stats",
+      "srg": "net.minecraft.stats.StatsCounter f_13013_",
       "why": "离线玩家「上次在线」排序要读原版统计表"
     },
     {
@@ -51,6 +65,12 @@
       "yarn": "net/minecraft/client/gui/screen/Screen drawables",
       "official": null,
       "why": "恢复第三方聊天控件绘制；Forge/NeoForge 的 Screen.renderables 已由加载器开放，无需额外 AT，Fabric 的对应字段 drawables 为 private，需要 AW。"
+    },
+    {
+      "yarn": null,
+      "official": null,
+      "official_modern": "com.mojang.blaze3d.platform.NativeImage setPixelABGR(III)V",
+      "why": "1.21.4 渲染桥导出调试皮肤时要直接写像素，NativeImage.setPixelABGR 是 private；1.21.1 那一代写像素走的是另一套 API，没有这一条"
     }
   ]
 }

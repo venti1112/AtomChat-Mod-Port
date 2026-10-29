@@ -1,0 +1,30 @@
+diff --git a/src/main/resources/assets/minecraft/shaders/core/atomchat_kawase_blur.json b/src/main/resources/assets/minecraft/shaders/core/atomchat_kawase_blur.json
+index b09146a..2bb4824 100644
+--- a/src/main/resources/assets/minecraft/shaders/core/atomchat_kawase_blur.json
++++ b/src/main/resources/assets/minecraft/shaders/core/atomchat_kawase_blur.json
+@@ -4,8 +4,8 @@
+     "srcrgb": "one",
+     "dstrgb": "zero"
+   },
+-  "vertex": "atomchat_kawase_blur",
+-  "fragment": "atomchat_kawase_blur",
++  "vertex": "minecraft:core/atomchat_kawase_blur",
++  "fragment": "minecraft:core/atomchat_kawase_blur",
+   "samplers": [
+     { "name": "Sampler0" }
+   ],
+diff --git a/src/main/resources/assets/minecraft/shaders/core/atomchat_panel_blur.json b/src/main/resources/assets/minecraft/shaders/core/atomchat_panel_blur.json
+index 26fa1da..9a45026 100644
+--- a/src/main/resources/assets/minecraft/shaders/core/atomchat_panel_blur.json
++++ b/src/main/resources/assets/minecraft/shaders/core/atomchat_panel_blur.json
+@@ -4,8 +4,8 @@
+     "srcrgb": "srcalpha",
+     "dstrgb": "1-srcalpha"
+   },
+-  "vertex": "atomchat_panel_blur",
+-  "fragment": "atomchat_panel_blur",
++  "vertex": "minecraft:core/atomchat_panel_blur",
++  "fragment": "minecraft:core/atomchat_panel_blur",
+   "samplers": [
+     { "name": "Sampler0" }
+   ],

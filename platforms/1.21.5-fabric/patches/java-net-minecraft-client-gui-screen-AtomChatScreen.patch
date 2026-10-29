@@ -1,0 +1,69 @@
+diff --git a/src/main/java/net/minecraft/client/gui/screen/AtomChatScreen.java b/src/main/java/net/minecraft/client/gui/screen/AtomChatScreen.java
+index bf1ab8e..f80b615 100644
+--- a/src/main/java/net/minecraft/client/gui/screen/AtomChatScreen.java
++++ b/src/main/java/net/minecraft/client/gui/screen/AtomChatScreen.java
+@@ -1956,11 +1956,9 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+             this.client.setScreen(null);
+             return;
+         }
+-        // The blur pre-pass is raw GL and must run before Skia paints the panel.
+-        // Load the shader first so drawPanel knows whether it may use the
+-        // translucent tint or must keep the solid fallback. The actual draw
+-        // result is tracked in blurDrawnThisFrame so a silent shader no-op can
+-        // never strip the solid background again.
++        // The blur is a request painted inside the Skia frame on 1.21.8: this
++        // pass only records the rect, and drawPanel asks whether it landed
++        // before choosing the translucent tint over the solid fallback.
+         blurDrawnThisFrame = false;
+         boolean blurWanted = AtomChatConfig.get().blurEnabled && !WallpaperStore.isSet();
+         if (blurWanted) {
+@@ -1976,12 +1974,10 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+                     // The capture rect must be the rect drawPhone paints: the
+                     // inset panel rect carried through the same open transform
+                     // (zoom around the panel centre, then the slide offset).
+-                    PanelOpenMotion.PanelRect capture = PanelOpenMotion.blurCapture(
++                    PanelOpenMotion.PanelRect capture = PanelOpenMotion.paintedPanelRect(
+                             panelProgress, AtomChatConfig.get().pageNavStyle,
+-                            panelX(), panelY(), panelWidth(), panelHeight(), strokeWidth,
+-                            uiDensity(), this.client.getWindow().getScaleFactor());
++                            panelX(), panelY(), panelWidth(), panelHeight(), strokeWidth);
+                     blurDrawnThisFrame = PanelBlurRenderer.render(
+-                            context.getMatrices().peek().getPositionMatrix(),
+                             capture.x(), capture.y(), capture.w(), capture.h(), capture.radius(),
+                             panelProgress);
+                 } catch (Throwable t) {
+@@ -2001,7 +1997,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+         // No super.render: ChatScreen/Screen would draw the vanilla input box and
+         // widget chrome; our UI is fully Skia-drawn, the suggestor renders explicitly.
+         Runnable blurPreUi = preUi;
+-        graphics.draw(() -> {
++        graphics.draw(context, () -> {
+             if (blurPreUi != null) blurPreUi.run();
+             com.atom.chat.render.ItemIconRenderer.prepare(context, graphics);
+         }, uiDensity(), (canvas, worldSnapshot) -> drawPhone(canvas, worldSnapshot, mouseX, mouseY, delta));
+@@ -2401,15 +2397,16 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+                 canvas.restore();
+             }
+         } else {
+-            // The raw-GL blur pre-pass already painted the rounded blurred image
+-            // on the main framebuffer, so this layer is only the tint over it.
+-            // Both paths use the configured panel colour — the blur branch used
+-            // to hardcode 0xFF16191F, which made the background impossible to
+-            // recolour with blur enabled (0.2.5 report). A blur that was asked
+-            // for but did not land this frame falls back to an OPAQUE panel; see
+-            // PanelBackground for why the translucent tint is only safe when the
+-            // blur is deliberately off.
+-            int tint = PanelBackground.tintFor(AtomChatConfig.get().blurEnabled, blurDrawnThisFrame,
++            // The Skia blur already painted the rounded blurred image into this
++            // canvas, so this layer is only the tint over it. Both paths use the
++            // configured panel colour — the blur branch used to hardcode
++            // 0xFF16191F, which made the background impossible to recolour with
++            // blur enabled (0.2.5 report). A blur that was asked for but did not
++            // land this frame falls back to an OPAQUE panel; see PanelBackground
++            // for why the translucent tint is only safe when the blur is
++            // deliberately off.
++            boolean blurLanded = blurDrawnThisFrame && PanelBlurRenderer.landedThisFrame();
++            int tint = PanelBackground.tintFor(AtomChatConfig.get().blurEnabled, blurLanded,
+                     AtomChatConfig.get().panelBgColor, AtomChatConfig.get().panelOpacity);
+             try (Paint bg = new Paint().setColor(tint)) {
+                 canvas.drawRRect(RRect.makeXYWH(innerX, innerY, innerW, innerH, innerRadius), bg);

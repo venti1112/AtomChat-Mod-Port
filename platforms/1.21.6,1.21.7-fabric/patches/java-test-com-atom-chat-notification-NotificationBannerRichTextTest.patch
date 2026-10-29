@@ -1,0 +1,13 @@
+diff --git a/src/test/java/com/atom/chat/notification/NotificationBannerRichTextTest.java b/src/test/java/com/atom/chat/notification/NotificationBannerRichTextTest.java
+index 7be588c..4c60ac6 100644
+--- a/src/test/java/com/atom/chat/notification/NotificationBannerRichTextTest.java
++++ b/src/test/java/com/atom/chat/notification/NotificationBannerRichTextTest.java
+@@ -220,7 +220,7 @@ class NotificationBannerRichTextTest {
+     void itemIconWidthIsIncludedWhenTruncatingABanner() {
+         Font font = FontManager.font(16);
+         RichText item = RichText.of(Text.literal("abcdefgh").setStyle(Style.EMPTY.withHoverEvent(
+-                new HoverEvent(HoverEvent.Action.SHOW_ITEM, new HoverEvent.ItemStackContent(new ItemStack(Items.DIAMOND))))));
++                new HoverEvent.ShowItem(new ItemStack(Items.DIAMOND)))));
+         float maxWidth = SkiaFontRenderer.getStringWidth(font, "abcd") + font.getSize();
+         RichText clipped = NotificationBanner.truncateRich(font, item, maxWidth);
+         float actual = RichTextRenderer.width(font, RichTextRenderer.wrapFor(clipped, font, Float.MAX_VALUE).get(0));

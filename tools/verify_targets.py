@@ -5,6 +5,9 @@
   * 矩阵的规则（每个 Minecraft 版本都要有 Fabric / NeoForge / Forge 三条）
   * mappings 全目标一致（shared/ 里那些 net.minecraft.* 名字的前提）
   * buildable: true 的目标不许留 unverified
+  * ci: false 只给上游基线用：它们不进 CI 构建，但源码仍被增量目标与孪生检查引用；
+    与 buildable: true 互斥（不构建的东西不可能进 Release）
+  * 目标名必须写明确：<minecraft>[,<covers>…]-<loader 小写>，区间 jar 要把覆盖版本列全
   * 工程目录存在就必须在矩阵里，反之亦然（不许有"没有任何地方编"的源码）
   * 各平台不许自己定义身份键（mod_version 等只在仓库根那一份）
   * 矩阵里写的 java / gradle 与工程里实际的 toolchain / wrapper 一致（防止两边各写一份然后漂移）
@@ -92,6 +95,7 @@ def check_targets(targets: dict, layers: dict, aliases: dict) -> None:
 
     mappings = {}
     seen_combo = set()
+    covered_by = {}
 
     for name, t in targets.items():
         for field in REQUIRED_FIELDS:
@@ -101,8 +105,66 @@ def check_targets(targets: dict, layers: dict, aliases: dict) -> None:
             continue
 
         mc, loader = t["minecraft"], t["loader"]
+        if (mc, loader) in seen_combo:
+            fail(f"目标 {name}: Minecraft {mc} 的 {loader} 条目重复 —— "
+                 f"同一版本同一加载器只能有一个目标（区间覆盖也算），否则两个 jar 会同时认领它")
         seen_combo.add((mc, loader))
         mappings.setdefault(t["mappings"], []).append(name)
+
+        # 版本区间：minecraft 是编译/测试版本（区间最低），covers 是同一个 jar 另外声明
+        # 支持的版本（都高于 minecraft），minecraft_until 是 Fabric 谓词的上界（不含）。
+        # covers 让「每个版本三加载器」的矩阵规则看得见区间覆盖的版本，也让发布端知道
+        # 一个 jar 该登记到哪些 gameVersions 上。
+        covers = t.get("covers")
+        covered = []
+        if covers is not None:
+            if not isinstance(covers, list) or not covers:
+                fail(f"目标 {name} 的 covers 必须是非空数组 —— 单版本目标直接删掉这个键")
+            else:
+                for c in covers:
+                    if not isinstance(c, str) or not c.strip():
+                        fail(f"目标 {name} 的 covers 含空值或非字符串项")
+                    elif c == mc:
+                        fail(f"目标 {name} 的 covers 不能重复写 minecraft 本身：{c}")
+                    elif version_key(c) <= version_key(mc):
+                        fail(f"目标 {name} 的 covers={c} 不高于 minecraft={mc} —— "
+                             f"区间一律对着最低版本编译，向上覆盖")
+                    else:
+                        covered.append(c)
+                if len(set(covered)) != len(covered):
+                    fail(f"目标 {name} 的 covers 有重复项：{covers}")
+        until = t.get("minecraft_until")
+        if until is not None:
+            if not isinstance(until, str) or not until.strip():
+                fail(f"目标 {name} 的 minecraft_until 必须是非空字符串")
+            elif version_key(until) <= version_key(mc):
+                fail(f"目标 {name} 的 minecraft_until={until} 不高于 minecraft={mc} —— "
+                     f"上界不含端点，必须写区间之后的下一个版本")
+            else:
+                for c in covered:
+                    if version_key(c) >= version_key(until):
+                        fail(f"目标 {name} 的 covers={c} 不在 minecraft_until={until} 之下 —— "
+                             f"区间声明与实际支持版本对不上")
+        if loader == "Fabric" and until is None:
+            fail(f"Fabric 目标 {name} 没有 minecraft_until —— fabric.mod.json 的 "
+                 f"depends.minecraft 谓词没有上界")
+        # 名字就是它的身份：CI 的 job / 产物名、workflow_dispatch 的选项、jar 名与商店条目
+        # 都从这里长出来。多版本区间必须把覆盖版本按升序列全，否则拿着 jar 的人看不出它认哪些版本。
+        expected_name = ",".join([mc] + sorted(covered, key=version_key)) + "-" + loader.lower()
+        if name != expected_name:
+            fail(f"目标名 {name} 与声明的版本/加载器对不上：应为 {expected_name} —— "
+                 f"多版本区间要把 covers 里的版本按升序列进名字，加载器小写")
+        ci = t.get("ci", True)
+        if not isinstance(ci, bool):
+            fail(f"目标 {name} 的 ci 必须是 true / false")
+        elif ci is False and t["buildable"]:
+            fail(f"目标 {name} 声明 ci: false（不进 CI 构建）却又 buildable: true（产物进 Release）—— "
+                 f"不构建的东西不可能进 Release")
+        for c in covered:
+            if (c, loader) in seen_combo:
+                fail(f"目标 {name} 的 covers 与另一个目标重复认领 {c}（{loader}）")
+            seen_combo.add((c, loader))
+            covered_by.setdefault((c, loader), []).append(name)
 
         for layer in t["layers"]:
             if layer not in layers:
@@ -167,25 +229,30 @@ def check_targets(targets: dict, layers: dict, aliases: dict) -> None:
             built = [n for n in mappings[family]
                      if (ROOT / targets[n]["project"]).is_dir()
                      and not targets[n].get("overlay_base")]
+            # 带版本区间的映射层也算「这个家族的映射层」：1.21.4 的 API 分叉不是重建一套映射，
+            # 而是把同一个映射家族按版本再切一刀。
             declared = [n for n, d in layers.items()
-                        if layer_axes(d) == ["mappings"] and d.get("mappings") == family]
+                        if "mappings" in layer_axes(d) and d.get("mappings") == family]
             if len(built) > 1 and not declared:
                 fail(f"mappings={family} 有 {len(built)} 个在建目标（{', '.join(built)}），"
-                     f"但 layers.json 里没有纯映射层声明 mappings={family} —— "
+                     f"但 layers.json 里没有映射层声明 mappings={family} —— "
                      f"它们本可共用一份，现在只能各存一份没人盯着的手抄副本")
                 continue
             for layer_name in declared:
                 check_mapping_twins(layer_name, layers[layer_name], targets, family,
-                                    aliases.get(f"layers/mapping/{layer_name}", {}))
+                                    aliases.get(layer_rel(layer_name, layers[layer_name]), {}))
 
-    # 反方向：某一家族已经有映射层了，同家族的目标就必须挂它 —— 否则它会留一份私藏副本，
-    # 而那份副本与层里的内容本应逐字相同，没有任何东西会告诉你它慢慢不一样了。
+    # 反方向：某一家族已经有映射层了，满足它谓词（映射 + 版本区间）的同家族目标就必须挂它 ——
+    # 否则它会留一份私藏副本，而那份副本与层里的内容本应逐字相同，没有任何东西会告诉你它慢慢不一样了。
+    # 不满足谓词的目标（例如 1.21.1 之于 official-modern）不该挂，挂了由上面「挂了满足不了的层」报。
     for name, t in targets.items():
         for layer_name, d in layers.items():
-            if layer_axes(d) != ["mappings"] or d.get("mappings") != t.get("mappings"):
+            if "mappings" not in layer_axes(d) or d.get("mappings") != t.get("mappings"):
+                continue
+            if predicate_gap(t, layer_name, d) is not None:
                 continue
             if layer_name not in t["layers"]:
-                fail(f"目标 {name} 的 mappings 是 {t.get('mappings')}，映射层 {layer_name} 就是为这个家族准备的，"
+                fail(f"目标 {name} 的 mappings 是 {t.get('mappings')}，且满足层 {layer_name} 的版本谓词，"
                      f"但它的 layers 里没有这一层 —— 那样它会留一份没人盯着的私藏副本")
 
     # 矩阵是规则：每个出现过的 Minecraft 版本都要凑齐三个加载器
@@ -335,25 +402,33 @@ def _root_of(line: str) -> str:
 
 
 def layer_axes(d: dict) -> list:
-    return [a for a in ("since", "loader", "mappings") if a in d]
+    return [a for a in ("since", "until", "loader", "mappings") if a in d]
 
 
 def layer_dir(layer_name: str, d: dict) -> pathlib.Path:
-    """目录由声明的轴推出来 —— 声明与目录不会互相矛盾。"""
-    axis_dirs = {"since": "version", "loader": "loader", "mappings": "mapping"}
-    return ROOT / "layers" / "+".join(sorted(axis_dirs[a] for a in layer_axes(d))) / layer_name
+    """目录由声明的轴推出来 —— 声明与目录不会互相矛盾。
+
+    since 与 until 共用 version 这一段：同一层两个都写时目录名里只出现一次，
+    所以「official 名 × 版本区间」落在 layers/mapping+version/<层名>/。
+    """
+    axis_dirs = {"since": "version", "until": "version", "loader": "loader", "mappings": "mapping"}
+    segments = sorted({axis_dirs[a] for a in layer_axes(d)})
+    return ROOT / "layers" / "+".join(segments) / layer_name
+
+
+def layer_rel(layer_name: str, d: dict) -> str:
+    """层目录相对仓库根的路径 —— mapping-aliases.json 的键就是它。"""
+    return layer_dir(layer_name, d).relative_to(ROOT).as_posix()
+
+
+def version_key(v: str) -> tuple:
+    return tuple(int(p) if str(p).isdigit() else 0 for p in str(v).split("."))
 
 
 def version_at_least(have: str, want: str) -> bool:
-    def parts(v):
-        return [int(p) if str(p).isdigit() else 0 for p in str(v).split(".")]
-
-    a, b = parts(have), parts(want)
-    for i in range(max(len(a), len(b))):
-        x, y = (a[i] if i < len(a) else 0), (b[i] if i < len(b) else 0)
-        if x != y:
-            return x > y
-    return True
+    a, b = version_key(have), version_key(want)
+    n = max(len(a), len(b))
+    return a + (0,) * (n - len(a)) >= b + (0,) * (n - len(b))
 
 
 def predicate_gap(t: dict, layer_name: str, d: dict):
@@ -363,6 +438,10 @@ def predicate_gap(t: dict, layer_name: str, d: dict):
         if axis == "since":
             if not version_at_least(t["minecraft"], want):
                 return f"Minecraft {t['minecraft']} 够不到 since {want}"
+        elif axis == "until":
+            # 上界不含端点：1.21.4 满足 until 1.21.5，但不满足 until 1.21.4。
+            if version_at_least(t["minecraft"], want):
+                return f"Minecraft {t['minecraft']} 已经够到 until {want}（不含端点）"
         else:
             have = str(t.get(axis))
             if have != want:
@@ -386,7 +465,15 @@ def check_mapping_twins(layer_name: str, d: dict, targets: dict, family: str, al
 
     aliases 是路径别名：有的类在两个家族上包路径不同（Fabric 侧故意住在原版包下，
     借包私有访问达成与 AT 同样的目的）。别名把这一处写下来，检查照样按对应路径去找，
-    找不到一样红 —— 别名不是豁免，只是让例外变成可检查的声明。"""
+    找不到一样红 —— 别名不是豁免，只是让例外变成可检查的声明。
+
+    【版本区间的映射层与增量目标】只看**满足该层谓词**的目标：1.21.1 不欠
+    official-modern 的孪生副本。增量目标的源码树来自 overlay_base：
+      · 来源平台自己也满足谓词 → 孪生副本就在那份源码树里，那一轮会按同一路径检查；
+      · 来源平台不满足谓词（例如 official-modern 之于 1.21.1-fabric）→ 生成树里那份
+        属于另一个 API 世代，目标必须在 overlay_exclude / patches 里对每个文件表态，
+        否则构建出来的仍是旧世代的那份代码。
+    """
     base = layer_dir(layer_name, d)
     if not base.is_dir():
         return
@@ -395,20 +482,39 @@ def check_mapping_twins(layer_name: str, d: dict, targets: dict, family: str, al
         if not rel.startswith(("src/main/java/", "src/test/java/")):
             continue
         twin_rel = aliases.get(rel, rel)
+        hint = f"（按别名找的是 {twin_rel}）" if twin_rel != rel else ""
         for name, t in targets.items():
             if t.get("mappings") == family:
                 continue
-            if t.get("overlay_base"):
-                # 增量目标没有自己的源码树，它用的孪生副本就是 overlay_base 平台里那一份。
-                # base 必须是矩阵里同映射家族的实体目标（见 check_targets），那一轮已经
-                # 按同一批路径查过「存在且不是逐字相同」，这里不重复报。
-                continue
+            if predicate_gap(t, layer_name, d) is not None:
+                continue  # 这一层不适用于它：那份代码根本不在这个目标里，不欠副本
             project = ROOT / t["project"]
             if not project.is_dir():
                 continue  # 还没建起来的目标不欠副本
+            if t.get("overlay_base"):
+                base_rel = t["overlay_base"]
+                base_target = next((bt for bt in targets.values()
+                                    if isinstance(bt, dict) and bt.get("project") == base_rel), None)
+                if base_target is not None and predicate_gap(base_target, layer_name, d) is None:
+                    # 生成树的来源平台本身就适用这一层：孪生副本在它平台目录里，
+                    # 非增量那一轮已经按同一批路径查过「存在且不是逐字相同」。
+                    continue
+                excluded = set(t.get("overlay_exclude") or [])
+                patched = set()
+                patches = project / "patches"
+                if patches.is_dir():
+                    for patch in patches.glob("*.patch"):
+                        patched |= _patch_paths(patch)
+                if twin_rel in excluded:
+                    continue  # 由目标本地实现顶上；本地实现是否存在由 overlay 检查负责
+                if twin_rel not in patched:
+                    fail(f"映射层 {layer_name} 里有 {rel}，目标 {name}"
+                         f"（mappings={t.get('mappings')}）适用这一层，但它的增量树来自"
+                         f"不适用的 {base_rel}：既没有 overlay_exclude 也没有补丁改动 {twin_rel}{hint} —— "
+                         f"那样构建出来的还是另一个 API 世代的那份代码")
+                continue
             twin = project / twin_rel
             if not twin.is_file():
-                hint = f"（按别名找的是 {twin_rel}）" if twin_rel != rel else ""
                 fail(f"映射层 {layer_name} 里有 {rel}，但目标 {name}"
                      f"（mappings={t.get('mappings')}）的平台目录里没有对应的孪生副本{hint} —— "
                      f"这条路线的代价就是那份平行副本，少了它意味着这个类在那个目标上根本不存在")
@@ -424,7 +530,8 @@ def check_layers(layers: dict) -> None:
     for name, d in layers.items():
         axes = layer_axes(d)
         if not axes:
-            fail(f"层 {name} 一个轴都没钉（since / loader / mappings）—— 一个都不写就是 shared/，不是层")
+            fail(f"层 {name} 一个轴都没钉（since / until / loader / mappings）—— "
+                 f"一个都不写就是 shared/，不是层")
         if not isinstance(d.get("populated"), bool):
             fail(f"层 {name} 没有声明 populated（true/false）—— 「空」要是显式声明的状态")
         directory = layer_dir(name, d)
@@ -467,13 +574,16 @@ def parse_accesstransformer(rel: str) -> set:
 
 
 def check_access_parity(parity: dict) -> None:
-    """三份访问扩宽文件必须覆盖同一批成员，各写自己家族的命名。
+    """每份访问扩宽文件都与声明表里自己那一列逐项相等，各写自己家族的命名。
 
     判据（不需要映射表也能咬住真实的漂移）：
-      · Fabric AW 的成员集合 == 声明表 yarn 侧
-      · NeoForge AT 的成员集合 == 声明表非 null 的 official 侧
-      · Forge AT 的**类名集合**与 NeoForge 相同、条数相同，成员名必须是 SRG 形状
-      · NeoForge AT 的成员名不许是 SRG 形状（写错家族的常见翻车）
+      · Fabric AW 的成员集合 == 声明表 yarn 列
+      · 两份官方名 AT（NeoForge 1.21.1 / 1.21.4 官方名目标）各自 == 自己的 official /
+        official_modern 列 —— 两代 API 需要的方法成员本来就不同，不要求彼此相等
+      · Forge 1.20.1 的**类名集合**与 NeoForge 1.21.1 相同、条数相同，成员名必须是 SRG 形状
+      · 官方名那两份的成员名不许是 SRG 形状（写错家族的常见翻车）
+      · 文件所属的工程还没建起来时跳过这一列（声明先于工程，与 resource-paths 同一条约定）；
+        工程存在而文件缺席仍算漂移
     """
     files = parity.get("files", {})
     members = parity.get("members", [])
@@ -481,35 +591,53 @@ def check_access_parity(parity: dict) -> None:
         fail("versions/access-parity.json 缺 files 或 members")
         return
 
-    yarn = parse_accesswidener(files["yarn"])
-    official = parse_accesstransformer(files["official"])
-    srg = parse_accesstransformer(files["srg"])
-
-    declared_yarn = {m["yarn"] for m in members}
-    declared_official = {m["official"] for m in members if m.get("official")}
-
-    for label, actual, declared in (("Fabric AW", yarn, declared_yarn),
-                                    ("NeoForge AT", official, declared_official)):
+    slots = (
+        ("yarn", "Fabric AW", parse_accesswidener),
+        ("official", "NeoForge 1.21.1 AT", parse_accesstransformer),
+        ("official_modern", "1.21.4 官方名 AT", parse_accesstransformer),
+        ("srg", "Forge 1.20.1 AT", parse_accesstransformer),
+    )
+    actual_by_slot = {}
+    for slot, label, parser in slots:
+        path = files.get(slot)
+        if not path:
+            fail(f"versions/access-parity.json 缺 {slot} 文件")
+            continue
+        if not (ROOT / path).is_file():
+            project = path.split("/src/", 1)[0]
+            if "/src/" in path and not (ROOT / project).is_dir():
+                notes.append(f"{label} 所属的 {project} 还没建起来，跳过这份文件的比对")
+                continue
+            fail(f"{label} 的 {path} 不存在 —— 声明与文件不一致")
+            continue
+        actual = parser(path)
+        actual_by_slot[slot] = actual
+        declared = {m[slot] for m in members if m.get(slot)}
         for missing in sorted(declared - actual):
             fail(f"{label} 里没有声明表写着的成员：{missing} —— 声明与文件不一致")
         for extra in sorted(actual - declared):
             fail(f"{label} 里有声明表没有的成员：{extra} —— "
-                 f"把它写进 versions/access-parity.json，并给出另一侧的对应项或说明为什么不需要")
+                 f"把它写进 versions/access-parity.json，说明它属于哪一列、为什么需要")
 
     srg_shape = re.compile(r"^f_\d+_$")
-    for entry in sorted(official):
-        if srg_shape.match(entry.split()[-1]):
-            fail(f"NeoForge 的 AT 写了 SRG 名（{entry}）—— 那一侧要写官方名；SRG 名只在 Forge 那侧")
+    for slot, label in (("official", "NeoForge 1.21.1 AT"),
+                        ("official_modern", "1.21.4 官方名 AT")):
+        for entry in sorted(actual_by_slot.get(slot, ())):
+            if srg_shape.match(entry.split()[-1]):
+                fail(f"{label} 写了 SRG 名（{entry}）—— 官方名那一侧要写官方名；SRG 名只在 Forge 1.20.1 那侧")
 
+    official = actual_by_slot.get("official", set())
+    srg = actual_by_slot.get("srg", set())
     official_owners = {e.split()[0] for e in official}
     srg_owners = {e.split()[0] for e in srg}
     if official_owners != srg_owners:
-        fail(f"两份 AT 的类名集合不一致：NeoForge {sorted(official_owners)} vs Forge {sorted(srg_owners)}")
+        fail(f"两份 AT 的类名集合不一致：NeoForge 1.21.1 {sorted(official_owners)} "
+             f"vs Forge 1.20.1 {sorted(srg_owners)}")
     if len(official) != len(srg):
-        fail(f"两份 AT 条数不一致：NeoForge {len(official)} 条，Forge {len(srg)} 条")
+        fail(f"两份 AT 条数不一致：NeoForge 1.21.1 {len(official)} 条，Forge 1.20.1 {len(srg)} 条")
     for entry in sorted(srg):
         if not srg_shape.match(entry.split()[-1]):
-            fail(f"Forge 的 AT 写了非 SRG 名（{entry}）—— 那一侧运行时用 SRG 名，写官方名会静默不生效")
+            fail(f"Forge 1.20.1 的 AT 写了非 SRG 名（{entry}）—— 那一侧运行时用 SRG 名，写官方名会静默不生效")
 
 
 def check_resource_paths(paths: dict) -> None:
@@ -755,11 +883,12 @@ def main() -> int:
         if not isinstance(t, dict) or "project" not in t:
             continue
         mark = "发" if t.get("buildable") else "不发"
+        builds = "不建" if t.get("ci") is False else "建"
         exists = "有工程" if (ROOT / t["project"]).is_dir() else "无工程"
         excluded = t.get("overlay_exclude") or []
         excl = f" excl={len(excluded)}" if excluded else ""
-        print(f"  {name:18} mc={t.get('minecraft'):7} loader={t.get('loader'):9} "
-              f"java={t.get('java')} gradle={t.get('gradle')} {mark}/{exists} "
+        print(f"  {name:20} mc={t.get('minecraft'):7} loader={t.get('loader'):9} "
+              f"java={t.get('java')} gradle={t.get('gradle')} {mark}/{builds}/{exists} "
               f"layers={t.get('layers')}{excl}")
 
     if errors:
@@ -798,7 +927,8 @@ def main() -> int:
                 "suffix": "" if t["buildable"] else "-未验证",
             }
             for name, t in targets.items()
-            if isinstance(t, dict) and (ROOT / t.get("project", "")).is_dir()
+            if isinstance(t, dict) and t.get("ci", True) is not False
+            and (ROOT / t.get("project", "")).is_dir()
         ]
         matrix.sort(key=lambda e: e["target"])
         with open(args.matrix_out, "w", encoding="utf-8") as f:

@@ -3,9 +3,8 @@ name: Build
 # 单分支多目标：支持哪些目标写在 versions/targets.json 里，这个工作流里没有分支名。
 # 新增一个目标 = 加一条 JSON + 建工程目录，不必碰这个文件。
 #
-# 旧分支（Fabric-1.21.1 / NeoForge-1.21.1 / Forge-1.20.1）仍各自带着自己那份 build.yml，
-# 那三份在分支退休时一起删掉；发版（release.yml）同样等到收尾那一刀再改 —— 现在
-# main 上的构建不发布任何东西。
+# 构建范围由矩阵决定：有工程目录且没有 ci: false 的目标都编（上游基线 ci: false，不编），
+# 未验证目标的产物名带 -未验证。发布走 release.yml（标签或手动触发），这里只构建、不发布。
 
 on:
   push:
@@ -130,8 +129,8 @@ jobs:
       - name: 上传产物
         uses: actions/upload-artifact@v7
         with:
-          # buildable: false 但工程存在的目标照样编，名字上带出"未验证"。
-          # 后缀由 verify_targets.py 算好放进矩阵 —— 不在这里拼表达式。
+          # buildable: false 但工程存在的目标照样编，名字上带出"未验证"；ci: false 的上游基线
+          # 不进矩阵。后缀由 verify_targets.py 算好放进矩阵 —— 不在这里拼表达式。
           name: atomchat-${{ matrix.target }}${{ matrix.suffix }}
           path: dist/*.jar
           if-no-files-found: error

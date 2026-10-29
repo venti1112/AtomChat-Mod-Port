@@ -1,0 +1,17 @@
+diff --git a/src/main/java/com/atom/chat/render/ItemIconModelView.java b/src/main/java/com/atom/chat/render/ItemIconModelView.java
+index 9bff0f5..c1ef053 100644
+--- a/src/main/java/com/atom/chat/render/ItemIconModelView.java
++++ b/src/main/java/com/atom/chat/render/ItemIconModelView.java
+@@ -10,11 +10,10 @@ final class ItemIconModelView {
+         var stack = RenderSystem.getModelViewStack();
+         stack.pushMatrix();
+         stack.identity();
+-        RenderSystem.applyModelViewMatrix();
++        // 1.21.4 uploads ModelViewMat when the buffer is drawn; applyModelViewMatrix is gone.
+     }
+ 
+     static void pop() {
+         RenderSystem.getModelViewStack().popMatrix();
+-        RenderSystem.applyModelViewMatrix();
+     }
+ }

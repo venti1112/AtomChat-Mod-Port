@@ -1,0 +1,13 @@
+diff --git a/src/main/java/com/atom/chat/notification/NotificationController.java b/src/main/java/com/atom/chat/notification/NotificationController.java
+index c1eb4db..7d3dc56 100644
+--- a/src/main/java/com/atom/chat/notification/NotificationController.java
++++ b/src/main/java/com/atom/chat/notification/NotificationController.java
+@@ -41,7 +41,7 @@ public final class NotificationController {
+      */
+     public static void registerSound() {
+         Registry.register(Registries.SOUND_EVENT,
+-                NOTIFICATION_SOUND.getId(), NOTIFICATION_SOUND);
++                NOTIFICATION_SOUND.id(), NOTIFICATION_SOUND);
+     }
+ 
+     /** Plays the cue directly, bypassing the gate — the settings "test sound" card. */

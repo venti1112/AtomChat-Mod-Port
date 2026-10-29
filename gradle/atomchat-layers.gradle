@@ -71,6 +71,15 @@ ext.atomchatTargetName = targetName
 ext.atomchatTarget = targetDef
 ext.atomchatOverlayBaseDir = targetDef.overlay_base == null ? null
         : new File(repoRoot, targetDef.overlay_base.toString()).canonicalFile
+// Fabric 的 depends.minecraft 谓词：下界是编译/测试版本，上界不含（minecraft_until）。
+// 版本范围只在 targets.json 声明一次，fabric.mod.json 用 ${minecraft_version_range} 展开，
+// 不再由每个增量目标在自己的补丁里手抄。
+ext.atomchatMinecraftRange = targetDef.minecraft_until == null ? null
+        : ">=${targetDef.minecraft} <${targetDef.minecraft_until}"
+// 商店条目要列出这个 jar 实际能加载的全部版本：编译版本 + covers（同一 jar 验证过的更高版本）。
+// minecraft_until 是谓词上界，不是「支持到哪个版本」，所以不参与展开。
+ext.atomchatMinecraftVersions = [targetDef.minecraft.toString()] +
+        ((targetDef.covers ?: []) as List).collect { it.toString() }
 
 def layers = new JsonSlurper().parse(layersFile)
 def mounted = (targetDef.layers ?: []) as List
@@ -83,16 +92,17 @@ mounted.each { name ->
     }
 }
 
-// 三个轴；目录由【声明的轴】推出来：单轴 → layers/<轴名>/，多轴 → layers/<轴名按字母序 + 连接>/
-def AXIS_DIR = [since: 'version', loader: 'loader', mappings: 'mapping']
-def axesOf = { Map d -> ['since', 'loader', 'mappings'].findAll { d.containsKey(it) } }
+// 四个轴；目录由【声明的轴】推出来：单轴 → layers/<轴名>/，多轴 → layers/<轴名按字母序 + 连接>/
+// since 与 until 共用 version 这一段（同一个层两个都写时只出现一次）。
+def AXIS_DIR = [since: 'version', until: 'version', loader: 'loader', mappings: 'mapping']
+def axesOf = { Map d -> ['since', 'until', 'loader', 'mappings'].findAll { d.containsKey(it) } }
 def layerDir = { String name ->
     def d = layers[name] as Map
     def axes = axesOf(d)
     if (axes.isEmpty()) {
-        throw new GradleException("层 ${name} 一个轴都没钉（since / loader / mappings）—— 一个都不写就是 shared/，不是层")
+        throw new GradleException("层 ${name} 一个轴都没钉（since / until / loader / mappings）—— 一个都不写就是 shared/，不是层")
     }
-    return new File(repoRoot, "layers/${axes.collect { AXIS_DIR[it] }.sort().join('+')}/${name}")
+    return new File(repoRoot, "layers/${axes.collect { AXIS_DIR[it] }.unique().sort().join('+')}/${name}")
 }
 
 // 版本比较：够不够得到 since
@@ -117,6 +127,13 @@ mounted.each { name ->
             if (!versionAtLeast(targetDef.minecraft.toString(), want)) {
                 throw new GradleException(
                     "目标 ${targetName}（Minecraft ${targetDef.minecraft}）挂了版本层 ${name}（since ${want}）—— 它够不到。")
+            }
+        } else if (axis == 'until') {
+            // until 是上界，不含端点：1.21.4 的目标能挂 until 1.21.5，但挂不了 until 1.21.4。
+            if (versionAtLeast(targetDef.minecraft.toString(), want)) {
+                throw new GradleException(
+                    "目标 ${targetName}（Minecraft ${targetDef.minecraft}）挂了版本层 ${name}（until ${want}，不含）—— " +
+                    "它已经够到上界了。")
             }
         } else {
             def have = (axis == 'mappings' ? targetDef.mappings : targetDef.loader).toString()
@@ -201,15 +218,14 @@ repositories {
 }
 ext.atomchatBundledFlatLaf = "${bundledGroup}:${bundledArtifact}:${bundledVersion}"
 
-// Forge's JarJar rejects a plain version ("The given version specification is
-// invalid: 3.7.2 ... convert this to a maven compatible format") — what it
-// records in jarjar metadata is a RANGE. Derive "3.7.2" -> "[3.7.2,3.8)" so the
-// upper bound follows the version instead of being hardcoded somewhere.
+// Forge's JarJar records a RANGE in its metadata. Derive "3.7.2" -> "[3.7.2,3.8)"
+// so the upper bound follows the version instead of being hardcoded somewhere.
 def vParts = bundledVersion.tokenize('.')
 def vUpper = vParts.size() >= 2
         ? "${vParts[0]}.${(vParts[1] as int) + 1}"
         : "${bundledVersion}-"
-ext.atomchatBundledFlatLafRange = "${bundledGroup}:${bundledArtifact}:[${bundledVersion},${vUpper})"
+ext.atomchatBundledFlatLafRangeSpec = "[${bundledVersion},${vUpper})"
+ext.atomchatBundledFlatLafRange = "${bundledGroup}:${bundledArtifact}:${atomchatBundledFlatLafRangeSpec}"
 
 // ---- 3c. 构建戳（运行期环境摘要要能唯一定位构建） ----
 //

@@ -1,0 +1,18 @@
+diff --git a/src/main/java/com/atom/chat/notification/NotificationHudOverlay.java b/src/main/java/com/atom/chat/notification/NotificationHudOverlay.java
+index cb54f84..befac2a 100644
+--- a/src/main/java/com/atom/chat/notification/NotificationHudOverlay.java
++++ b/src/main/java/com/atom/chat/notification/NotificationHudOverlay.java
+@@ -17,12 +17,11 @@ public final class NotificationHudOverlay {
+         if (failed || !NotificationHudVisibility.visible() || !NotificationBanner.INSTANCE.hasActive()) return;
+         MinecraftClient client = MinecraftClient.getInstance();
+         try {
+-            gui.draw();
+             GRAPHICS.checkFrameBufferId();
+             float density = ScreenMetrics.uiDensity(client.getWindow());
+             float width = client.getFramebuffer().textureWidth / density;
+             float height = client.getFramebuffer().textureHeight / density;
+-            GRAPHICS.draw(() -> ItemIconRenderer.prepare(gui, GRAPHICS), density,
++            GRAPHICS.draw(gui, () -> ItemIconRenderer.prepare(gui, GRAPHICS), density,
+                     (canvas, snapshot) -> NotificationBanner.INSTANCE.renderInHud(canvas, width, height));
+         } catch (RuntimeException | LinkageError e) {
+             failed = true;

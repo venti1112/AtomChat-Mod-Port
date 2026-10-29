@@ -1,0 +1,22 @@
+diff --git a/src/test/java/com/atom/chat/text/InlineItemLayoutTest.java b/src/test/java/com/atom/chat/text/InlineItemLayoutTest.java
+index f0abd35..f45a686 100644
+--- a/src/test/java/com/atom/chat/text/InlineItemLayoutTest.java
++++ b/src/test/java/com/atom/chat/text/InlineItemLayoutTest.java
+@@ -24,7 +24,7 @@ class InlineItemLayoutTest {
+ 
+     private RichText item(String text) {
+         return RichText.of(Text.literal(text).setStyle(Style.EMPTY.withHoverEvent(
+-                new HoverEvent(HoverEvent.Action.SHOW_ITEM, new HoverEvent.ItemStackContent(new ItemStack(Items.DIAMOND))))));
++                new HoverEvent.ShowItem(new ItemStack(Items.DIAMOND)))));
+     }
+ 
+     @Test
+@@ -54,7 +54,7 @@ class InlineItemLayoutTest {
+ 
+     @Test
+     void contiguousColourChangesDoNotDuplicateTheItem() {
+-        var hover = new HoverEvent(HoverEvent.Action.SHOW_ITEM, new HoverEvent.ItemStackContent(new ItemStack(Items.DIAMOND)));
++        var hover = new HoverEvent.ShowItem(new ItemStack(Items.DIAMOND));
+         RichText text = RichText.of(Text.literal("   a").setStyle(Style.EMPTY.withHoverEvent(hover))
+                 .append(Text.literal("b").setStyle(Style.EMPTY.withHoverEvent(hover).withColor(0x123456))));
+         var line = RichTextRenderer.wrapFor(text, FONT, 200).get(0);

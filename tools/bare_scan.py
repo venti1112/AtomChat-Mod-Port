@@ -9,9 +9,9 @@
 【口径】（与阶段 0 审计 5-B 对齐，杜绝两套数字）
   * 正则：`(?<![A-Za-z0-9_])s\\(\\s*-?[0-9]` —— **必须带词边界**。朴素的 `s\\([0-9]`
     会混进 `radius(8)` / `ofSeconds(10)` 这类假阳性（审计实测 22 处）。
-  * 范围（去重视图）：`shared/src/main/java` + `layers/mapping/official/src/main/java`。
-    platforms/ 下的孪生镜像不扫（同一份逻辑重复计），测试源集不扫，
-    `UiTokens.java` 自身不扫（它就是 token 的定义处，里面全是数字）。
+  * 范围（去重视图）：`shared/src/main/java` + 所有层里的 `src/main/java`（含
+    `layers/mapping+version/` 这类多轴目录）。platforms/ 下的孪生镜像不扫（同一份逻辑
+    重复计），测试源集不扫，`UiTokens.java` 自身不扫（它就是 token 的定义处，里面全是数字）。
   * 计数单位是**出现次数**（一行多处全计），不是行数。
   * 整行注释（首非空白为 `//`、`*`、`/*`）不计 —— 注释里引用 `s(8)` 不该挡构建。
     行内尾注释里的 `s(N)` **照计**：宁可多计（棘轮偏保守）也不漏计。
@@ -38,10 +38,17 @@ import pathlib
 import re
 import sys
 
-SCAN_DIRS = ["shared/src/main/java", "layers/mapping/official/src/main/java"]
+SCAN_DIRS = ["shared/src/main/java"]
 EXCLUDE_FILES = {"shared/src/main/java/com/atom/chat/ui/UiTokens.java"}
 PATTERN = re.compile(r"(?<![A-Za-z0-9_])s\(\s*-?[0-9]")
 EXEMPT_MARK = "// bare-value:"
+
+
+def scan_roots(root: pathlib.Path) -> list[pathlib.Path]:
+    """共享层 + 每个层的 main 源根：层目录按声明的轴拼出来，不在这里维护第二份层清单。"""
+    dirs = [root / d for d in SCAN_DIRS]
+    dirs += sorted(root.glob("layers/**/src/main/java"))
+    return [d for d in dirs if d.is_dir()]
 
 
 def is_comment_line(line: str) -> bool:
@@ -65,10 +72,7 @@ def scan_file(path: pathlib.Path) -> tuple[int, list[str]]:
 
 def scan(root: pathlib.Path) -> dict[str, int]:
     counts: dict[str, int] = {}
-    for d in SCAN_DIRS:
-        base = root / d
-        if not base.is_dir():
-            continue
+    for base in scan_roots(root):
         for p in sorted(base.rglob("*.java")):
             rel = p.relative_to(root).as_posix()
             if rel in EXCLUDE_FILES:

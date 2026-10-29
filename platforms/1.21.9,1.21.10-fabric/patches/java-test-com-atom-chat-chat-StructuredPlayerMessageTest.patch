@@ -1,0 +1,13 @@
+diff --git a/src/test/java/com/atom/chat/chat/StructuredPlayerMessageTest.java b/src/test/java/com/atom/chat/chat/StructuredPlayerMessageTest.java
+index 904cca5..9a1ab0f 100644
+--- a/src/test/java/com/atom/chat/chat/StructuredPlayerMessageTest.java
++++ b/src/test/java/com/atom/chat/chat/StructuredPlayerMessageTest.java
+@@ -15,7 +15,7 @@ class StructuredPlayerMessageTest {
+         net.minecraft.Bootstrap.initialize();
+     }
+     @Test void directHudItemShareRetainsTheOriginalBodyAndStyleWithoutOnlineNameHeuristics() {
+-        var hover = new HoverEvent(HoverEvent.Action.SHOW_ITEM, new HoverEvent.ItemStackContent(new ItemStack(Items.DIAMOND)));
++        var hover = new HoverEvent.ShowItem(new ItemStack(Items.DIAMOND));
+         Text body = Text.literal("   [Diamond]").setStyle(Style.EMPTY.withHoverEvent(hover));
+         Text name = Text.literal("[VIP]Alice");
+         SenderMeta meta = ChatPipeline.structuredPlayerLine(Text.translatable("chat.type.text", name, body));

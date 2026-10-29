@@ -58,6 +58,40 @@
 - CCB 带状态 JFR 捕获到 Emoji 开关慢帧，独立动态缩放 GL 探针复现字形生成／提交开销；共享 Emoji 字形缓存已通过像素、容量与缩放回归。最终新包在 CCB 的开关、稳定帧率和观感仍待用户实测。
 - 早期独立审查问题已修；本轮最新补全／缓存修改的独立复审因 429 未完成，不能当作审查通过。代理未启动或关闭游戏，未提交／推送／发布。
 
+## 目标命名与 CI 范围（2026-10-29）
+
+- 目标名改成「它到底认哪些版本」：区间目标的键、工程目录、CI job / 产物名、`workflow_dispatch` 选项、jar 名与商店显示名统一为 `1.21.2,1.21.3-fabric` / `1.21.6,1.21.7-fabric` / `1.21.9,1.21.10-fabric`。编译版本仍是区间最低版本，`covers` 只负责列出同一个 jar 另外支持的版本。
+- `archives_base_name` 与 `storeVersion` 由 `targets.json` 的 `minecraft` + `covers` 展开（`gradle/atomchat-layers.gradle` 的 `atomchatMinecraftVersions`），单版本目标的值不变；产物名因此直接写着它认的版本。
+- 上游三个基线 `1.21.1-fabric` / `1.21.1-neoforge` / `1.20.1-forge` 不再由 CI 构建：`targets.json` 新增 `ci: false`（与 `buildable: true` 互斥），矩阵生成跳过它们。工程目录与源码保留 —— 它们仍是全部 Fabric 增量目标的 `overlay_base` 与映射孪生的对照副本，校验器照常盯。
+- `verify_targets.py` 增加两条规则：目标名必须等于 `<minecraft>[,<covers>…]-<loader 小写>`；`ci: false` 不许与 `buildable: true` 共存。CI 矩阵为 7 个目标（1.21.4 / 1.21.5 / 1.21.8 / 1.21.11 与三个区间目标），Release 仍只挂 3 个 `buildable: true` 目标的 9 份产物。
+- `release.yml` 的 `target` 选项从三个旧基线换成这 7 个目标；未验证目标（`buildable: false`）只构建、不发布。
+
+## 面板闪烁修复（2026-10-29）
+
+- 用户报告：1.21.5 关闭背景模糊后打开聊天面板，整个画面（面板与周围世界）持续闪烁直到关闭面板；1.21.8 只在开合动画期间轻微闪烁，闪烁的暗部短暂变成半透明无模糊。
+- 根因在共享 `GlStateUtil.restore()`：framebuffer 是唯一只经 `GlStateMirror` 恢复、没有先写驱动的状态，而 `GlStateManager._glBindFramebuffer` 是缓存门控的（`readFbo` / `writeFbo`）。Skia 用裸 GL 绑定自己的 FBO 后，Blaze3D 缓存仍停在进入时的 FBO，恢复调用认为「已经是目标值」直接跳过。1.21.5 直接画主帧缓冲，关闭模糊时没有其它裸 GL 调用弄脏缓存，漏恢复每帧持续；开启模糊时 `copyWorld` 的 `copyTextureToTexture` 经 `GlStateManager` 绑定临时 FBO，缓存与目标不一致，恢复反而真正执行。1.21.8 的独立 uiTexture 把误差带进 GUI 合批，只在动画的 `saveLayer` 期间暴露。
+- 修复：DRAW / READ framebuffer 恢复改为先裸写驱动、再镜像缓存（与其余状态同一规则）；`NotificationRenderWiringTest` 增加先后顺序断言防回退。
+- 1.21.5 / 1.21.8 `test build` 各 1493 项 0 失败/错误、5 项跳过；11 个平台的 Windows 与 Linux 包全部重建，`verify_jars` 0 失败。尚未实机复测。
+
+## 1.21.2–1.21.10 Fabric 中间版本补全（2026-10-29）
+
+- 补齐四个增量目标，全部以 `platforms/1.21.1-fabric` 为 `overlay_base`，4 个渲染桥文件（`SkiaGraphics` / `PanelBlurRenderer` / `ItemIconRenderer` / `GlStateMirror`）继续 `overlay_exclude` 由目标本地实现。小版本能共用一套代码的按区间出一个 jar，对着区间最低版本编译：
+  - `1.21.2,1.21.3-fabric`：覆盖 1.21.3，`depends.minecraft` = `>=1.21.2 <1.21.4`；Gradle 8.8 / Loom 1.7.4 / Loader 0.16.9 / Yarn 1.21.2+build.1 / Fabric API 0.106.1+1.21.2，7 个差异补丁。
+  - `1.21.5-fabric`：单版本，`>=1.21.5 <1.21.6`；Gradle 9.7.1 / Loom 1.17.21 / Loader 0.20.1 / Yarn 1.21.5+build.1 / Fabric API 0.128.2+1.21.5，19 个差异补丁（以 1.21.6 的补丁集为底）。
+  - `1.21.6,1.21.7-fabric`：覆盖 1.21.7，`>=1.21.6 <1.21.8`；工具链同 1.21.5（Yarn 1.21.6+build.1 / Fabric API 0.128.2+1.21.6），19 个差异补丁。
+  - `1.21.9,1.21.10-fabric`：覆盖 1.21.10，`>=1.21.9 <1.21.11`；Gradle 9.8.2 / Loom 1.17.21 / Loader 0.20.1 / Yarn 1.21.9+build.1 / Fabric API 0.134.1+1.21.9，41 个差异补丁（以 1.21.11 的补丁集为底）。
+- 1.21.5 是三代渲染管线之间的分界：已有 `GpuDevice`/`RenderPass`，但 GUI 还没有 1.21.6 的批处理状态，`DrawContext` 仍在调用点自己 flush。桥接因此单独实现：Skia 画进一个只挂主帧缓冲颜色纹理的私有 FBO（不清屏，直接覆盖世界），模糊用 `copyTextureToTexture` 的世界快照，物品图标经 `RenderPhase.Target#get` mixin 改用 `SimpleFramebuffer` 离屏目标；`GlResourceManager` 的 program/pipeline 缓存通过 accessor mixin 在原始 GL 后失效。
+- 1.21.9 相对 1.21.11 回退了四处 API：权限回到 `hasPermissionLevel` / `getPermissionLevel`（`net.minecraft.command.permission` 包 1.21.9 还没有）、UI 音效用 `PositionedSoundInstance.master(...)`、`ChatHud.render` 仍是 `(DrawContext,int,int,int,boolean)` 五参、纹理过滤用 `GpuTexture.setTextureFilter` + `TextureSetup.withoutGlTexture`（没有 `SamplerCache`）。对应补丁按 1.21.9 重生成，`TestCompanionServer` 回退后与基础平台逐字一致、补丁删除。
+- 各目标 `test build` 通过：1493 项测试 0 失败/错误、5 项跳过（2 项原有 + 3 项真实 GL 读回在 Linux 跳过）。intermediary 引用检查：1.21.2 jar 对 1.21.2/1.21.3、1.21.5 jar 对 1.21.5、1.21.6 jar 对 1.21.6/1.21.7、1.21.9 jar 对 1.21.9/1.21.10 均 0 未解析。
+- 矩阵里四个目标均 `buildable: false`，等用户实机验收后再打开；1.21.9 / 1.21.10 的 NeoForge、Forge 条目已按「没做」登记。
+
+## 1.21.4-forge 暂时移除（2026-10-29）
+
+- 移除 `platforms/1.21.4-forge`：ForgeGradle 7 的加载器胶水（payload 通道、JarJar 内嵌、FML 测试引导、AT）比 Fabric / NeoForge 复杂得多，维护成本高，不便跟随上游更新。工程源码与构建脚本已归档到仓库外的 `~/projects/AtomChat-Mod-Port-archive/1.21.4-forge-2026-10-29/`（不含 build/ 与日志）。
+- `versions/targets.json` 的 `1.21.4-forge` 条目回到「没做」形态（`buildable: false`、工具链字段标 unverified），保留「每个 Minecraft 版本三条目」的可见性；移除前实测起点 Forge 54.1.22 / Java 21 / Gradle 9.3.1 写在 note 里，供恢复时使用。
+- `official-modern` 映射+版本层保留：`1.21.4-neoforge` 的矩阵条目仍挂它，工程建起来即生效。`versions/access-parity.json` 的 `official_modern` 列改指向该目标的 AT 路径；工程不存在时校验器跳过这一列（与资源落点检查同一条「声明先于工程」约定），工程存在而文件缺席仍报错。
+- `versions/resource-paths.json` 删除 1.21.4-forge 的着色器落点声明；共享代码、其余层与目标不受影响。此前 Forge 端的 1481 项测试与构建结论仅作为归档记录，不再计入当前状态。
+
 ## 上游 0.4.0 同步（2026-10-28）
 
 - 用 rebase 把本地 1.21.4 / 1.21.8 / 1.21.11 三个提交重放到上游 `93f58a1`，丢弃重复的 0.4.0-preview 合并提交并保留其内容（1.21.4 的 `ItemIconRenderer` / `ItemIconModelView` 补丁、测试 agent、矩阵备注）；三个提交重新签名，作者与提交时间不变，尚未推送。
@@ -95,7 +129,7 @@
 - 新增 `platforms/1.21.4-fabric` 增量目标：目录里只有 8 个差异补丁，构建期从 `platforms/1.21.1-fabric` 复制源码树后应用；shared/ 与基础平台的后续改动可直接流入。旧 main 分支上的整树移植随本分支合并删除。
 - 三系统/架构包已构建；Linux x64 包实机验收通过（首次打开、模糊着色器、表情面板）。矩阵中 `buildable` 已打开。
 - 1.21.4 的 shader JSON 必须写完整资源 id（`minecraft:core/...`），`resources-shader-identifiers.patch` 修复了模糊着色器加载失败。
-- 1.21.4 NeoForge / Forge 仍缺 official 映射层的 1.21.4 API 差异，矩阵中保持 `buildable: false`。
+- 1.21.4 NeoForge 仍缺 official 映射层的 1.21.4 API 差异，矩阵中保持 `buildable: false`；Forge 工程已于 2026-10-29 暂时移除（见上方小节），矩阵条目回到「没做」。
 - 上游 0.4.0-preview 已合并入本分支，增量补丁随之上推：新增 `ItemIconRenderer` / `ItemIconModelView` 两个补丁适配 `ProjectionType`、按绘制上传矩阵的 `RenderSystem`，测试侧补上基础平台的 package-access agent。合并后 Fabric 1.21.4 跑满 1488 项测试（0 失败/错误，2 项原有跳过），三包产物断言通过。
 - 2026-10-28 同步上游 0.4.0：共享 `SkinTextureReader` 自动流入，`AvatarRenderer` 补丁无需调整；同步后 `test build` 1493 项测试 0 失败/错误、5 项跳过（2 项原有 + 3 项真实 GL 读回在 Linux 跳过）。
 

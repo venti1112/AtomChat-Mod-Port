@@ -1,0 +1,22 @@
+diff --git a/src/main/java/com/atom/chat/net/PackNetServer.java b/src/main/java/com/atom/chat/net/PackNetServer.java
+index bb6c35d..29c20ab 100644
+--- a/src/main/java/com/atom/chat/net/PackNetServer.java
++++ b/src/main/java/com/atom/chat/net/PackNetServer.java
+@@ -49,7 +49,7 @@ public final class PackNetServer implements Net.ServerSide, Host.ServerSide {
+      * the server thread here only builds the queue.
+      */
+     private static void onServer(ServerPlayerEntity player, Runnable work) {
+-        MinecraftServer server = player == null ? null : player.getServer();
++        MinecraftServer server = player == null ? null : player.getEntityWorld().getServer();
+         if (server != null) {
+             server.execute(work);
+         }
+@@ -81,7 +81,7 @@ public final class PackNetServer implements Net.ServerSide, Host.ServerSide {
+ 
+     @Override
+     public Object serverOf(Object player) {
+-        return player instanceof ServerPlayerEntity sender ? sender.getServer() : null;
++        return player instanceof ServerPlayerEntity sender ? sender.getEntityWorld().getServer() : null;
+     }
+ 
+     @Override

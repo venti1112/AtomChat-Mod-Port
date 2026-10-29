@@ -13,6 +13,12 @@ class NotificationRenderWiringTest {
         assertTrue(s.contains("GL_DRAW_FRAMEBUFFER_BINDING"));
         assertTrue(s.contains("GlStateMirror.bindReadFramebuffer(readFramebuffer)"));
         assertTrue(s.contains("GlStateMirror.bindDrawFramebuffer(framebuffer)"));
+        // The mirror is cache-gated and Skia binds its FBO with raw GL, so the
+        // raw write has to come first or the restore is silently skipped.
+        int rawDraw = s.indexOf("GL30C.glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, framebuffer)");
+        int rawRead = s.indexOf("GL30C.glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, readFramebuffer)");
+        assertTrue(rawDraw >= 0 && rawDraw < s.indexOf("GlStateMirror.bindDrawFramebuffer(framebuffer)"));
+        assertTrue(rawRead >= 0 && rawRead < s.indexOf("GlStateMirror.bindReadFramebuffer(readFramebuffer)"));
     }
     private Path root() {
         Path p = Path.of("").toAbsolutePath();

@@ -1,0 +1,13 @@
+diff --git a/src/main/java/com/atom/chat/audio/FeedbackSoundController.java b/src/main/java/com/atom/chat/audio/FeedbackSoundController.java
+index 9afa23d..348819e 100644
+--- a/src/main/java/com/atom/chat/audio/FeedbackSoundController.java
++++ b/src/main/java/com/atom/chat/audio/FeedbackSoundController.java
+@@ -19,7 +19,7 @@ public final class FeedbackSoundController {
+     } }
+     private FeedbackSoundController() {}
+     public static void registerSound() {
+-        for(var sound:SOUNDS.values()) Registry.register(Registries.SOUND_EVENT,sound.getId(),sound);
++        for(var sound:SOUNDS.values()) Registry.register(Registries.SOUND_EVENT,sound.id(),sound);
+     }
+     public static void beginAction() { batching=true; pending=null; }
+     public static void endAction() {

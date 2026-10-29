@@ -239,7 +239,18 @@ public final class GlStateUtil {
             }
             GL11C.glScissor(scissorBox[0], scissorBox[1], scissorBox[2], scissorBox[3]);
 
+            // Blaze3D's framebuffer setter is cache-gated (GlStateManager keeps
+            // readFbo/writeFbo). Skia binds its own FBO with raw GL, so the
+            // cache still names the entry-time FBO while the driver holds
+            // Skia's; the setter then skips the bind and the game keeps
+            // rendering into the Skia target. 1.21.5 flickered for as long as
+            // the panel stayed open (blur off, no other raw-GL op dirtied the
+            // cache); 1.21.8 leaked it into the GUI pass during the open/close
+            // animation. Driver write first, mirror second — same rule as every
+            // other value above.
+            GL30C.glBindFramebuffer(GL30C.GL_DRAW_FRAMEBUFFER, framebuffer);
             GlStateMirror.bindDrawFramebuffer(framebuffer);
+            GL30C.glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, readFramebuffer);
             GlStateMirror.bindReadFramebuffer(readFramebuffer);
             GlStateMirror.viewport(viewport[0], viewport[1], viewport[2], viewport[3]);
 

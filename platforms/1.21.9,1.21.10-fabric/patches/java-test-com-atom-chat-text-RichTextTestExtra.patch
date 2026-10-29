@@ -1,0 +1,13 @@
+diff --git a/src/test/java/com/atom/chat/text/RichTextTestExtra.java b/src/test/java/com/atom/chat/text/RichTextTestExtra.java
+index 255ab33..a0b9a6f 100644
+--- a/src/test/java/com/atom/chat/text/RichTextTestExtra.java
++++ b/src/test/java/com/atom/chat/text/RichTextTestExtra.java
+@@ -12,7 +12,7 @@ class RichTextTestExtra {
+     void stripInteractionsRemovesClickHoverUnderlineButKeepsColor() {
+         Style interactive = Style.EMPTY.withColor(0xFF55FF)
+                 .withUnderline(true)
+-                .withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/msg Steve "));
++                .withClickEvent(new ClickEvent.SuggestCommand("/msg Steve "));
+         RichText rich = RichText.of(Text.literal("Steve").setStyle(interactive));
+         RichText clean = rich.stripInteractions();
+         assertEquals("Steve", clean.getString());

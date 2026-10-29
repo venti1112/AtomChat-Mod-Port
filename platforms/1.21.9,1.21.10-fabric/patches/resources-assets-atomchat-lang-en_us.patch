@@ -1,0 +1,12 @@
+diff --git a/src/main/resources/assets/atomchat/lang/en_us.json b/src/main/resources/assets/atomchat/lang/en_us.json
+index 96219e1..0a7a701 100644
+--- a/src/main/resources/assets/atomchat/lang/en_us.json
++++ b/src/main/resources/assets/atomchat/lang/en_us.json
+@@ -83,6 +83,7 @@
+   "atomchat.input.save_failed": "Failed to save image",
+   "key.atomchat.open": "Open AtomChat home",
+   "key.atomchat.category": "AtomChat",
++  "key.category.atomchat.category": "AtomChat",
+   "atomchat.conversation.start": "Tap to start a chat",
+   "atomchat.conversation.me": "Me",
+   "atomchat.private.offline": "Player is offline, cannot send",

@@ -29,11 +29,19 @@ A client-side mod that replaces the vanilla chat screen with a vector-drawn phon
 | Target | Requires |
 | --- | --- |
 | Fabric 1.21.1 | Fabric Loader 0.16+, Fabric API |
+| Fabric 1.21.2 – 1.21.3 | Fabric Loader 0.16+, Fabric API |
 | Fabric 1.21.4 | Fabric Loader 0.16+, Fabric API |
+| Fabric 1.21.5 | Fabric Loader 0.16+, Fabric API |
+| Fabric 1.21.6 – 1.21.7 | Fabric Loader 0.16+, Fabric API |
+| Fabric 1.21.8 | Fabric Loader 0.16+, Fabric API |
+| Fabric 1.21.9 – 1.21.10 | Fabric Loader 0.16+, Fabric API |
+| Fabric 1.21.11 | Fabric Loader 0.16+, Fabric API |
 | NeoForge 1.21.1 | NeoForge 21.1+ |
 | Forge 1.20.1 | Forge 47+ |
 
-Java 21 for the 1.21.1 and 1.21.4 targets, Java 17 for Forge 1.20.1. **Windows x64, Windows ARM64 and Linux x64 have separate JARs.** Choose exactly one matching your OS and Minecraft JVM architecture. Filenames follow `atomchat-<loader>-<mc>-<mod>-<os>-<arch>.jar`. Each JAR bundles Skija 0.143.18 with only its matching native. Windows ARM64 packaging is experimental pending testing on an ARM64 Windows machine. Linux needs EGL/OpenGL libraries (Ubuntu/Debian: `sudo apt install libegl1 libgl1`). Install the same variant on the server for media hosting and profile synchronization.
+Java 21 for every Fabric target; Java 17 only for the Forge 1.20.1 baseline. **Windows x64, Windows ARM64 and Linux x64 have separate JARs.** Choose exactly one matching your OS and Minecraft JVM architecture. Filenames follow `atomchat-<loader>-<mc>-<mod>-<os>-<arch>.jar`, and `<mc>` lists every Minecraft version that jar loads — `atomchat-Fabric-1.21.2,1.21.3-0.4.0-windows-x64.jar` runs on both 1.21.2 and 1.21.3. A target covering several versions is compiled against the lowest one. Each JAR bundles Skija 0.143.18 with only its matching native. Windows ARM64 packaging is experimental pending testing on an ARM64 Windows machine. Linux needs EGL/OpenGL libraries (Ubuntu/Debian: `sudo apt install libegl1 libgl1`). Install the same variant on the server for media hosting and profile synchronization.
+
+Release artifacts currently ship for Fabric 1.21.4, 1.21.8 and 1.21.11; the remaining Fabric versions are built and tested by CI while they finish in-game validation. Fabric 1.21.1, NeoForge 1.21.1 and Forge 1.20.1 stay in the source tree as the upstream baseline for incremental targets and are no longer attached to new releases — their 0.4.0 jars remain available.
 
 Item links using Minecraft's `SHOW_ITEM` hover data have inline icons and native tooltips in the AtomChat panel. Quark's original action-emote buttons and panel are retained on Forge/NeoForge; Fabric uses the common item-link support without a Quark dependency. Actual item sharing still requires the sharing mod's own client/server support.
 
@@ -59,7 +67,7 @@ Server policy lives in config/atomchat/atomchat-server.json, including hostingEn
 
 ## Known limitations
 
-- Windows x64 rendering with Skija 0.143.18 passed user validation on Fabric 1.21.1; Linux x64 rendering passed user validation on Fabric 1.21.4. Windows ARM64 remains untested in-game. macOS, Linux ARM64 and Android natives are not bundled.
+- Windows x64 rendering with Skija 0.143.18 passed user validation on Fabric 1.21.1; Linux x64 rendering passed user validation on Fabric 1.21.4, 1.21.8 and 1.21.11. Windows ARM64 remains untested in-game. macOS, Linux ARM64 and Android natives are not bundled.
 - Without the server mod, images fall back to a third-party host (roughly 3-hour expiry); files above `maxFileKb` are not uploaded.
 - Player identity parsing is best-effort — exotic nickname-plugin formats degrade to grey system messages.
 - The dedicated-server hosting path has only been tested against singleplayer and LAN hosts.
@@ -74,17 +82,20 @@ Server policy lives in config/atomchat/atomchat-server.json, including hostingEn
 
 ## Install
 
-1. Download the jar for your loader from [Releases](https://github.com/NoWordz/AtomChat-Mod/releases) (Forge: the non-`-slim` jar).
+1. Download the jar matching your Minecraft version from [Releases](https://github.com/NoWordz/AtomChat-Mod/releases) (use the non-`-slim` jar). A multi-version jar lists every version it loads in its filename, e.g. `1.21.2,1.21.3`.
 2. Place it in `mods/`; add the same jar to the server's `mods/` for media hosting.
 3. Open chat in game, or press `Y` to open the panel directly.
 
 ## Building from source
 
-Single-branch multi-target layout: `shared/` holds mapping-neutral logic, `layers/mapping/official/` the official-mappings layer, and `platforms/<target>/` one Gradle project per target.
+Single-branch multi-target layout: `shared/` holds mapping-neutral logic, `layers/mapping/official/` the official-mappings layer, and `platforms/<target>/` one Gradle project per target. `versions/targets.json` is the source of truth: a target named `1.21.2,1.21.3-fabric` compiles against the lowest version in its range and produces one jar for every version it lists.
 
 ```bash
-cd platforms/1.21.1-fabric && ./gradlew build    # JDK 21; other targets: change directory, Forge 1.20.1 uses JDK 17
+cd "platforms/1.21.2,1.21.3-fabric" && ./gradlew build    # JDK 21; quote the path — it contains a comma
+cd platforms/1.20.1-forge && ./gradlew build               # JDK 17; upstream baseline
 ```
+
+CI builds every target that has a project directory except the `ci: false` upstream baselines (`1.21.1-fabric`, `1.21.1-neoforge`, `1.20.1-forge`); those still build locally with the same command.
 
 See the [wiki](https://github.com/NoWordz/AtomChat-Mod/wiki) for details.
 

@@ -1,0 +1,17 @@
+diff --git a/src/main/java/com/atom/chat/AtomChatClient.java b/src/main/java/com/atom/chat/AtomChatClient.java
+index 9150b23..c12e868 100644
+--- a/src/main/java/com/atom/chat/AtomChatClient.java
++++ b/src/main/java/com/atom/chat/AtomChatClient.java
+@@ -28,9 +28,11 @@ import net.minecraft.util.Identifier;
+ import org.lwjgl.glfw.GLFW;
+ 
+ public class AtomChatClient implements ClientModInitializer {
++    private static final KeyBinding.Category CATEGORY =
++            KeyBinding.Category.create(Identifier.of("atomchat", "category"));
+     public static final KeyBinding OPEN_ATOMCHAT_KEY = KeyBindingHelper.registerKeyBinding(
+             new KeyBinding("key.atomchat.open", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_Y,
+-                    "key.atomchat.category"));
++                    CATEGORY));
+ 
+     @Override
+     public void onInitializeClient() {

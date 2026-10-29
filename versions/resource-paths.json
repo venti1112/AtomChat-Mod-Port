@@ -3,9 +3,10 @@
     "【资源落点声明】同一份资源在不同目标上的命名空间不同，放错了不会报错 —— 表现是运行期",
     "「模糊没了」「界面退回英文」这类静默降级。这张表把落点写下来，由 CI 逐目标比对。",
     "",
-    "【本仓的现实】着色器必须放在原版命名空间下才被 Fabric 的加载器找到（assets/minecraft/…），",
-    "而 NeoForge/Forge 两端用的是自己的命名空间（assets/atomchat/…）。语言文件与 sounds.json",
-    "三端都在 assets/atomchat/ 下。",
+    "【本仓的现实】Fabric 的着色器必须放在原版命名空间下才被加载器找到（assets/minecraft/…），",
+    "NeoForge 与 Forge 1.20.1 用的是自己的命名空间（assets/atomchat/…）。1.21.4 起",
+    "ShaderManager 按 minecraft:core/<名字> 查找，对应的官方名目标建起来时要按原版命名空间登记。",
+    "语言文件与 sounds.json 各端都在 assets/atomchat/ 下。",
     "",
     "【判据】每个目标的实际文件集合必须与声明**逐项相等**（多一个少一个都红）：",
     "着色器按 <shaders_root>/<名字><扩展名> 展开，语言文件按两种语言各一份。"

@@ -1,0 +1,26 @@
+diff --git a/src/main/java/com/atom/chat/chat/ChatPipeline.java b/src/main/java/com/atom/chat/chat/ChatPipeline.java
+index 2f33398..8392e80 100644
+--- a/src/main/java/com/atom/chat/chat/ChatPipeline.java
++++ b/src/main/java/com/atom/chat/chat/ChatPipeline.java
+@@ -36,8 +36,8 @@ public final class ChatPipeline {
+         String display = name.getString().replaceAll("§.", "").trim();
+         if (display.isBlank()) return null;
+         var info = ChatClassifier.resolveOnlinePlayer(display);
+-        String profile = info != null ? info.getProfile().getName() : display;
+-        UUID uuid = info != null ? info.getProfile().getId() : SeenPlayers.findUuid(display);
++        String profile = info != null ? info.getProfile().name() : display;
++        UUID uuid = info != null ? info.getProfile().id() : SeenPlayers.findUuid(display);
+         return new SenderMeta(uuid, display, profile, body.getString(), false, name, body);
+     }
+ 
+@@ -82,8 +82,8 @@ public final class ChatPipeline {
+         }
+ 
+         PlayerListEntry info = ChatClassifier.resolveOnlinePlayer(pl.playerName());
+-        String profile = info != null ? info.getProfile().getName() : pl.playerName();
+-        UUID uuid = info != null ? info.getProfile().getId() : ChatClassifier.resolveUuid(pl.playerName());
++        String profile = info != null ? info.getProfile().name() : pl.playerName();
++        UUID uuid = info != null ? info.getProfile().id() : ChatClassifier.resolveUuid(pl.playerName());
+         return new SenderMeta(uuid, pl.displayLabel(), profile, pl.content(), false);
+     }
+ 

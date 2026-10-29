@@ -56,9 +56,20 @@ tasks.named('remapJar') {
     archiveFileName = "${project.archives_base_name}-${project.mod_version}${project.atomchatNativeSuffix}.jar"
 }
 
+// depends.minecraft 的谓词由 targets.json 的 minecraft + minecraft_until 生成：
+// 版本范围只声明一次，补丁不再手抄这一行。
+def mcRange = project.ext.atomchatMinecraftRange
+if (!mcRange) {
+    throw new GradleException(
+        "versions/targets.json 里 ${project.ext.atomchatTargetName} 没有 minecraft_until —— " +
+        "Fabric 目标的版本范围没有上界，fabric.mod.json 没法展开")
+}
 processResources {
     inputs.property 'version', project.version
-    filesMatching('fabric.mod.json') { expand version: project.version }
+    inputs.property 'minecraft_version_range', mcRange
+    filesMatching('fabric.mod.json') {
+        expand version: project.version, minecraft_version_range: mcRange
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -113,7 +124,7 @@ loom {
 
 // Store-facing version label, following the jar naming habit:
 // Fabric-<mc_version>-<mod_version>, e.g. Fabric-1.21.11-0.4.0-preview
-def storeVersion = "Fabric-${project.minecraft_version}-${project.mod_version}${project.atomchatNativeSuffix}"
+def storeVersion = "Fabric-${project.atomchatMinecraftVersions.join(',')}-${project.mod_version}${project.atomchatNativeSuffix}"
 
 def changelogFor(version) {
     def text = new File(atomchatRepoRoot, 'RELEASE_NOTES.md').getText('UTF-8')
@@ -139,7 +150,7 @@ modrinth {
     versionNumber = storeVersion
     versionType = "release"
     uploadFile = remapJar
-    gameVersions = [project.minecraft_version]
+    gameVersions = project.atomchatMinecraftVersions
     loaders = ["fabric"]
     changelog = changelogFor(project.version)
 
@@ -165,7 +176,7 @@ tasks.register('curseforge', net.darkhax.curseforgegradle.TaskPublishCurseForge)
         main.changelog = changelogFor(project.version)
         main.releaseType = 'release'
         main.displayName = storeVersion
-        main.addGameVersion project.minecraft_version
+        project.atomchatMinecraftVersions.each { main.addGameVersion it }
         main.addModLoader 'Fabric'
         main.addJavaVersion 'Java 21'
         // CurseForge rejects uploads without an environment tag (error 1021).

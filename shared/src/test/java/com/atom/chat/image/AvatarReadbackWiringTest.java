@@ -25,7 +25,8 @@ class AvatarReadbackWiringTest {
     void bothMappingsUseTheBoundedTextureReader() throws Exception {
         Path root = repositoryRoot();
         for (String path : List.of(
-                "layers/mapping/official/src/main/java/com/atom/chat/image/AvatarRenderer.java",
+                "layers/mapping+version/official-legacy/src/main/java/com/atom/chat/image/AvatarRenderer.java",
+                "layers/mapping+version/official-modern/src/main/java/com/atom/chat/image/AvatarRenderer.java",
                 "platforms/1.21.1-fabric/src/main/java/com/atom/chat/image/AvatarRenderer.java")) {
             String source = Files.readString(root.resolve(path));
             assertFalse(source.contains("glGetTexImage("),

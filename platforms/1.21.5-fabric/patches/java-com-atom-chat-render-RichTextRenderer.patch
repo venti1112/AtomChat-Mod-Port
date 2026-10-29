@@ -1,0 +1,20 @@
+diff --git a/src/main/java/com/atom/chat/render/RichTextRenderer.java b/src/main/java/com/atom/chat/render/RichTextRenderer.java
+index d5d23a8..96b4e56 100644
+--- a/src/main/java/com/atom/chat/render/RichTextRenderer.java
++++ b/src/main/java/com/atom/chat/render/RichTextRenderer.java
+@@ -227,13 +227,11 @@ public final class RichTextRenderer {
+      * the Minecraft client is bootstrapped.
+      */
+     private static Style withUrlHover(Style style) {
+-        if (style == null || style.getClickEvent() == null
+-                || style.getClickEvent().getAction() != ClickEvent.Action.OPEN_URL
++        if (style == null || !(style.getClickEvent() instanceof ClickEvent.OpenUrl openUrl)
+                 || style.getHoverEvent() != null) {
+             return style;
+         }
+-        return style.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT,
+-                Text.literal(style.getClickEvent().getValue())));
++        return style.withHoverEvent(new HoverEvent.ShowText(Text.literal(openUrl.uri().toString())));
+     }
+ 
+     /**

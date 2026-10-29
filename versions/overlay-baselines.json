@@ -12,7 +12,25 @@
     "src/main/java/com/atom/chat/render/PanelBlurRenderer.java": "b143c22acc5ebf0d935c92bcafeafd995763cd28",
     "src/main/java/com/atom/chat/render/SkiaGraphics.java": "9ed86c11d8e55a1676dece71e5a1ca9f53e22fa8"
   },
+  "1.21.5-fabric": {
+    "src/main/java/com/atom/chat/render/GlStateMirror.java": "17f440412ab2bee5a974056daad3970e27df3fc9",
+    "src/main/java/com/atom/chat/render/ItemIconRenderer.java": "3bb0de33f6b6ec5496568e70ac14d7d3db0e5dd4",
+    "src/main/java/com/atom/chat/render/PanelBlurRenderer.java": "b143c22acc5ebf0d935c92bcafeafd995763cd28",
+    "src/main/java/com/atom/chat/render/SkiaGraphics.java": "9ed86c11d8e55a1676dece71e5a1ca9f53e22fa8"
+  },
+  "1.21.6,1.21.7-fabric": {
+    "src/main/java/com/atom/chat/render/GlStateMirror.java": "17f440412ab2bee5a974056daad3970e27df3fc9",
+    "src/main/java/com/atom/chat/render/ItemIconRenderer.java": "3bb0de33f6b6ec5496568e70ac14d7d3db0e5dd4",
+    "src/main/java/com/atom/chat/render/PanelBlurRenderer.java": "b143c22acc5ebf0d935c92bcafeafd995763cd28",
+    "src/main/java/com/atom/chat/render/SkiaGraphics.java": "9ed86c11d8e55a1676dece71e5a1ca9f53e22fa8"
+  },
   "1.21.8-fabric": {
+    "src/main/java/com/atom/chat/render/GlStateMirror.java": "17f440412ab2bee5a974056daad3970e27df3fc9",
+    "src/main/java/com/atom/chat/render/ItemIconRenderer.java": "3bb0de33f6b6ec5496568e70ac14d7d3db0e5dd4",
+    "src/main/java/com/atom/chat/render/PanelBlurRenderer.java": "b143c22acc5ebf0d935c92bcafeafd995763cd28",
+    "src/main/java/com/atom/chat/render/SkiaGraphics.java": "9ed86c11d8e55a1676dece71e5a1ca9f53e22fa8"
+  },
+  "1.21.9,1.21.10-fabric": {
     "src/main/java/com/atom/chat/render/GlStateMirror.java": "17f440412ab2bee5a974056daad3970e27df3fc9",
     "src/main/java/com/atom/chat/render/ItemIconRenderer.java": "3bb0de33f6b6ec5496568e70ac14d7d3db0e5dd4",
     "src/main/java/com/atom/chat/render/PanelBlurRenderer.java": "b143c22acc5ebf0d935c92bcafeafd995763cd28",

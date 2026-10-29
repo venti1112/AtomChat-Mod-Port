@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/atom/chat/net/ReactionCompanionServer.java b/src/main/java/com/atom/chat/net/ReactionCompanionServer.java
+index 16116dc..5267600 100644
+--- a/src/main/java/com/atom/chat/net/ReactionCompanionServer.java
++++ b/src/main/java/com/atom/chat/net/ReactionCompanionServer.java
+@@ -22,14 +22,14 @@ public final class ReactionCompanionServer {
+     private static boolean available(ServerPlayerEntity receiver) { return net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.canSend(receiver, ReactionPayloads.DataPayload.ID); }
+     private static void send(ServerPlayerEntity receiver, byte[] bytes) { if (available(receiver)) { net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(receiver, new ReactionPayloads.DataPayload(bytes)); } }
+     private static void action(ServerPlayerEntity sender, byte[] bytes) {
+-        MinecraftServer server = sender.getServer();
++        MinecraftServer server = sender.getEntityWorld().getServer();
+         if (server == null || !com.atom.chat.config.AtomChatServerConfig.get().hostingEnabled) return;
+         ReactionWire.Action action;
+         try { action = ReactionWire.readAction(bytes); }
+         catch (IllegalArgumentException e) { return; }
+         ReactionLedger ledger = ledger(server);
+         long before=ledger.revision(action.id());
+-        String reason = ledger.apply(sender.getUuid(), sender, sender.getGameProfile().getName(), action, System.nanoTime()/1_000_000L);
++        String reason = ledger.apply(sender.getUuid(), sender, sender.getGameProfile().name(), action, System.nanoTime()/1_000_000L);
+         if (!reason.isEmpty()) { send(sender, ReactionWire.rejection(reason)); return; }
+         ReactionWire.Snapshot snapshot = ledger.snapshot(action.id());
+         if (snapshot == null) return;

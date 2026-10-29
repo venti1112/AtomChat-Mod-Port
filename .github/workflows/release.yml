@@ -16,15 +16,21 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: 只发布某个目标（手动触发时）
+        description: 只发布某个目标（手动触发时；未验证目标只构建、不发布）
         required: false
         default: all
         type: choice
+        # 选项与构建矩阵一致：上游基线不再构建（targets.json 的 ci: false），不列。
+        # 多版本区间目标的选项就是它们各自的名字，与 CI job / 产物名同形。
         options:
           - all
-          - 1.21.1-fabric
-          - 1.21.1-neoforge
-          - 1.20.1-forge
+          - 1.21.2,1.21.3-fabric
+          - 1.21.4-fabric
+          - 1.21.5-fabric
+          - 1.21.6,1.21.7-fabric
+          - 1.21.8-fabric
+          - 1.21.9,1.21.10-fabric
+          - 1.21.11-fabric
       dry_run:
         description: 只构建与校验，不建 Release、不发布到商店
         required: false
@@ -164,7 +170,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release-out
-          # buildable: false 的目标也参与构建（产物名带 -未验证），但不进 Release。
+          # buildable: false 的目标也参与构建（产物名带 -未验证），但不进 Release；
+          # ci: false 的上游基线根本不进构建矩阵，这里自然也不会出现。
           find artifacts -name "*.jar" ! -name "*sources*" ! -name "*-slim*" \
             ! -path "*-未验证/*" -exec cp {} release-out/ \;
           ls -la release-out

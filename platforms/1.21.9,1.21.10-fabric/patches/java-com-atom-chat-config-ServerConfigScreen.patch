@@ -1,0 +1,32 @@
+diff --git a/src/main/java/com/atom/chat/config/ServerConfigScreen.java b/src/main/java/com/atom/chat/config/ServerConfigScreen.java
+index 95860d5..9ea6340 100644
+--- a/src/main/java/com/atom/chat/config/ServerConfigScreen.java
++++ b/src/main/java/com/atom/chat/config/ServerConfigScreen.java
+@@ -2,6 +2,7 @@ package com.atom.chat.config;
+ 
+ import com.atom.chat.net.ConfigPayloads;
+ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
++import net.minecraft.client.gui.Click;
+ import net.minecraft.client.gui.DrawContext;
+ import net.minecraft.client.gui.screen.Screen;
+ import net.minecraft.client.gui.widget.ButtonWidget;
+@@ -310,7 +311,9 @@ public final class ServerConfigScreen extends Screen {
+     }
+ 
+     @Override
+-    public boolean mouseClicked(double mx, double my, int button) {
++    public boolean mouseClicked(Click click, boolean doubled) {
++        double mx = click.x();
++        double my = click.y();
+         if (mx >= listLeft && mx <= listLeft + listWidth && my >= listTop && my < listBottom) {
+             int index = phraseScroll + (int) ((my - listTop) / PHRASE_ROW_H);
+             if (index >= 0 && index < phrases.size()) {
+@@ -320,7 +323,7 @@ public final class ServerConfigScreen extends Screen {
+             }
+             return true;
+         }
+-        return super.mouseClicked(mx, my, button);
++        return super.mouseClicked(click, doubled);
+     }
+ 
+     @Override

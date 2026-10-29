@@ -1,0 +1,24 @@
+diff --git a/src/main/java/com/atom/chat/mixin/MessageHandlerMixin.java b/src/main/java/com/atom/chat/mixin/MessageHandlerMixin.java
+index 1b27ad3..9cedb26 100644
+--- a/src/main/java/com/atom/chat/mixin/MessageHandlerMixin.java
++++ b/src/main/java/com/atom/chat/mixin/MessageHandlerMixin.java
+@@ -30,8 +30,8 @@ public class MessageHandlerMixin {
+     @Inject(method = "processChatMessageInternal", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/hud/ChatHud;addMessage(Lnet/minecraft/text/Text;Lnet/minecraft/network/message/MessageSignatureData;Lnet/minecraft/client/gui/hud/MessageIndicator;)V"))
+     private void atomchat$captureSignedBeforeAdd(MessageType.Parameters bound, SignedMessage message, Text decorated,
+                                             GameProfile gameProfile, boolean secure, Instant instant, CallbackInfoReturnable<Boolean> ci) {
+-        UUID uuid = message.getSender() != null ? message.getSender() : gameProfile.getId();
+-        String profile = gameProfile.getName();
++        UUID uuid = message.getSender() != null ? message.getSender() : gameProfile.id();
++        String profile = gameProfile.name();
+         // Never restore masked content through the native unsigned/decorated body.
+         Text contentComponent = message.filterMask().isPassThrough() ? message.getContent()
+                 : message.filterMask().getFilteredText(message.getSignedContent());
+@@ -75,7 +75,7 @@ public class MessageHandlerMixin {
+             if (uuid != null) {
+                 var info = ChatClassifier.resolveOnlinePlayer(display);
+                 if (info != null) {
+-                    profile = info.getProfile().getName();
++                    profile = info.getProfile().name();
+                 }
+             }
+             MessageCapture.set(new SenderMeta(uuid, display, profile, null, false,
