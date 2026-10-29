@@ -156,6 +156,7 @@ public final class ShellHeader {
     private static void drawIconButton(Canvas canvas, UiLayout.Rect rect, float hover,
                                        boolean pressed, PressScale scale,
                                        io.github.humbleui.skija.Path icon, int color) {
+        ClickRipples.region(rect.x(), rect.y(), rect.w(), rect.h(), UiTokens.radius(8), UiTokens.cardFill());
         // The scaled shape is the inset wash, so the width budget is spent on
         // that surface (rect minus the inset on both sides), not on the outer
         // hit-test rect. Behaviour is unchanged at the default inset — this is

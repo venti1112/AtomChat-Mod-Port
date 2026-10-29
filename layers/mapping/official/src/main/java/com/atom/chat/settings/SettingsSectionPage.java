@@ -400,12 +400,10 @@ public final class SettingsSectionPage {
         };
     }
 
-    /** Two-step confirm for destructive actions: first tap arms a red
-     *  "确定清除？", second tap within the window really fires. Guards against
-     *  accidental wipes; any click that is not the armed button disarms. */
-    private static final long CONFIRM_ARM_MS = 3000L;
-    private String armedActionId;
-    private long armedActionAt;
+    private final com.atom.chat.ui.ConfirmationDialog confirmation = new com.atom.chat.ui.ConfirmationDialog();
+
+    public com.atom.chat.ui.ConfirmationDialog confirmation() { return confirmation; }
+
     /** Session-only user folds. Every group starts expanded; a click may
      *  collapse it until this settings page instance is discarded. */
     private final java.util.Set<String> collapsedColorGroups =
@@ -429,17 +427,6 @@ public final class SettingsSectionPage {
      *  the value snaps to exactly 0, so the scroll height converges without
      *  a visible end-of-animation jump. */
     private static final float GROUP_FOLD_MIN_DRAWN = 0.01F;
-    /** Whether the given destructive action is showing its red confirm state. */
-    public boolean actionArmed(String actionId) {
-        return actionId != null && actionId.equals(armedActionId)
-                && System.currentTimeMillis() - armedActionAt <= CONFIRM_ARM_MS;
-    }
-
-    /** Cancels any armed confirmation (click-outside rule). */
-    public void disarmAction() {
-        armedActionId = null;
-    }
-
     /** Destructive actions that must pass through the two-step confirm. */
     private static boolean needsConfirm(String actionId) {
         return ACTION_WALLPAPER_CLEAR.equals(actionId)
@@ -708,7 +695,7 @@ public final class SettingsSectionPage {
     private ActionCopy actionCopy(Row row) {
         SettingsItem item = row.item();
         boolean available = item.available();
-        boolean redConfirm = needsConfirm(row.actionId()) && actionArmed(row.actionId());
+        boolean redConfirm = false;
         String subtitle;
         String verb;
         if (!available) {
@@ -906,6 +893,8 @@ public final class SettingsSectionPage {
                         () -> rows.add(Row.ofAction(ACTION_TELEPORT_MODE, teleportModeItem())));
                 addGroup(rows, "atomchat.settings.group.chat.fun",
                         () -> addSwitches(rows, SettingsSection.CHAT, "fun_effects"));
+                addGroup(rows, "atomchat.settings.group.chat.experimental",
+                        () -> addSwitches(rows, SettingsSection.CHAT, "experimental_effects"));
             }
             default -> {
                 addGroup(rows, "atomchat.settings.group.chat.input", () ->
@@ -2663,11 +2652,14 @@ public final class SettingsSectionPage {
         String group = foldableGroup(row.labelKey());
         String text = tr(row.labelKey());
         float padX = UiTokens.SETTINGS_ROW_PAD;
-        float textX = rect.x() + padX;
+        float iconSize = UiTokens.COMPOSER_ICON_SIZE;
+        float textX = rect.x() + padX + (group == null ? 0 : iconSize + UiTokens.SETTINGS_TILE_TEXT_GAP);
         float rightX = rect.right() - padX;
         float cy = rect.y() + rect.h() / 2.0F;
 
         if (group != null) {
+            com.atom.chat.render.DrawPrimitives.drawIconCentered(canvas,SettingsGroupIcons.forLabel(row.labelKey()),
+                    rect.x()+padX+iconSize/2,cy,iconSize,textColor);
             float trailW = Math.max(0F, rightX - textX - UiTokens.SETTINGS_FOLD_CHEVRON_SIZE - UiTokens.SETTINGS_ROW_PAD);
             com.atom.chat.render.DotTexture.drawTrail(canvas,
                     new UiLayout.Rect(textX, cy - UiTokens.DOT_TRAIL_HEIGHT / 2F, trailW, UiTokens.DOT_TRAIL_HEIGHT),
@@ -3267,8 +3259,7 @@ public final class SettingsSectionPage {
     }
 
     /** Applies a hit: flips a switch, opens a link, fires an action, folds a
-     *  colour group, or unblocks. Destructive actions go through the two-step
-     *  confirm. */
+     *  colour group, or unblocks. Destructive actions open a modal confirmation. */
     public boolean perform(RowHit hit) {
         if (hit == null) {
             return false;
@@ -3313,14 +3304,15 @@ public final class SettingsSectionPage {
                 }
                 String actionId = hit.row().actionId();
                 if (needsConfirm(actionId)) {
-                    // Two-step confirm: first tap arms, second tap fires.
-                    long now = System.currentTimeMillis();
-                    if (!actionArmed(actionId) || now - armedActionAt > CONFIRM_ARM_MS) {
-                        armedActionId = actionId;
-                        armedActionAt = now;
-                        return true;
+                    String bodyKey = "atomchat.confirm." + actionId;
+                    if (ACTION_HISTORY_CLEAR.equals(actionId) && !AtomChatConfig.get().chatHistoryEnabled) {
+                        bodyKey += ".memory";
                     }
-                    armedActionId = null;
+                    cancelPointer(); // The modal will consume the mouse-up belonging to this card.
+                    confirmation.open(tr(hit.row().item().titleKey()), tr(bodyKey),
+                            tr("atomchat.confirm.cancel"), tr("atomchat.confirm.confirm"),
+                            () -> actionHandler.onAction(actionId));
+                    return true;
                 }
                 actionHandler.onAction(actionId);
             }

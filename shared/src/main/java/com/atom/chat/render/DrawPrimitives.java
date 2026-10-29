@@ -48,6 +48,7 @@ public final class DrawPrimitives {
 
         /** Whether the quick-phrase panel is open (its button's active tint). */
         boolean phrasePanelOpen();
+        default boolean toolPanelOpen() { return false; }
     }
 
     private final Host host;
@@ -139,6 +140,8 @@ public final class DrawPrimitives {
     private static final String ICON_BLOCK_SVG = "M10 3 a7 7 0 1 0 0 14 a7 7 0 1 0 0 -14"
             + " M4.5 4.5 L15.5 15.5";
     public static final Path ICON_IMAGE_PATH = Path.makeFromSVGString(ICON_IMAGE_SVG);
+    public static final Path ICON_TOOLS_PATH = Path.makeFromSVGString(
+            "M10 2 A8 8 0 1 1 10 18 A8 8 0 1 1 10 2 M10 6 L10 14 M6 10 L14 10");
     public static final Path ICON_EMOJI_PATH = Path.makeFromSVGString(ICON_EMOJI_SVG);
     /** Quick-phrase button: a lightning bolt (Lucide zap). */
     private static final String ICON_PHRASE_SVG = "M13 2 3 14h9l-1 8 10-12h-9l1-8z";
@@ -172,11 +175,11 @@ public final class DrawPrimitives {
      */
     public void drawIcon(Canvas canvas, Path icon, float bx, float by,
                          float boxW, float boxH, int color) {
-        drawIconCentered(canvas, icon, bx + boxW / 2.0F, by + boxH / 2.0F, UiTokens.s(18), color);
+        drawIconCentered(canvas, icon, bx + boxW / 2.0F, by + boxH / 2.0F, UiTokens.COMPOSER_ICON_SIZE, color);
     }
 
     /** Draws an icon centered on an arbitrary point; used by toolbar and menus. */
-    public void drawIconCentered(Canvas canvas, Path icon, float cx, float cy,
+    public static void drawIconCentered(Canvas canvas, Path icon, float cx, float cy,
                                  float size, int color) {
         Rect b = icon.getBounds();
         if (b == null || b.isEmpty()) {
@@ -208,6 +211,8 @@ public final class DrawPrimitives {
      * a window read.
      */
     public void drawIconButton(Canvas canvas, float bx, float by, int id, float vmx, float vmy) {
+        com.atom.chat.ui.ClickRipples.region(bx, by, UiTokens.ACTION_BUTTON_SIZE, UiTokens.ACTION_BUTTON_SIZE,
+                UiTokens.radius(8), UiTokens.cardFill());
         float frameDt = host.frameDt();
         boolean hover = inputButtonHovered(bx, by, UiTokens.ACTION_BUTTON_SIZE,
                 UiTokens.ACTION_BUTTON_SIZE, vmx, vmy);
@@ -243,10 +248,10 @@ public final class DrawPrimitives {
         }
         // Active states take the accent colour: the emoji button while its
         // panel is open (a toggle), any button for a moment after a press.
-        boolean activeTint = (id == 1 && host.emojiPanelOpen()) || (id == 3 && host.phrasePanelOpen())
+        boolean activeTint = (id == 0 && host.toolPanelOpen()) || (id == 1 && host.emojiPanelOpen()) || (id == 3 && host.phrasePanelOpen())
                 || pressed;
         Path icon = switch (id) {
-            case 0 -> ICON_IMAGE_PATH;
+            case 0 -> ICON_TOOLS_PATH;
             case 3 -> ICON_PHRASE_PATH;
             default -> ICON_EMOJI_PATH;
         };
@@ -259,6 +264,19 @@ public final class DrawPrimitives {
      * space (see {@link #drawIconButton}).
      */
     public void drawSendButton(Canvas canvas, float bx, float by, float vmx, float vmy) {
+        drawSendButton(canvas, bx, by, vmx, vmy, true);
+    }
+    public void drawSendButton(Canvas canvas, float bx, float by, float vmx, float vmy, boolean enabled) {
+        if (!enabled) {
+            com.atom.chat.ui.ClickRipples.block(new com.atom.chat.ui.UiLayout.Rect(bx, by, UiTokens.BUTTON_W, UiTokens.BUTTON_H));
+            int dimAccent = (accent() & 0xFFFFFF) | 0x55000000;
+            SkiaDraw.drawRoundedRect(canvas, bx, by, UiTokens.BUTTON_W, UiTokens.BUTTON_H, UiTokens.radius(9), dimAccent);
+            drawIcon(canvas, ICON_SEND_PATH, bx, by, UiTokens.BUTTON_W, UiTokens.BUTTON_H,
+                    (UiTokens.onAccent(accent()) & 0xFFFFFF) | 0x66000000);
+            return;
+        }
+        com.atom.chat.ui.ClickRipples.region(bx, by, UiTokens.BUTTON_W, UiTokens.BUTTON_H,
+                UiTokens.radius(8), UiTokens.accentFill());
         float frameDt = host.frameDt();
         boolean hover = inputButtonHovered(bx, by, UiTokens.BUTTON_W, UiTokens.BUTTON_H, vmx, vmy);
         boolean pressed = buttonPressed(2);

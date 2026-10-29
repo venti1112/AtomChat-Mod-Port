@@ -14,6 +14,15 @@ import java.util.List;
  * Minimal Skia text renderer with Minecraft color-code support (ported from Tuui's FontRenderer).
  */
 public final class SkiaFontRenderer {
+    private static final EmojiGlyphCache EMOJI_GLYPHS = new EmojiGlyphCache();
+    static void clearEmojiGlyphCache() { EMOJI_GLYPHS.clear(); }
+    static long emojiGlyphBuilds() { return EMOJI_GLYPHS.builds(); }
+    /** Native editable/ordered text is literal; section signs are not a second formatting language. */
+    public static float literalWidth(Font font,String text) { return text == null || text.isEmpty() ? 0 : measureRuns(font,text); }
+    public static void drawLiteralText(Canvas canvas,Font font,String text,float x,float y,int color) {
+        if (text == null || text.isEmpty()) return;
+        try (Paint paint = new Paint().setColor(color)) { drawRuns(canvas,text,x,y,font,paint); }
+    }
     private static final int[] COLOR_CODE_RGB = new int[]{
             0x000000, 0x0000AA, 0x00AA00, 0x00AAAA,
             0xAA0000, 0xAA00AA, 0xFFAA00, 0xAAAAAA,
@@ -552,7 +561,7 @@ public final class SkiaFontRenderer {
         return resolved;
     }
 
-    private static boolean isEmojiCodepoint(int cp) {
+    static boolean isEmojiCodepoint(int cp) {
         return (cp >= 0x1F000 && cp <= 0x1FAFF) || (cp >= 0x2600 && cp <= 0x27BF)
                 || cp == 0xFE0F || cp == 0x200D || (cp >= 0x2B00 && cp <= 0x2BFF);
     }
@@ -587,7 +596,8 @@ public final class SkiaFontRenderer {
                 j += Character.charCount(cp2);
             }
             String run = text.substring(i, j);
-            canvas.drawString(run, drawX, y, runFont, paint);
+            if (!EMOJI_GLYPHS.draw(canvas, runFont, run, drawX, y, paint))
+                canvas.drawString(run, drawX, y, runFont, paint);
             drawX += runFont.measureTextWidth(run);
             i = j;
         }

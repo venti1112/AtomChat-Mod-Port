@@ -199,10 +199,23 @@ public final class ComposerInput {
         field.fieldFocus();
     }
 
+    /** Inserts a tool's mention at the caret without replacing the conversation's draft. */
+    public void insert(String text) {
+        if (!field.present() || text == null || field.text().length() + text.length() > 256) return;
+        String current = field.text();
+        int caret = Math.max(0, Math.min(current.length(), field.caretPosition()));
+        field.setText(current.substring(0, caret) + text + current.substring(caret));
+        field.moveCaretTo(caret + text.length());
+        focus();
+    }
+
     public void caretToEnd() {
         if (field.present()) {
             field.moveCaretTo(text().length());
         }
+    }
+    public void moveCaretTo(int position) {
+        if (field.present()) field.moveCaretTo(Math.max(0, Math.min(text().length(), position)));
     }
 
     // ---------------------------------------------------------------- geometry
@@ -235,7 +248,7 @@ public final class ComposerInput {
         if (inputWrapCache == null || inputWrapWidth != maxWidth || !text.equals(inputWrapText)) {
             inputWrapText = text;
             inputWrapWidth = maxWidth;
-            inputWrapCache = SkiaFontRenderer.wrap(FontManager.font(UiTokens.FONT_INPUT), text, maxWidth);
+            inputWrapCache = com.atom.chat.render.PlainText.wrap(FontManager.font(UiTokens.FONT_INPUT), text, maxWidth);
         }
         return inputWrapCache;
     }
@@ -289,9 +302,8 @@ public final class ComposerInput {
     }
 
     /**
-     * Absolute index of the line holding the caret. wrap() drops the whitespace
-     * at a break point, so line lengths can sum to slightly less than the full
-     * text — the mapping is exact everywhere except right at a break.
+     * Absolute index of the line holding the caret. Editable soft wraps retain
+     * whitespace, so accumulated line lengths keep native completion ranges aligned.
      */
     public static int caretLine(List<String> lines, int caret) {
         int pos = 0;

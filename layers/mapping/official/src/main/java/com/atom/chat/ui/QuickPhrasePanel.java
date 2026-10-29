@@ -156,7 +156,7 @@ public final class QuickPhrasePanel {
     }
 
     private static float rowH() {
-        return s(36);
+        return UiTokens.COMPOSER_POPUP_ROW_HEIGHT;
     }
 
     private static float panelH() {
@@ -165,12 +165,12 @@ public final class QuickPhrasePanel {
     }
 
     private static float panelX(UiLayout layout) {
-        return layout.rect().x() + UiTokens.LIST_PAD_X;
+        return ComposerPopupLayout.left(layout);
     }
 
     /** Sits directly above the input bar, so it follows the bar's grown height. */
     private static float panelY(UiLayout layout) {
-        return layout.inputBar.y() - UiTokens.PANEL_TOP_GAP - panelH() - s(6);
+        return ComposerPopupLayout.top(layout, panelH());
     }
 
     private static Rect panelRect(UiLayout layout) {
@@ -382,7 +382,12 @@ public final class QuickPhrasePanel {
         }
     }
 
+    public UiLayout.Rect bounds(UiLayout layout) { return ComposerPopupLayout.place(layout,panelW(),panelH()); }
+    private ComposerPopupTransform.Point localPointer(UiLayout layout,float x,float y) {
+        return ComposerPopupTransform.of(bounds(layout),anim).toLocal(x,y);
+    }
     public boolean overPanel(UiLayout layout, double mx, double my) {
+        var point=localPointer(layout,(float)mx,(float)my); mx=point.x(); my=point.y();
         if (anim < 0.5F) {
             return false;
         }
@@ -475,6 +480,7 @@ public final class QuickPhrasePanel {
 
     /** Hit-tests a left click inside the panel. */
     public Action click(UiLayout layout, double mx, double my) {
+        var point=localPointer(layout,(float)mx,(float)my); mx=point.x(); my=point.y();
         Rect addRow = addRowRect(layout);
         if (contains(addRow, (float) mx, (float) my)) {
             pulseCell(ADD_CELL_KEY);
@@ -529,6 +535,7 @@ public final class QuickPhrasePanel {
 
     /** Called every frame with the virtual cursor so hover capsules can fade. */
     public void hover(UiLayout layout, float vmx, float vmy) {
+        var point=localPointer(layout,vmx,vmy); vmx=point.x(); vmy=point.y();
         if (!open) {
             hoveredRow = -1;
             hoveredBtn = -1;
@@ -584,15 +591,8 @@ public final class QuickPhrasePanel {
         try (Paint layer = new Paint()) {
             layer.setColor(Color.makeARGB((int) (255.0F * anim), 0, 0, 0));
             canvas.saveLayer(Rect.makeXYWH(px - s(24), py - s(24), pw + s(48), ph + s(48)), layer);
-            float sc = 0.92F + 0.08F * anim;
-            float cx = px + pw / 2.0F;
-            float cy = py + ph / 2.0F;
-            canvas.translate(cx, cy);
-            canvas.scale(sc, sc);
-            canvas.translate(-cx, -cy);
-            canvas.translate(0.0F, (1.0F - anim) * s(10));
-            SkiaDraw.drawRoundedRect(canvas, px, py, pw, ph, UiTokens.radius(14), UiTokens.SKIN_PANEL);
-            SkiaDraw.drawRoundedShadow(canvas, px, py, pw, ph, UiTokens.radius(14), s(8), UiTokens.CHROME_SHADOW);
+            ComposerPopupTransform.of(bounds(layout),anim).apply(canvas);
+            MenuPopup.drawPickerSurface(canvas, px, py, pw, ph);
 
             com.atom.chat.render.DotTexture.drawConnector(canvas,
                     new UiLayout.Rect(px, py, pw, ph), UiTokens.radius(14), layout.inputBar, layout.phraseBtn, accent.getAsInt());

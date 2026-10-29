@@ -1,5 +1,7 @@
 package com.atom.chat.notification;
 
+import com.atom.chat.config.AtomChatConfig;
+
 import com.atom.chat.chat.ChatMessage;
 import com.atom.chat.chat.LocalEcho;
 import com.atom.chat.chat.PlayerRef;
@@ -121,6 +123,7 @@ class NotificationJumpServiceTest {
         boolean composerPresent;
         final List<PlayerRef> openedPrivate = new ArrayList<>();
         int worldOpens;
+        boolean filterView;
         List<ChatMessage> messages = List.of();
         final ScrollController scroll = new ScrollController();
         int scrollLookups;
@@ -155,7 +158,7 @@ class NotificationJumpServiceTest {
 
         @Override
         public List<ChatMessage> currentMessages() {
-            return messages;
+            return filterView ? new com.atom.chat.chat.WorldFeedFilter().filterFeed(messages) : messages;
         }
 
         @Override
@@ -225,6 +228,43 @@ class NotificationJumpServiceTest {
     private static NotificationBanner.Active mention(ChatMessage message) {
         return new NotificationBanner.Active(NotificationBanner.Type.MENTION, RichText.empty(),
                 RichText.empty(), BORN, message);
+    }
+
+    @Test
+    void searchPreservesTheCurrentFilterAndOnlyRevealsItsRetainedMatches() {
+        Harness h = new Harness();
+        var config = AtomChatConfig.get();
+        var previous = config.worldFeedFilter;
+        var store = com.atom.chat.chat.ChatStore.get();
+        store.reset();
+        try {
+            var messages = feed(150); store.addLoaded(messages);
+            h.screen.messages = messages; h.screen.page = AppPage.WORLD_CHAT; h.screen.filterView = true;
+            config.worldFeedFilter = com.atom.chat.chat.MessageFilter.SYSTEM;
+            assertTrue(h.screen.currentMessages().isEmpty());
+            var folds = new com.atom.chat.history.HistoryFoldStore();
+            assertFalse(h.service.revealSearchMessage(messages.get(40), h.layout, h.view, folds));
+            assertEquals(com.atom.chat.chat.MessageFilter.SYSTEM, config.worldFeedFilter);
+            config.worldFeedFilter = com.atom.chat.chat.MessageFilter.ALL;
+            assertTrue(h.service.revealSearchMessage(messages.get(40), h.layout, h.view, folds));
+            assertEquals(com.atom.chat.chat.MessageFilter.ALL, config.worldFeedFilter);
+            assertEquals(0, folds.historyWindowForNav(com.atom.chat.nav.NavPage.of(AppPage.WORLD_CHAT), messages.size()).visibleStart());
+            assertTrue(h.screen.scrollLookups > 0);
+        } finally { config.worldFeedFilter = previous; store.reset(); }
+    }
+
+    @Test
+    void actionFeedbackCanRenderAboveAComposerToolPageWithoutBanners() {
+        Harness h = new Harness();
+        h.service.feedback("atomchat.tools.search.unavailable", false);
+        sleep(SETTLE_MS);
+        try (Surface surface = Surface.makeRasterN32Premul(SURFACE_W, SURFACE_H)) {
+            surface.getCanvas().clear(0);
+            int saved = surface.getCanvas().getSaveCount();
+            h.service.drawActionFeedback(surface.getCanvas(), UiLayout.ofDetail(PANEL_X, PANEL_Y, PANEL_W, PANEL_H));
+            assertTrue(drawnBytes(surface) > 0);
+            assertEquals(saved, surface.getCanvas().getSaveCount());
+        }
     }
 
     // ----------------------------------------------------------- the jump

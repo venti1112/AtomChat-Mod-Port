@@ -12,4 +12,9 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface ChatInputSuggestorAccessor {
     @Accessor("window")
     ChatInputSuggestor.SuggestionWindow atomchat$getWindow();
+    @Accessor("messages")
+    java.util.List<net.minecraft.text.OrderedText> atomchat$getUsage();
+    @org.spongepowered.asm.mixin.Mutable
+    @Accessor("maxSuggestionSize")
+    void atomchat$setLineLimit(int limit);
 }

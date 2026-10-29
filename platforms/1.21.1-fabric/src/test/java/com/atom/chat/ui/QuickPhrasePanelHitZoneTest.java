@@ -75,8 +75,10 @@ class QuickPhrasePanelHitZoneTest {
     }
 
     private static QuickPhrasePanel panel() {
-        return new QuickPhrasePanel(text -> {
+        var panel = new QuickPhrasePanel(text -> {
         }, () -> ACCENT);
+        panel.open(); panel.update(UiMotion.POPUP_MS);
+        return panel;
     }
 
     @Test

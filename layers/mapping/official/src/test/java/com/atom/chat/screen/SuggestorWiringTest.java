@@ -62,7 +62,7 @@ class SuggestorWiringTest {
     /** The two insets the anchors exist for; both are panel-space lengths. */
     @Test
     void theInsetsTheAnchorsApplyAreReal() {
-        assertTrue(UiTokens.s(4) > 0.0F, "the popup clears the input bar's button row by 4 panel px");
+        assertTrue(UiTokens.COMPOSER_POPUP_GAP > 0.0F, "the popup clears the input bar's button row by 4 panel px");
         assertTrue(UiTokens.INPUT_TEXT_X > 0.0F, "the text column is inset from the bar's left edge");
     }
 
@@ -72,7 +72,7 @@ class SuggestorWiringTest {
 
         int anchored = SuggestorWiring.anchorTopY(layout, 2.0, 4.0);
 
-        assertEquals((int) Math.round((layout.inputBar.y() - UiTokens.s(4)) * 2.0 / 4.0), anchored,
+        assertEquals((int) Math.round((layout.inputBar.y() - UiTokens.COMPOSER_POPUP_GAP) * 2.0 / 4.0), anchored,
                 "the popup's bottom edge clears the whole input bar, converted to GUI space");
     }
 
@@ -102,7 +102,7 @@ class SuggestorWiringTest {
     @Test
     void theAnchorsLandOnWholeGuiPixels() {
         UiLayout layout = layout();
-        double exact = (layout.inputBar.y() - UiTokens.s(4)) * 1.5 / 3.0;
+        double exact = (layout.inputBar.y() - UiTokens.COMPOSER_POPUP_GAP) * 1.5 / 3.0;
 
         int anchored = SuggestorWiring.anchorTopY(layout, 1.5, 3.0);
 

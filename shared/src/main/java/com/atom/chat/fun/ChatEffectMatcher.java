@@ -15,10 +15,7 @@ public final class ChatEffectMatcher {
         ChatEffectType.FIREWORK, ChatEffectType.STAR
     };
     public Optional<ChatEffectType> match(String body) {
-        if (body == null || body.isBlank() || body.stripLeading().startsWith("/") || body.contains("CICode")) return Optional.empty();
-        StringBuilder text = new StringBuilder(body);
-        var excluded = EXCLUDED.matcher(body);
-        while (excluded.find()) for (int i=excluded.start();i<excluded.end();i++) text.setCharAt(i, ' ');
+        String text=matchableText(body);if(text==null)return Optional.empty();
         int earliest=Integer.MAX_VALUE;
         ChatEffectType found=null;
         for(int i=0;i<RULES.length;i++) {
@@ -26,5 +23,12 @@ public final class ChatEffectMatcher {
             if(m.find() && m.start()<earliest) { earliest=m.start(); found=TYPES[i]; }
         }
         return Optional.ofNullable(found);
+    }
+    static String matchableText(String body) {
+        if (body == null || body.isBlank() || body.stripLeading().startsWith("/") || body.contains("CICode")) return null;
+        StringBuilder text = new StringBuilder(body);
+        var excluded = EXCLUDED.matcher(body);
+        while (excluded.find()) for (int i=excluded.start();i<excluded.end();i++) text.setCharAt(i, ' ');
+        return text.toString();
     }
 }

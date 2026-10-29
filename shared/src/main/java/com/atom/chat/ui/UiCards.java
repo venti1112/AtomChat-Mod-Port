@@ -55,7 +55,7 @@ public final class UiCards {
     /** Draws the full card stack; {@code hoverWeight} 0..1. */
     public static void drawCard(Canvas canvas, float x, float y, float w, float h,
                                 float radius, float hoverWeight) {
-        drawCard(canvas, x, y, w, h, radius, hoverWeight, UiTokens.CARD_SHADOW, UiTokens.s(6));
+        drawCard(canvas, x, y, w, h, radius, hoverWeight, UiTokens.CARD_SHADOW, UiTokens.CONTENT_SHADOW_BLUR);
     }
 
     /**
@@ -77,6 +77,7 @@ public final class UiCards {
     public static void drawCard(Canvas canvas, float x, float y, float w, float h,
                                 float radius, float hoverWeight, int shadowColor, float shadowBlur,
                                 int baseFill) {
+        ClickRipples.region(x, y, w, h, radius, baseFill);
         SkiaDraw.drawRoundedShadow(canvas, x, y, w, h, radius, shadowBlur, shadowColor);
         SkiaDraw.drawRoundedRect(canvas, x, y, w, h, radius, baseFill);
         // The hairline language: one stroke width, alpha 42 on both

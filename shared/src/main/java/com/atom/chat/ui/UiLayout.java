@@ -39,6 +39,8 @@ public final class UiLayout {
     public final Rect list;
     public final Rect replyBar;
     public final Rect inputBar;
+    /** Reserved inline status for a borrowed composer, never a second panel. */
+    public final Rect searchStatus;
     public final Rect imageBtn;
     public final Rect emojiBtn;
     public final Rect sendBtn;
@@ -48,6 +50,9 @@ public final class UiLayout {
     public final float inputTextCenterY;
 
     private UiLayout(float panelX, float panelY, float panelW, float panelH, float inputExtraH, float replyH, Mode mode, boolean docked) {
+        this(panelX, panelY, panelW, panelH, inputExtraH, replyH, mode, docked, 0);
+    }
+    private UiLayout(float panelX, float panelY, float panelW, float panelH, float inputExtraH, float replyH, Mode mode, boolean docked, float statusH) {
         this.panelX = panelX;
         this.panelY = panelY;
         this.panelW = panelW;
@@ -85,7 +90,7 @@ public final class UiLayout {
                 UiTokens.TAB_BAR_H)
                 : new Rect(0, 0, 0, 0);
         float bottomOfContent = switch (mode) {
-            case CHAT -> inputY;
+            case CHAT -> inputY - statusH;
             case ROOT -> this.tabBar.y();
             // Detail pages use the same outer profile as the left and right
             // edges. Their scroll content then adds ROW_CLIP_INSET below the
@@ -106,7 +111,8 @@ public final class UiLayout {
                 : new Rect(0, 0, 0, 0);
 
         if (mode == Mode.CHAT) {
-            float replyY = inputY - this.replyH;
+            float replyY = inputY - this.replyH - statusH;
+            this.searchStatus = new Rect(panelX + chromePad, inputY - statusH, panelW - chromePad * 2, statusH);
             this.replyBar = this.replyH > 0.0F
                     ? new Rect(panelX + chromePad, replyY,
                     panelW - chromePad * 2.0F, this.replyH)
@@ -162,6 +168,7 @@ public final class UiLayout {
             this.inputTextCenterY = inputBar.y + UiTokens.EDGE_CONTROL_INSET
                     + UiTokens.INPUT_ROW_H + buttonExtraH + UiTokens.INPUT_TEXT_BAND / 2.0F;
         } else {
+            this.searchStatus = new Rect(0, 0, 0, 0);
             this.replyBar = new Rect(0, 0, 0, 0);
             this.inputBar = new Rect(0, 0, 0, 0);
             this.imageBtn = new Rect(0, 0, 0, 0);
@@ -242,6 +249,9 @@ public final class UiLayout {
     public static UiLayout of(float panelX, float panelY, float panelW, float panelH, float inputExtraH, float replyH, boolean docked) {
         return new UiLayout(panelX, panelY, panelW, panelH, inputExtraH, replyH, Mode.CHAT, docked);
     }
+    public static UiLayout of(float panelX, float panelY, float panelW, float panelH, float inputExtraH, float replyH, boolean docked, boolean search) {
+        return new UiLayout(panelX, panelY, panelW, panelH, inputExtraH, replyH, Mode.CHAT, docked, search ? UiTokens.SEARCH_STATUS_HEIGHT : 0);
+    }
 
     public static UiLayout ofRoot(float panelX, float panelY, float panelW, float panelH) {
         return ofRoot(panelX, panelY, panelW, panelH, false);
@@ -275,6 +285,7 @@ public final class UiLayout {
     public float inputTextMaxWidth() {
         return inputBar.w() - UiTokens.INPUT_TEXT_X * 2.0F;
     }
+    public float inputTextX() { return inputBar.x() + UiTokens.INPUT_TEXT_X; }
 
     public record Rect(float x, float y, float w, float h) {
         public float right() {

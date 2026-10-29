@@ -119,7 +119,7 @@ public class AtomChatConfig {
     public int otherBubbleColor = 0xFF2C3E50;
     public int panelBgColor = 0xEE16191F;
     public int textPrimaryColor = 0xFFFFFFFF;
-    public int textSecondaryColor = 0xDCAAAABA;
+    public int textSecondaryColor = 0xE8B7BDCA;
     /**
      * Card/chrome surface colour. The card-tint slider sets this colour's
      * alpha (60 at 0% → 255 at 100%); white keeps the shipped frosted look.
@@ -340,6 +340,7 @@ public class AtomChatConfig {
     public boolean feedbackSendEnabled = true;
     public boolean feedbackPanelEnabled = true;
     public boolean funEffectsEnabled = true;
+    public boolean experimentalEffectsEnabled = false;
     /**
      * User-defined quick phrases, shown in the chat composer's phrase panel.
      * Clicking one inserts it into the input box (never sends it straight

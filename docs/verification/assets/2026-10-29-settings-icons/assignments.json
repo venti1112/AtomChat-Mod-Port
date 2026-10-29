@@ -1,0 +1,132 @@
+[
+  {
+    "key": "atomchat.settings.group.appearance.presets",
+    "title": "主题预设",
+    "glyph": "PRESETS"
+  },
+  {
+    "key": "atomchat.settings.group.appearance.bubbles",
+    "title": "气泡样式",
+    "glyph": "TAB_CHAT"
+  },
+  {
+    "key": "atomchat.settings.group.appearance.corners",
+    "title": "圆角",
+    "glyph": "CORNERS"
+  },
+  {
+    "key": "atomchat.settings.group.appearance.message_colors",
+    "title": "消息配色",
+    "glyph": "MESSAGE_COLORS"
+  },
+  {
+    "key": "atomchat.settings.group.appearance.ui_colors",
+    "title": "界面配色",
+    "glyph": "PALETTE"
+  },
+  {
+    "key": "atomchat.settings.group.appearance.effects",
+    "title": "显示效果",
+    "glyph": "SPARKLES"
+  },
+  {
+    "key": "atomchat.settings.group.appearance.motion",
+    "title": "动效",
+    "glyph": "MOTION"
+  },
+  {
+    "key": "atomchat.settings.group.appearance.wallpaper",
+    "title": "壁纸",
+    "glyph": "IMAGE"
+  },
+  {
+    "key": "atomchat.settings.group.appearance.layout",
+    "title": "布局缩放",
+    "glyph": "LAYOUT"
+  },
+  {
+    "key": "atomchat.settings.group.appearance.transparency",
+    "title": "透明层次",
+    "glyph": "OPACITY"
+  },
+  {
+    "key": "atomchat.settings.group.chat.input",
+    "title": "输入与发送",
+    "glyph": "KEYBOARD"
+  },
+  {
+    "key": "atomchat.settings.group.chat.messages_display",
+    "title": "消息显示",
+    "glyph": "MESSAGE_LIST"
+  },
+  {
+    "key": "atomchat.settings.group.chat.interaction",
+    "title": "互动与动效",
+    "glyph": "TOUCH"
+  },
+  {
+    "key": "atomchat.settings.group.history.storage",
+    "title": "历史存储",
+    "glyph": "CLOCK"
+  },
+  {
+    "key": "atomchat.settings.group.history.cleanup",
+    "title": "历史清理",
+    "glyph": "TRASH"
+  },
+  {
+    "key": "atomchat.settings.group.notify.banner",
+    "title": "横幅提示",
+    "glyph": "BANNER"
+  },
+  {
+    "key": "atomchat.settings.sounds.notification",
+    "title": "通知音效",
+    "glyph": "SPEAKER"
+  },
+  {
+    "key": "atomchat.settings.group.notify.feedback",
+    "title": "操作反馈",
+    "glyph": "CLICK"
+  },
+  {
+    "key": "atomchat.settings.group.chat.shortcuts",
+    "title": "快捷操作",
+    "glyph": "PHRASE"
+  },
+  {
+    "key": "atomchat.settings.group.chat.fun",
+    "title": "趣味特效",
+    "glyph": "EMOJI"
+  },
+  {
+    "key": "atomchat.settings.group.privacy.messages",
+    "title": "消息屏蔽显示",
+    "glyph": "HIDDEN"
+  },
+  {
+    "key": "atomchat.settings.group.privacy.blocked",
+    "title": "屏蔽名单",
+    "glyph": "BLOCK"
+  },
+  {
+    "key": "atomchat.settings.about.authors",
+    "title": "作者",
+    "glyph": "TAB_PROFILE"
+  },
+  {
+    "key": "atomchat.settings.about.modinfo",
+    "title": "Mod 信息",
+    "glyph": "SETTINGS_ABOUT"
+  },
+  {
+    "key": "atomchat.settings.about.thirdparty.group",
+    "title": "第三方组件",
+    "glyph": "PLUG"
+  },
+  {
+    "key": "atomchat.settings.group.advanced",
+    "title": "高级",
+    "glyph": "TAB_SETTINGS"
+  }
+]

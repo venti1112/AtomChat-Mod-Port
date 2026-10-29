@@ -1,0 +1,59 @@
+{
+  "version": "0.4.0",
+  "sourceHead": "93f58a16a7e910adec2106891e13f717473680b2",
+  "sourceDirty": true,
+  "time": "2026-10-28T17:34:00.195264+08:00",
+  "sourceInputCount": 519,
+  "sourceFingerprint": "c9954f1fec2349b97b076a22be76fdbfa6e9b12a8fe1d499e5df6ffbfca16f53",
+  "packages": [
+    {
+      "target": "1.20.1-forge",
+      "platform": "windows-x64",
+      "path": "platforms/1.20.1-forge/build/libs/atomchat-Forge-1.20.1-0.4.0-windows-x64.jar",
+      "sha256": "b6ec099ef568b0a3fa5275192e400aeda099b9da4783e69edf49875051697d29",
+      "bytes": 19195337,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.21.1-fabric",
+      "platform": "windows-x64",
+      "path": "platforms/1.21.1-fabric/build/libs/atomchat-Fabric-1.21.1-0.4.0-windows-x64.jar",
+      "sha256": "157d11abfc8a8bba0bae8018d0c14c9d9c315162a308fc3816e60b4eeb65060e",
+      "bytes": 19216500,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.21.1-neoforge",
+      "platform": "windows-x64",
+      "path": "platforms/1.21.1-neoforge/build/libs/atomchat-NeoForge-1.21.1-0.4.0-windows-x64.jar",
+      "sha256": "39e774d7981be5d7846ac49d92b8ceb45212fbe04894875fde1eae785fb04616",
+      "bytes": 19208243,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    }
+  ],
+  "tests": {
+    "1.20.1-forge": {
+      "tests": 1512,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 4
+    },
+    "1.21.1-fabric": {
+      "tests": 1524,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 4
+    },
+    "1.21.1-neoforge": {
+      "tests": 1512,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 4
+    }
+  },
+  "status": "UI correction candidate; Emoji performance unresolved",
+  "nativeScope": "Windows x64 only; older ARM64/Linux candidates are not this correction"
+}

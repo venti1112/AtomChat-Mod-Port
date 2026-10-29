@@ -420,6 +420,33 @@ public final class UiTokens {
      * BUTTON_W x BUTTON_H capsule it has always been.</p>
      */
     public static final float ACTION_BUTTON_SIZE = s(36);
+    // Composer tools, modal cards and suggestion menus inherit the established control families.
+    public static final float TOOL_LIST_ROW_H = s(58);
+    public static final float COMPOSER_POPUP_ROW_HEIGHT = s(36);
+    public static final float TOOL_MENU_ROW_H = COMPOSER_POPUP_ROW_HEIGHT;
+    public static final float TOOL_MENU_WIDTH = s(160);
+    public static final float SEARCH_STATUS_HEIGHT = s(24);
+    public static final float COMPOSER_POPUP_LAYER_PAD = s(24);
+    public static final float COMPOSER_POPUP_DROP = s(10);
+    public static final float COMPOSER_POPUP_START_SCALE = .92F;
+    public static final float COMPOSER_POPUP_RADIUS = 14;
+    /** The shipped emoji/phrase gap: panel gap plus their existing 6-unit lower clearance. */
+    public static final float COMPOSER_POPUP_GAP = PANEL_TOP_GAP + s(6);
+    public static final float COMPOSER_ICON_SIZE = s(18);
+    public static final int MODAL_SCRIM = 0x66000000;
+    public static final float FOCUS_RING_WIDTH = s(1.5F);
+    /** Shared capsule radius for composer and confirmation actions. */
+    public static float buttonRadius() { return radius(9); }
+    public static final float TOOL_ICON_STROKE = s(1.4F);
+    public static final float DIALOG_MAX_WIDTH = s(390);
+    public static final float DIALOG_STACK_WIDTH = s(230);
+    public static final float DIALOG_LINE_HEIGHT = s(23);
+    public static final float DIALOG_MIN_TEXT_SIZE = s(11);
+    public static final float CONTENT_SHADOW_BLUR = s(6);
+    public static final float SUGGESTION_ROW_HEIGHT = COMPOSER_POPUP_ROW_HEIGHT;
+    public static final float SUGGESTION_PADDING = s(10);
+    public static final float SUGGESTION_MIN_WIDTH = s(120);
+    public static final float TOOLTIP_MAX_WIDTH = s(280);
     /**
      * Edge inset the chrome action keys keep to their card, s(4) = 5px on
      * screen: the header's back button off the header's left edge, the filter

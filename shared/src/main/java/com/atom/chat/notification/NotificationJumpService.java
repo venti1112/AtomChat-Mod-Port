@@ -157,6 +157,12 @@ public final class NotificationJumpService {
         // edge of the input bar — and rises up from behind it, rather than
         // dropping in from the panel top away from the action. Pages without a
         // composer (detail pages) fall back to the bottom of the list.
+        drawActionFeedback(canvas, layout);
+    }
+
+    /** Read-only acknowledgements may sit above a tools page while interactive banners stay hidden. */
+    public void drawActionFeedback(Canvas canvas, UiLayout layout) {
+        UiLayout.Rect panel = layout.rect();
         UiLayout toastLayout = layout;
         float toastAnchor = toastLayout.inputBar.w() > 0.0F
                 ? toastLayout.inputBar.y() : toastLayout.list.bottom();
@@ -266,6 +272,19 @@ public final class NotificationJumpService {
      * destination, so merged messages are never un-merged here. Returns whether
      * the message was located and the scroll/highlight applied.
      */
+    /** Search stays on the current page and preserves its filter; folded retained matches can be revealed. */
+    public boolean revealSearchMessage(ChatMessage msg, UiLayout layout, MessageListView view,
+                                com.atom.chat.history.HistoryFoldStore folds) {
+        if (navPort.topPage() != AppPage.WORLD_CHAT && navPort.topPage() != AppPage.PRIVATE_CHAT) return false;
+        List<ChatMessage> retained = scrollPort.currentMessages();
+        if (!retained.contains(msg)) return false;
+        var page = navPort.topPage() == AppPage.WORLD_CHAT ? com.atom.chat.nav.NavPage.of(AppPage.WORLD_CHAT)
+                : com.atom.chat.nav.NavPage.privateChat(navPort.activePrivateTarget());
+        var window = folds.historyWindowForNav(page, retained.size());
+        while (window.loadEarlier()) { /* Reveal the retained target before computing its offset. */ }
+        return scrollToMessage(msg, layout, view);
+    }
+
     private boolean scrollToMessage(ChatMessage msg, UiLayout layout, MessageListView view) {
         List<ChatMessage> messages = scrollPort.currentMessages();
         int index = findMessageIndex(messages, msg);

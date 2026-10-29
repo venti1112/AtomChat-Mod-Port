@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(ChatInputSuggestor.SuggestionWindow.class)
-public interface SuggestionWindowAccessor {
+public interface SuggestionWindowAccessor extends com.atom.chat.ui.CandidateWindow {
     @Mutable
     @Final
     @Accessor("area")
@@ -18,4 +18,17 @@ public interface SuggestionWindowAccessor {
     @Final
     @Accessor("area")
     void atomchat$setArea(Rect2i area);
+
+    @Accessor("suggestions")
+    java.util.List<com.mojang.brigadier.suggestion.Suggestion> atomchat$getCandidates();
+    @Accessor("inWindowIndex")
+    int atomchat$getOffset();
+    @Accessor("inWindowIndex")
+    void atomchat$setOffset(int offset);
+    @Accessor("selection")
+    int atomchat$getSelected();
+    @org.spongepowered.asm.mixin.gen.Invoker("select")
+    void atomchat$select(int index);
+    @org.spongepowered.asm.mixin.gen.Invoker("complete")
+    void atomchat$complete();
 }

@@ -73,7 +73,7 @@ class PanelShellWiringSourceTest {
         REQUIRED.put("PanelOpenMotion.fade(progress)", 2);
         REQUIRED.put("PanelOpenMotion.fadeLayer(progress,", 1);
         // Input gate, foreign-widget input, and the deferred migration warning.
-        REQUIRED.put("PanelOpenMotion.animating(panelProgress, closing)", 3);
+        REQUIRED.put("PanelOpenMotion.animating(panelProgress, closing)", 4);
         REQUIRED.put("CanvasLeakWatch.probe(\"drawPanel+banners\"", 2);
         REQUIRED.put("CanvasLeakWatch.probe(\"messageListView.draw\"", 1);
         REQUIRED.put("CanvasLeakWatch::probe,", 1);

@@ -77,11 +77,21 @@ public final class MenuPopup {
      * the fade and scale-in apply to it for free.
      */
     public static void drawSurface(Canvas canvas, float x, float y, float w, float h) {
+        drawSurface(canvas, x, y, w, h, SURFACE_RADIUS);
+    }
+
+    /** Emoji/phrase pickers have their own larger frame; compact action menus use drawSurface. */
+    public static void drawPickerSurface(Canvas canvas, float x, float y, float w, float h) {
+        drawSurface(canvas, x, y, w, h, UiTokens.COMPOSER_POPUP_RADIUS);
+    }
+
+    private static void drawSurface(Canvas canvas, float x, float y, float w, float h, float radius) {
+        ClickRipples.block(new UiLayout.Rect(x, y, w, h));
         // Preserve the accepted inset-light gradient shared with the emoji panel.
         com.atom.chat.render.SkiaDraw.drawRoundedRect(canvas, x, y, w, h,
-                UiTokens.radius(SURFACE_RADIUS), SURFACE_COLOR);
+                UiTokens.radius(radius), SURFACE_COLOR);
         com.atom.chat.render.SkiaDraw.drawRoundedShadow(canvas, x, y, w, h,
-                UiTokens.radius(SURFACE_RADIUS), UiTokens.s(SURFACE_SHADOW_BLUR), UiTokens.CHROME_SHADOW);
+                UiTokens.radius(radius), UiTokens.s(SURFACE_SHADOW_BLUR), UiTokens.CHROME_SHADOW);
     }
 
     /**
@@ -156,6 +166,9 @@ public final class MenuPopup {
      * below the same 0.01 alpha floor the menus guard their content with.
      */
     public static void drawRowWash(Canvas canvas, float rowX, float rowY, float rowW, float rowH, float hoverAlpha) {
+        float rippleInset = rowInset(rowW);
+        ClickRipples.region(rowX + rippleInset, rowY + WASH_VERTICAL_INSET,
+                rowW - rippleInset * 2, rowH - WASH_VERTICAL_INSET * 2, UiTokens.radius(WASH_RADIUS), SURFACE_COLOR);
         if (hoverAlpha <= 0.01F) {
             return;
         }

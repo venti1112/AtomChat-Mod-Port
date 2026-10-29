@@ -143,6 +143,8 @@ public final class EmojiPanel {
                 () -> com.atom.chat.config.AtomChatConfig.get().emoteMax);
     }
 
+    public int diagnosticTab() { return tab; }
+
     public boolean isOpen() {
         return open;
     }
@@ -200,7 +202,14 @@ public final class EmojiPanel {
                 scroll - (int) (verticalAmount * s(18)), maxScroll()));
     }
 
+    public UiLayout.Rect bounds(UiLayout layout) { return ComposerPopupLayout.place(layout,panelW(),panelH()); }
+    private ComposerPopupTransform.Point localPointer(UiLayout layout,float x,float y) {
+        return ComposerPopupTransform.of(bounds(layout),anim).toLocal(x,y);
+    }
     public boolean overPanel(UiLayout layout, float mx, float my) {
+        var p = localPointer(layout,mx,my); return overPanelLocal(layout,p.x(),p.y());
+    }
+    private boolean overPanelLocal(UiLayout layout,float mx,float my) {
         float px = panelX(layout);
         float py = panelY(layout);
         return mx >= px && mx <= px + panelW() && my >= py && my <= py + panelH();
@@ -211,10 +220,11 @@ public final class EmojiPanel {
      * click was consumed without inserting; tabs, emote actions and gutters).
      */
     public String click(UiLayout layout, float mx, float my) {
+        var point = localPointer(layout,mx,my); mx=point.x(); my=point.y();
         float px = panelX(layout);
         float py = panelY(layout);
         float pw = panelW();
-        if (!overPanel(layout, mx, my)) {
+        if (!overPanelLocal(layout, mx, my)) {
             return "";
         }
         // Tab bar. The strip is inset by EMOJI_PANEL_PAD so it aligns with the
@@ -292,15 +302,8 @@ public final class EmojiPanel {
         try (Paint layer = new Paint()) {
             layer.setColor(Color.makeARGB((int) (255.0F * anim), 0, 0, 0));
             canvas.saveLayer(Rect.makeXYWH(px - s(24), py - s(24), pw + s(48), ph + s(48)), layer);
-            float sc = 0.92F + 0.08F * anim;
-            float cx = px + pw / 2.0F;
-            float cy = py + ph / 2.0F;
-            canvas.translate(cx, cy);
-            canvas.scale(sc, sc);
-            canvas.translate(-cx, -cy);
-            canvas.translate(0.0F, (1.0F - anim) * s(10));
-            SkiaDraw.drawRoundedRect(canvas, px, py, pw, ph, UiTokens.radius(14), SKIN_PANEL_BG);
-            SkiaDraw.drawRoundedShadow(canvas, px, py, pw, ph, UiTokens.radius(14), s(8), SKIN_PANEL_SHADOW);
+            ComposerPopupTransform.of(bounds(layout),anim).apply(canvas);
+            MenuPopup.drawPickerSurface(canvas, px, py, pw, ph);
 
             com.atom.chat.render.DotTexture.drawConnector(canvas,
                     new UiLayout.Rect(px, py, pw, ph), UiTokens.radius(14), layout.inputBar, layout.emojiBtn, AtomChatConfig.get().accentColor);
@@ -436,12 +439,12 @@ public final class EmojiPanel {
 
     /** Left-aligned with the message list inside the panel. */
     private static float panelX(UiLayout layout) {
-        return layout.rect().x() + UiTokens.LIST_PAD_X;
+        return ComposerPopupLayout.left(layout);
     }
 
     /** Sits directly above the input bar, so it follows the bar's grown height. */
     private static float panelY(UiLayout layout) {
-        return layout.inputBar.y() - UiTokens.PANEL_TOP_GAP - panelH() - s(6);
+        return ComposerPopupLayout.top(layout, panelH());
     }
 
     private int maxScroll() {
@@ -548,9 +551,10 @@ public final class EmojiPanel {
      * follows the exact slots users click.
      */
     private void updateTabHover(UiLayout layout, float vmx, float vmy, long frameDt) {
+        var point = localPointer(layout,vmx,vmy); vmx=point.x(); vmy=point.y();
         int hovered = -1;
         float stripW = 0.0F;
-        if (open && overPanel(layout, vmx, vmy)
+        if (open && overPanelLocal(layout, vmx, vmy)
                 && vmy < panelY(layout) + UiTokens.EMOJI_TAB_H) {
             float px = panelX(layout);
             float pw = panelW();
@@ -592,8 +596,9 @@ public final class EmojiPanel {
      * outgoing and incoming tab layers read the same per-cell state.
      */
     private void updateGridHover(UiLayout layout, float vmx, float vmy, long frameDt) {
+        var point = localPointer(layout,vmx,vmy); vmx=point.x(); vmy=point.y();
         int hovered = -1;
-        if (open && overPanel(layout, vmx, vmy) && vmy >= panelY(layout) + UiTokens.EMOJI_TAB_H) {
+        if (open && overPanelLocal(layout, vmx, vmy) && vmy >= panelY(layout) + UiTokens.EMOJI_TAB_H) {
             hovered = tab == 2 ? emoteGridHoveredIndex(vmx, vmy, layout) : textGridHoveredIndex(tab, vmx, vmy, layout);
         }
         int hoveredKey = hovered < 0 ? -1 : gridHoverKey(tab, hovered);

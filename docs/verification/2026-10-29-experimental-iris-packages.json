@@ -1,0 +1,59 @@
+{
+  "version": "0.4.0",
+  "sourceHead": "93f58a16a7e910adec2106891e13f717473680b2",
+  "sourceDirty": true,
+  "time": "2026-10-29T16:23:29.186058+08:00",
+  "sourceInputCount": 539,
+  "sourceFingerprint": "ab8db5864aa588b9b3ef3c40dd513f53e21ce93137c00e52cf27d864d053ad90",
+  "packages": [
+    {
+      "target": "1.20.1-forge",
+      "platform": "windows-x64",
+      "path": "platforms/1.20.1-forge/build/libs/atomchat-Forge-1.20.1-0.4.0-windows-x64.jar",
+      "sha256": "ac7b36a2d301a837e632429e1c884f9e3adb6b7e65128df5b2c578002f1d9af8",
+      "bytes": 19239607,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.21.1-fabric",
+      "platform": "windows-x64",
+      "path": "platforms/1.21.1-fabric/build/libs/atomchat-Fabric-1.21.1-0.4.0-windows-x64.jar",
+      "sha256": "15fbd8bfe9a9885f0ba23d498f232650b0631923ff04568012d1ddb3950bb58a",
+      "bytes": 19261587,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.21.1-neoforge",
+      "platform": "windows-x64",
+      "path": "platforms/1.21.1-neoforge/build/libs/atomchat-NeoForge-1.21.1-0.4.0-windows-x64.jar",
+      "sha256": "d86f3291082aed81d58027e7caba7bc44bf5fda0131f16820ad487dbca4d174c",
+      "bytes": 19252249,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    }
+  ],
+  "tests": {
+    "1.20.1-forge": {
+      "tests": 1551,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 4
+    },
+    "1.21.1-fabric": {
+      "tests": 1563,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 4
+    },
+    "1.21.1-neoforge": {
+      "tests": 1551,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 4
+    }
+  },
+  "status": "Shaderpack display-RGB alpha regression verified in real GL; final Iris/Bliss in-game recheck pending",
+  "nativeScope": "Windows x64 only; older ARM64/Linux candidates are not this correction"
+}

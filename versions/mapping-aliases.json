@@ -19,11 +19,11 @@
     "它与 AtomChatSuggestor 同住一个包、同一份理由；它的测试孪生也住在同一个包，",
     "所以测试那份同样按路径别名登记（src/test/java 下的同一对）。"
   ],
-
   "layers/mapping/official": {
     "src/main/java/com/atom/chat/screen/AtomChatSuggestor.java": "src/main/java/net/minecraft/client/gui/screen/AtomChatSuggestor.java",
     "src/main/java/com/atom/chat/screen/SuggestorWiring.java": "src/main/java/net/minecraft/client/gui/screen/SuggestorWiring.java",
     "src/test/java/com/atom/chat/screen/SuggestorWiringTest.java": "src/test/java/net/minecraft/client/gui/screen/SuggestorWiringTest.java",
-    "src/main/java/com/atom/chat/mixin/ChatInputSuggestorAccessor.java": "src/main/java/net/minecraft/client/gui/screen/atomchat/ChatInputSuggestorAccessor.java"
+    "src/main/java/com/atom/chat/mixin/ChatInputSuggestorAccessor.java": "src/main/java/net/minecraft/client/gui/screen/atomchat/ChatInputSuggestorAccessor.java",
+    "src/test/java/com/atom/chat/screen/VanillaCompletionStartupTest.java": "src/test/java/net/minecraft/client/gui/screen/VanillaCompletionStartupTest.java"
   }
 }

@@ -4,11 +4,18 @@
 
 **新增**
 
+- 趣味特效下新增默认关闭的实验性内容，可播放全屏星云引力开启动画及聊天触发的水波、冰霜和黑洞特效
+- 输入栏新增圆圈＋工具菜单，沿用表情／常用语浮层动效，提供搜索、原位在线玩家列表与图片发送入口。
+- 搜索借用原输入框，仅查询当前页及其筛选下的保留记录，支持逐条定位高亮、匹配计数和原草稿恢复。
+- 新增澄蓝、暮紫、冰雾、暖砂四款半透明模糊主题，深浅配色各两款。
+- 工具按钮、菜单、导航与设置卡片增加淡水波反馈，保留原有按压回弹并跟随全局动画开关。
+- 清空聊天记录、清除壁纸和清理图片缓存使用主题确认弹窗，包含进退场、按钮悬停／回弹、取消与键盘操作。
 - 聊天→横幅提示提供可视化 HUD 编辑器，可拖动、等比缩放、吸附九宫格锚点并用方向键微调。
 - 头像样式、页面切换动画和传送命令检测改为双向步进选择器。
 
 **修复**
 
+- 修复开启光影时全屏实验特效将世界画面变黑或改变颜色的问题
 - 步进选择器箭头悬停改用全局渐变动效，左右箭头和不同设置项独立过渡。
 - 横幅跳转图标改用发送按钮的强调色对比色规则，不再被主文字色染色后融入按钮。
 - 关于页作者卡片恢复为两张独立圆角卡片，中缝不再显示连接底色。
@@ -17,6 +24,8 @@
 
 **更改**
 
+- 小幅增强内置主题的文字、气泡和背景对比度，个人保存的外观预设保持原样。
+- 命令补全、用法提示与候选说明改用 AtomChat 菜单样式，保留原版候选、Tab 循环和方向键补全行为。
 - 面板背景模糊取消旧的两帧/500ms 缓存节流，改为每帧读取当前画面。
 - HUD、面板与编辑器横幅复用卡片材质，继承卡片 RGB/透明度，底色最低 50%，并使用局部背景模糊；入退场跟随全局 zoom/slide，旧横幅滑动让位。
 - 个人目录收为 `client/`、`cache/`、`server/`、`backups/` 四个顶层组；个人素材首次启动即创建，缓存、托管和备份只在需要时出现。
@@ -26,11 +35,18 @@
 
 **Added**
 
+- Add default-off experimental content with a fullscreen nebula activation and chat-triggered shockwave, frost and black-hole effects
+- Add a circled-plus composer menu with emoji/phrase popup motion, search, an inline online-player list and image sending.
+- Search retained messages in the current conversation and active filter through the existing composer, with match navigation, counters and draft restoration.
+- Add Azure Glass, Plum Glass, Ice Glass and Sand Glass translucent blurred themes, with two dark and two light palettes.
+- Add subtle click ripples to tool buttons, menus, navigation and settings cards, retaining press bounce and respecting the global animation switch.
+- Use themed confirmation dialogs for clearing history, wallpaper and image caches, with entrance/exit motion, button hover/bounce and keyboard cancellation.
 - Add a visual HUD layout editor with dragging, proportional resizing, nine anchor snaps and arrow-key nudging.
 - Use bidirectional steppers for avatar style, page transition animation and teleport-command detection.
 
 **Fixed**
 
+- Fix fullscreen experimental effects turning shaderpack world rendering black or changing its colours
 - Animate stepper-arrow hover through the global motion curve, with independent arrows and selectors.
 - Derive the banner jump icon from the accent contrast rule used by the composer send button instead of the primary text colour.
 - Keep About-page author cards independent, with no connecting fill in the gap.
@@ -39,6 +55,8 @@
 
 **Changed**
 
+- Slightly strengthen text, bubble and background contrast in built-in themes while preserving saved personal appearance presets.
+- Render command completions, usage hints and candidate tooltips in AtomChat's menu style while preserving vanilla suggestions, Tab cycling and arrow-key navigation.
 - Refresh panel background blur from the current frame instead of the old two-frame/500 ms cadence.
 - Reuse card materials for HUD, panel and editor banners, inheriting card RGB and alpha with a 50% minimum fill and local background blur; entrance and exit follow the global zoom/slide motion while older banners slide aside.
 - Reduce the personal-data root to four top-level groups: `client/`, `cache/`, `server/` and `backups/`; client asset folders are created on first launch, while cache, hosting and backup folders appear only when used.

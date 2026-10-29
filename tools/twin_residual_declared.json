@@ -167,6 +167,13 @@
         "reason": "主会话 2026-10-09 批复：结构性合法。fabric 侧 getter 也带 @Mutable/@Final（冗余但无害，Mixin 允许），官方侧只在 setter 上带",
         "sample_a": "",
         "sample_b": "    @Mutable"
+      },
+      {
+        "fingerprint": "b20809e384ce",
+        "kind": "mixin-annotations",
+        "reason": "Minecraft cached official source suggestionList and Yarn 1.21.1+build.3 suggestions are the same Brigadier candidate field; a global suggestions alias would collide with the outer suggestor window accessor, so record this exact annotation block only.",
+        "sample_a": "    @Accessor(\"suggestionList\")",
+        "sample_b": "    @Accessor(\"suggestions\")"
       }
     ],
     "src/main/java/com/atom/chat/text/RichText.java": [
@@ -224,18 +231,32 @@
         "sample_b": "    public CommandSuggestions install(Minecraft client, Screen owner, Font textRenderer) {"
       },
       {
-        "fingerprint": "73fc8a2d34cf",
-        "kind": "code",
-        "reason": "主会话终验批准 2026-10-09（D8 工单「既定裁定」）：dismissSuggestor 的平台差异是平台接缝，只记注释不统一。official 侧（Forge/NeoForge）用 hide() 并自建 EditBox responder 驱动 suggestor（setAllowSuggestions(!text.equals(originalChatText)) + updateCommandInfo()）；fabric 侧用 setWindowActive(false)（yarn 名 = setAllowSuggestions，同时清 allow 标志）且不装 responder —— 它把 suggestor 写进 ChatScreen 自己的字段，由 vanilla 的 chat-field listener 继续驱动并在每次击键时重新武装该标志。因此 install 的签名在 official 侧多一个 originalChatText（responder 的比较基线），fabric 侧没有 responder 也就不需要它。两者各自正确，不许统一。",
-        "sample_a": "        suggestor.hide();",
-        "sample_b": "        suggestor.setWindowActive(false);"
-      },
-      {
         "fingerprint": "76c85d0dd1ea",
         "kind": "code",
         "reason": "主会话终验批准 2026-10-09（D8 工单「既定裁定」）：dismissSuggestor 的平台差异是平台接缝，只记注释不统一。official 侧（Forge/NeoForge）用 hide() 并自建 EditBox responder 驱动 suggestor（setAllowSuggestions(!text.equals(originalChatText)) + updateCommandInfo()）；fabric 侧用 setWindowActive(false)（yarn 名 = setAllowSuggestions，同时清 allow 标志）且不装 responder —— 它把 suggestor 写进 ChatScreen 自己的字段，由 vanilla 的 chat-field listener 继续驱动并在每次击键时重新武装该标志。因此 install 的签名在 official 侧多一个 originalChatText（responder 的比较基线），fabric 侧没有 responder 也就不需要它。两者各自正确，不许统一。",
         "sample_a": "            chatInputSuggestor.hide();",
         "sample_b": "            chatInputSuggestor.setWindowActive(false);"
+      },
+      {
+        "fingerprint": "c493f4f9c45d",
+        "kind": "code",
+        "reason": "Preserves existing 2026-10-09 platform seam: official ChatScreen suggestor field is inaccessible, so the anchored replacement owns its responder and original-text baseline; Fabric replaces the parent field and retains the native changed listener. Resume restores the same native allow-suggestions condition.",
+        "sample_a": "    private String initialText = \"\";",
+        "sample_b": ""
+      },
+      {
+        "fingerprint": "d1eef0c036a8",
+        "kind": "code",
+        "reason": "Preserves existing 2026-10-09 platform seam: official ChatScreen suggestor field is inaccessible, so the anchored replacement owns its responder and original-text baseline; Fabric replaces the parent field and retains the native changed listener. Resume restores the same native allow-suggestions condition.",
+        "sample_a": "        initialText = originalChatText;",
+        "sample_b": "        suggestor.setWindowActive(false);"
+      },
+      {
+        "fingerprint": "f5b84450a3fb",
+        "kind": "code",
+        "reason": "Preserves existing 2026-10-09 platform seam: official ChatScreen suggestor field is inaccessible, so the anchored replacement owns its responder and original-text baseline; Fabric replaces the parent field and retains the native changed listener. Resume restores the same native allow-suggestions condition.",
+        "sample_a": "            chatInputSuggestor.setAllowSuggestions(!host.input().getValue().equals(initialText));",
+        "sample_b": ""
       }
     ],
     "src/main/java/com/atom/chat/notification/NotificationHudEditorScreen.java": [
@@ -273,6 +294,15 @@
         "reason": "2026-10-23 HUD editor native screen bridge: only official/Yarn Screen, DrawContext, Text and input method names differ; the shared editor owns all behavior.",
         "sample_a": "    @Override public void onClose() { minecraft.setScreen(parent); }",
         "sample_b": "    @Override public void close() { client.setScreen(parent); }"
+      }
+    ],
+    "src/test/java/com/atom/chat/screen/VanillaCompletionStartupTest.java": [
+      {
+        "fingerprint": "eab6cd136b42",
+        "kind": "test-code",
+        "reason": "Native startup fixture calls the existing platform installer signature: official requires the original chat text for its responder baseline; Fabric retains the parent changed listener and has no baseline argument.",
+        "sample_a": "        wiring.install(null,owner,null,\"/he\");",
+        "sample_b": "        wiring.install(null,owner,null);"
       }
     ]
   }

@@ -1,0 +1,59 @@
+{
+  "version": "0.4.0",
+  "sourceHead": "93f58a16a7e910adec2106891e13f717473680b2",
+  "sourceDirty": true,
+  "time": "2026-10-29T12:26:09.251226+08:00",
+  "sourceInputCount": 534,
+  "sourceFingerprint": "9b9772569aa16f0f366229b3333ae245afda46c880d305642687ecbf4aff9996",
+  "packages": [
+    {
+      "target": "1.20.1-forge",
+      "platform": "windows-x64",
+      "path": "platforms/1.20.1-forge/build/libs/atomchat-Forge-1.20.1-0.4.0-windows-x64.jar",
+      "sha256": "6b9063457bc5faec0a1aa6041100f88c25a726b07020d2aa65456643f7579cbf",
+      "bytes": 19228980,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.21.1-fabric",
+      "platform": "windows-x64",
+      "path": "platforms/1.21.1-fabric/build/libs/atomchat-Fabric-1.21.1-0.4.0-windows-x64.jar",
+      "sha256": "a93c7e2a3f1ebc720face29343711026296ff8455e586bb7506b6305cc433dff",
+      "bytes": 19250844,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.21.1-neoforge",
+      "platform": "windows-x64",
+      "path": "platforms/1.21.1-neoforge/build/libs/atomchat-NeoForge-1.21.1-0.4.0-windows-x64.jar",
+      "sha256": "4ef012bf9f34d5290c2d3f31141a6ef0f8e40e859f2ad883cb6ccf8f191454d6",
+      "bytes": 19241634,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    }
+  ],
+  "tests": {
+    "1.20.1-forge": {
+      "tests": 1541,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 4
+    },
+    "1.21.1-fabric": {
+      "tests": 1553,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 4
+    },
+    "1.21.1-neoforge": {
+      "tests": 1541,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 4
+    }
+  },
+  "status": "Explicit heading icon semantics and hand-written native glyphs verified; final in-game acceptance pending",
+  "nativeScope": "Windows x64 only; older ARM64/Linux candidates are not this correction"
+}

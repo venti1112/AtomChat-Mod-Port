@@ -22,7 +22,8 @@
     "why": "文件选择器（Swing JFileChooser）的现代外观；不嵌的话会退回 Metal 旧样式"
   },
   "_provided": [
-    "《由原版或加载器提供，不必声明，也不算本模组的依赖》",
+    "《由 Java 运行时、原版或加载器提供，不额外打包》",
+    "jdk.jfr — Java 17+ 运行时自带 Flight Recorder；状态帧事件及其实际录制回归使用，不嵌入第三方 JAR",
     "net.minecraft  — 原版类（共享层里出现的都是两套映射下同名的那些；改名的那类编不过，编译就是判据）",
     "com.mojang     — 原版捆绑库（如 DataFixerUpper / brigadier）",
     "com.google     — gson / guava 等，由原版捆绑",
@@ -37,6 +38,7 @@
   ],
   "_test_only": [
     "《只在测试源集里允许，不进产物》",
+    "sun.misc — JDK allocation used only to exercise real vanilla key handlers without a Minecraft constructor",
     "org.junit      — JUnit 5"
   ]
 }

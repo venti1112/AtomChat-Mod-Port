@@ -125,6 +125,8 @@ public final class BottomTabBar {
         canvas.restore();
 
         for (int i = 0; i < 3; i++) {
+            ClickRipples.region(bar.x() + cellWidth * i + inset, bar.y() + inset, capsuleW, capsuleH,
+                    radius, i == selectedIndex ? UiTokens.accentFill() : UiTokens.cardFill());
             float cellCenterX = bar.x() + cellWidth * (i + 0.5F);
             float cellCenterY = bar.y() + bar.h() / 2.0F;
             float scale = tabScale[i].scale();

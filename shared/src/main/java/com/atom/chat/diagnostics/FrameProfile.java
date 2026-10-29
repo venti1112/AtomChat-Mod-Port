@@ -61,6 +61,26 @@ public final class FrameProfile {
     private static final Bucket LAYOUT_BUCKET = new Bucket(false);
 
     private static int framesSinceReport;
+    public enum Surface { CHAT, EMOJI, KAOMOJI, EMOTES, PHRASES, TOOLS, SEARCH, CONFIRMATION, OTHER }
+    private static Surface surface = Surface.OTHER;
+    private static Surface previousSurface;
+    private static long previousFrameStart;
+    private static final java.util.Map<Surface, Bucket> SURFACE_CPU = new java.util.EnumMap<>(Surface.class);
+    private static final java.util.Map<Surface, Bucket> SURFACE_INTERVAL = new java.util.EnumMap<>(Surface.class);
+
+    /** Labels the actual state before drawing; no query, message or player data is recorded. */
+    public static void surface(Surface value) { if (enabled) surface = value; }
+
+    @jdk.jfr.Name("com.atomchat.UiFrame")
+    @jdk.jfr.Label("AtomChat UI frame")
+    @jdk.jfr.Category("AtomChat")
+    @jdk.jfr.StackTrace(false)
+    static final class UiFrameEvent extends jdk.jfr.Event {
+        static final jdk.jfr.EventType TYPE = jdk.jfr.EventType.getEventType(UiFrameEvent.class);
+        public String surface;
+        @jdk.jfr.Timespan(jdk.jfr.Timespan.NANOSECONDS) public long renderNanos;
+        @jdk.jfr.Timespan(jdk.jfr.Timespan.NANOSECONDS) public long frameIntervalNanos;
+    }
 
     private FrameProfile() {
     }
@@ -94,7 +114,19 @@ public final class FrameProfile {
             return false;
         }
         long allocated = allocatedBefore < 0L ? -1L : Math.max(0L, allocatedBytes() - allocatedBefore);
-        PANEL_BUCKET.add(System.nanoTime() - startedAt, allocated);
+        long elapsed = System.nanoTime() - startedAt;
+        PANEL_BUCKET.add(elapsed, allocated);
+        SURFACE_CPU.computeIfAbsent(surface, ignored -> new Bucket(true)).add(elapsed, allocated);
+        long interval = previousSurface == surface && previousFrameStart != 0 ? startedAt - previousFrameStart : 0;
+        if (interval > 0 && interval < 1_000_000_000L)
+            SURFACE_INTERVAL.computeIfAbsent(surface, ignored -> new Bucket(false)).add(interval, -1);
+        previousFrameStart = startedAt; previousSurface = surface;
+        if (UiFrameEvent.TYPE.isEnabled()) {
+            var event = new UiFrameEvent(); event.surface = surface.name(); event.renderNanos = elapsed;
+            event.frameIntervalNanos = interval > 0 && interval < 1_000_000_000L ? interval : 0; event.commit();
+        }
+        // A later HUD draw using this bridge must not inherit the last screen's popup label.
+        surface = Surface.OTHER;
         framesSinceReport++;
         if (framesSinceReport >= REPORT_EVERY_FRAMES) {
             framesSinceReport = 0;
@@ -138,6 +170,12 @@ public final class FrameProfile {
         sb.append('\n').append(PANEL_BUCKET.row(PANEL));
         sb.append('\n').append(DECODE_BUCKET.row(DECODE));
         sb.append('\n').append(LAYOUT_BUCKET.row(LAYOUT));
+        for (var entry : SURFACE_CPU.entrySet()) {
+            String name = entry.getKey().name().toLowerCase(java.util.Locale.ROOT);
+            sb.append('\n').append(entry.getValue().row(name + "_render"));
+            Bucket intervals = SURFACE_INTERVAL.get(entry.getKey());
+            if (intervals != null) sb.append('\n').append(intervals.row(name + "_interval"));
+        }
         return sb.toString();
     }
 
@@ -147,6 +185,7 @@ public final class FrameProfile {
         DECODE_BUCKET.clear();
         LAYOUT_BUCKET.clear();
         framesSinceReport = 0;
+        SURFACE_CPU.clear(); SURFACE_INTERVAL.clear(); previousFrameStart = 0; previousSurface = null; surface = Surface.OTHER;
     }
 
     /** 一个桶：滚动窗口 + 分配统计。只在渲染线程上写，报告时读。 */
@@ -184,6 +223,7 @@ public final class FrameProfile {
         private String row(String name) {
             StringBuilder sb = new StringBuilder("  ");
             sb.append(String.format(java.util.Locale.ROOT, "%-7s", name));
+            if (name.length() >= 7) sb.append(' ');
             if (size == 0) {
                 return sb.append("no samples").toString();
             }

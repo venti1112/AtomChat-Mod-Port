@@ -523,6 +523,20 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
     private final com.atom.chat.compat.ForeignChatPointer foreignPointer =
             new com.atom.chat.compat.ForeignChatPointer();
 
+    private boolean canUseCompletions() {
+        return !closing && isWorldChatPage() && !imagePreview.isActive() && !imageCropper.isActive()
+                && !colorPicker.isActive() && !settingsSectionPage.confirmation().isActive() && !composerTools.active()
+                && !isPrivateReadOnly() && !emojiPanel.isOpen() && (!quickPhrasePanel.isOpen() || quickPhrasePanel.isEditing());
+    }
+
+    private final com.atom.chat.ui.input.CompletionInput completionInput = new com.atom.chat.ui.input.CompletionInput(
+            new com.atom.chat.ui.input.CompletionInput.Host() {
+        public boolean available() { return canUseCompletions(); }
+        public boolean click(double x,double y,int button) { return suggestorWiring.mouseClicked((int)x,(int)y,button); }
+        public boolean scroll(double x,double y,double amount) { return suggestorWiring.mouseScrolled(x,y,amount); }
+        public boolean key(int key,int scan,int modifiers) { return suggestorWiring.keyPressed(key,scan,modifiers); }
+    });
+
     private boolean canUseForeignChatUi() {
         return canRenderForeignChatUi() && !PanelOpenMotion.animating(panelProgress, closing)
                 && !director.pageNavActive() && !director.rootTransitionActive();
@@ -530,7 +544,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
 
     private boolean canRenderForeignChatUi() {
         return !closing && isWorldChatPage()
-                && !imagePreview.isActive() && !imageCropper.isActive() && !colorPicker.isActive()
+                && !imagePreview.isActive() && !imageCropper.isActive() && !colorPicker.isActive() && !composerTools.active() && !settingsSectionPage.confirmation().isActive()
                 && !contextMenu.hasMessageMenu() && !contextMenu.hasPlayerCardMenu()
                 && !emojiPanel.isOpen() && !quickPhrasePanel.isOpen();
     }
@@ -620,9 +634,45 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
             }
         });
     }
+    private final com.atom.chat.ui.ClickRipples clickRipples = new com.atom.chat.ui.ClickRipples();
+
+    private final com.atom.chat.tools.ComposerTools composerTools = new com.atom.chat.tools.ComposerTools(
+            new com.atom.chat.tools.ComposerTools.Host() {
+        public UiLayout layout() { return AtomChatScreen.this.layout(); }
+        public float x(double x) { return toVirtualX(x); }
+        public float y(double y) { return toVirtualY(y); }
+        public boolean chatVisible() { return isWorldChatPage() && !director.pageNavActive(); }
+        public String tr(String key) { return AtomChatScreen.tr(key); }
+        public String clipboard() { return client.keyboardHandler.getClipboard(); }
+        public java.util.List<PlayerRef> onlinePlayers() {
+            if (client.getConnection() == null) return java.util.List.of();
+            return client.getConnection().getOnlinePlayers().stream().map(p -> PlayerRef.of(p.getProfile().getId(), p.getProfile().getName())).toList();
+        }
+        public void mention(PlayerRef player) { composer.insert("@" + player.realName() + " "); }
+        public String composerText() { return composer.text(); }
+        public int composerCaret() { return composer.caretIndex(); }
+        public void setComposerText(String text) { composer.setText(text); }
+        public void moveComposerCaret(int caret) { composer.moveCaretTo(caret); }
+        public void focusComposer() { composer.focus(); }
+        public Object searchScope() { return topNav(); }
+        public java.util.List<ChatMessage> searchMessages() { return messageWiring.messagesForNav(topNav()); }
+        public boolean revealSearchMessage(ChatMessage message) {
+            return notificationJump.revealSearchMessage(message, layout(), messageListView, historyFold);
+        }
+        public void highlightSearchMessage(ChatMessage message) { messageListView.highlight(message); }
+        public void feedback(String key) { AtomChatScreen.this.feedback(key, false); }
+        public void pressTool() {
+            primitives.pressButton(0); primitives.setButtonHeld(0); composer.focus();
+            com.atom.chat.audio.FeedbackSoundController.play(com.atom.chat.audio.FeedbackCue.BUTTON);
+        }
+        public void releaseTool() { primitives.setButtonHeld(-1); }
+        public void pickImage() { if (!isPrivateReadOnly()) pickAndUploadImage(); }
+        public void dismissOtherPopups() { emojiPanel.close(); closePhrasePanel(); contextMenu.close(); dismissSuggestor(); }
+    });
+
     /**
      * Ordered input routing (D23a). Priority (first registered wins): closing
-     * guard, foreign chat UI, outside-panel close, modals (cropper/colour picker), pushed-subpage Esc, screen Esc,
+     * guard, confirmation, completion, foreign chat UI, outside-panel close, modals (cropper/colour picker), composer tools, pushed-subpage Esc, screen Esc,
      * root pages, world chat. New interactive features register a handler
      * instead of inserting branches into the former if-else chains.
      *
@@ -646,9 +696,13 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
         }
     })
             .add(new ClosingStateInput())
+            .add(new com.atom.chat.ui.ConfirmationInput(settingsSectionPage::confirmation,
+                    this::toVirtualX, this::toVirtualY))
+            .add(completionInput)
             .add(foreignChatUiInput())
             .add(outsidePanelInput())
             .add(new ModalInput())
+            .add(composerTools)
             .add(settingsDetailPage.numberEditInput())
             .add(new BannerInput())
             .add(new ScreenEscInput())
@@ -993,6 +1047,9 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
         }
 
         @Override
+        public boolean toolPanelOpen() { return composerTools.active(); }
+
+        @Override
         public boolean emojiPanelOpen() {
             return emojiPanel.isOpen();
         }
@@ -1054,7 +1111,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
 
                 @Override
                 public void appendToComposer(String text) {
-                    composer.append(text);
+                    if (!composerTools.appendToParkedDraft(text)) composer.append(text);
                 }
 
                 @Override
@@ -1096,7 +1153,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
 
                 @Override
                 public boolean worldChatPage() {
-                    return isWorldChatPage();
+                    return isWorldChatPage() && !composerTools.searching();
                 }
 
                 @Override
@@ -1888,6 +1945,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
 
     /** Persists the hidden EditBox draft to the page that is currently open. */
     private void saveCurrentDraft() {
+        composerTools.close();
         boolean retain = AtomChatConfig.get().retainDraftOnClose;
         long savedGeneration = DraftSessionStore.saveForScreen(draftStore, topPage(),
                 activePrivateTarget(), composerText, retain, draftGeneration);
@@ -1995,7 +2053,10 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
         graphics.draw(() -> {
             if (blurPreUi != null) blurPreUi.run();
             com.atom.chat.render.ItemIconRenderer.prepare(context, graphics);
-        }, uiDensity(), (canvas, worldSnapshot) -> drawPhone(canvas, worldSnapshot, mouseX, mouseY, delta));
+        }, uiDensity(), (canvas, worldSnapshot) -> {
+            drawPhone(canvas, worldSnapshot, mouseX, mouseY, delta);
+            chatEffects.renderExperimental(graphics.requireSurface());
+        });
         // Keep third-party chat additions in their original GUI coordinates.
         // The inherited input field remains only an IME carrier, never painted.
         if (canRenderForeignChatUi()) {
@@ -2013,17 +2074,20 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
         // one exception is the signature editor, which borrows the field on the
         // profile page and needs the anchor to follow it (the suggestor stays
         // composer-only).
-        if (!closing && input != null
+        if (!closing && !settingsSectionPage.confirmation().isActive() && input != null
                 && (isWorldChatPage() || profilePage.isSignatureEditing())) {
             composerPointer.positionField(layout());
-            suggestorWiring.render(context, mouseX, mouseY, isWorldChatPage());
+            suggestorWiring.setSuppressed(composerTools.searching());
+            suggestorWiring.render(context, mouseX, mouseY, canUseCompletions());
         }
+
+
 
         // Hover tooltips are drawn through the vanilla pipeline after the Skia
         // panel and the suggestion popup so they stay readable on top of both.
         // Whether a span is hovered at all is the domain's answer (D22), and it
         // answers null on a root page so a stale world span cannot show there.
-        ClickableSpan hoveredSpan = messageWiring.hoverSpan(isWorldChatPage(),
+        ClickableSpan hoveredSpan = messageWiring.hoverSpan(isWorldChatPage() && !composerTools.active(),
                 toVirtualX(mouseX), toVirtualY(mouseY));
         Style hovered = hoveredSpan != null ? hoveredSpan.style() : null;
         if (hovered != null && hovered.getHoverEvent() != null && !foreignChatUiHovered(mouseX, mouseY)
@@ -2048,6 +2112,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
      */
     private final ComposerPointer composerPointer = new ComposerPointer(composer,
             new ComposerPointer.Host() {
+        public boolean commandModeAllowed() { return !composerTools.searching(); }
         @Override
         public double density() {
             return uiDensity();
@@ -2211,7 +2276,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
      */
     private void drawNotificationBanners(Canvas canvas, int mouseX, int mouseY) {
         notificationJump.drawNotificationBanners(canvas,
-                imageCropper.isActive() || colorPicker.isActive() || imagePreview.isActive(),
+                imageCropper.isActive() || colorPicker.isActive() || imagePreview.isActive() || settingsSectionPage.confirmation().isActive() || composerTools.active(),
                 layout(), toVirtualX(mouseX), toVirtualY(mouseY));
     }
 
@@ -2226,6 +2291,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
             // The click rules live in NotificationJumpService; the GUI->panel
             // conversion, the layout, the list view and the read-only flag are
             // this shell's facts.
+            if (composerTools.active()) return false;
             return notificationJump.onBannerClick(button, toVirtualX(mouseX), toVirtualY(mouseY),
                     isPrivateReadOnly(), layout(), messageListView);
         }
@@ -2247,8 +2313,16 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
         // overdraw and the panel draws directly (same call as the nav branch).
         if (PageTransitionDirector.navLayerSkippable(PanelOpenMotion.fade(progress), scale)) {
             int probeBefore = canvas.getSaveCount();
+            clickRipples.begin(settingsSectionPage.confirmation().isActive() ? settingsSectionPage.confirmation()
+                    : imageCropper.isActive() ? imageCropper : colorPicker.isActive() ? colorPicker
+                    : imagePreview.isActive() ? imagePreview : this);
             drawPanel(canvas, x, y, worldSnapshot, mouseX, mouseY, delta);
             drawNotificationBanners(canvas, mouseX, mouseY);
+            suggestorWiring.renderSkia(canvas, mouseX, mouseY, canUseCompletions(), frameDt);
+            composerTools.render(canvas, toVirtualX(mouseX), toVirtualY(mouseY), frameDt);
+            if (composerTools.active()) notificationJump.drawActionFeedback(canvas, layout());
+            settingsSectionPage.confirmation().render(canvas, layout().rect(), toVirtualX(mouseX), toVirtualY(mouseY), frameDt);
+            clickRipples.end(canvas, frameDt);
             CanvasLeakWatch.probe("drawPanel+banners", probeBefore, canvas);
             return;
         }
@@ -2274,8 +2348,16 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
             // The world snapshot sits inside the saveLayer/transform stack so it
             // fades in with the panel and rides the same motion — no special handling.
             int probeBefore = canvas.getSaveCount();
+            clickRipples.begin(settingsSectionPage.confirmation().isActive() ? settingsSectionPage.confirmation()
+                    : imageCropper.isActive() ? imageCropper : colorPicker.isActive() ? colorPicker
+                    : imagePreview.isActive() ? imagePreview : this);
             drawPanel(canvas, x, y, worldSnapshot, mouseX, mouseY, delta);
             drawNotificationBanners(canvas, mouseX, mouseY);
+            suggestorWiring.renderSkia(canvas, mouseX, mouseY, canUseCompletions(), frameDt);
+            composerTools.render(canvas, toVirtualX(mouseX), toVirtualY(mouseY), frameDt);
+            if (composerTools.active()) notificationJump.drawActionFeedback(canvas, layout());
+            settingsSectionPage.confirmation().render(canvas, layout().rect(), toVirtualX(mouseX), toVirtualY(mouseY), frameDt);
+            clickRipples.end(canvas, frameDt);
             CanvasLeakWatch.probe("drawPanel+banners", probeBefore, canvas);
             canvas.restore();
         }
@@ -2309,6 +2391,9 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
 
     @Override
     public void removed() {
+        composerTools.close();
+        clickRipples.clear();
+        settingsSectionPage.confirmation().reset();
         chatEffects.close();
         avatarWiring.poke().uninstall();
         // Hygiene on screen teardown: release the borrowed field so the parked
@@ -2332,7 +2417,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
 
     private void drawPanel(Canvas canvas, float x, float y, Image worldSnapshot, int mouseX, int mouseY, float delta) {
         composer.syncFocusedFromField();
-        composer.blurOnReadOnlyPage(isPrivateReadOnly());
+        composer.blurOnReadOnlyPage(isPrivateReadOnly() && !composerTools.searching());
         chatEffects.session();
         long nowMs = System.currentTimeMillis();
         frameDt = PanelOpenMotion.domainFrameDtMs(nowMs, lastFrameMs);
@@ -2348,6 +2433,19 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
                 && com.atom.chat.util.DataMigration.takeWarning()) {
             feedback("atomchat.data.migration_warning", false);
         }
+        composerTools.update();
+        com.atom.chat.diagnostics.FrameProfile.surface(
+                settingsSectionPage.confirmation().isActive() ? com.atom.chat.diagnostics.FrameProfile.Surface.CONFIRMATION
+                : emojiPanel.isOpen() ? switch (emojiPanel.diagnosticTab()) {
+                    case 1 -> com.atom.chat.diagnostics.FrameProfile.Surface.KAOMOJI;
+                    case 2 -> com.atom.chat.diagnostics.FrameProfile.Surface.EMOTES;
+                    default -> com.atom.chat.diagnostics.FrameProfile.Surface.EMOJI;
+                }
+                : quickPhrasePanel.isOpen() ? com.atom.chat.diagnostics.FrameProfile.Surface.PHRASES
+                : composerTools.searching() ? com.atom.chat.diagnostics.FrameProfile.Surface.SEARCH
+                : composerTools.active() ? com.atom.chat.diagnostics.FrameProfile.Surface.TOOLS
+                : isWorldChatPage() ? com.atom.chat.diagnostics.FrameProfile.Surface.CHAT
+                : com.atom.chat.diagnostics.FrameProfile.Surface.OTHER);
         emojiPanel.update(frameDt);
         quickPhrasePanel.update(frameDt);
         UiLayout layout = layout();
@@ -2546,10 +2644,10 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
         // The list layout already ends at this bar's top, so the translucent
         // card never has message content underneath it.
         UiLayout.Rect bar = layout.inputBar;
-        boolean readOnly = view.readOnly();
+        boolean readOnly = view.readOnly() && !composerTools.searching();
         SkiaDraw.drawRoundedRect(canvas, bar.x(), bar.y(), bar.w(), bar.h(), UiTokens.shellChromeRadius(), UiTokens.cardFill());
         com.atom.chat.render.ChromeMaterial.drawDetails(canvas, bar, UiTokens.shellChromeRadius());
-        if (quickPhrasePanel.isEditing()) {
+        if (quickPhrasePanel.isEditing() || composerTools.searching()) {
             // The composer is borrowed as the phrase editor: ring it with the
             // accent so the mode is unmistakable.
             try (Paint border = new Paint().setMode(PaintMode.STROKE).setAntiAlias(true)
@@ -2609,7 +2707,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
         Font inputFont = FontManager.font(UiTokens.FONT_INPUT);
         float lineH = composer.lineHeight();
         String current = view.draft();
-        float textX = bar.x() + UiTokens.INPUT_TEXT_X;
+        float textX = layout.inputTextX();
         float clipTop = layout.inputTextCenterY - lineH / 2.0F;
         float clipBottom = bar.bottom() - UiTokens.INPUT_ROW_PAD;
         canvas.save();
@@ -2637,9 +2735,11 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
             // on "not focused" was literally never on screen. It doubles as the
             // upload progress readout, which is the only feedback a file drop can
             // give — GLFW reports the drop itself but has no drag-enter to react to.
-            if (current.isEmpty()) {
+            if (current.isEmpty() && (!ownComposer || !canUseCompletions() || suggestorWiring.ghostSuffix()==null || suggestorWiring.ghostSuffix().isEmpty())) {
                 String hintText;
-                if (quickPhrasePanel.isEditing()) {
+                if (composerTools.searching()) {
+                    hintText = tr("atomchat.tools.search.hint");
+                } else if (quickPhrasePanel.isEditing()) {
                     hintText = tr("atomchat.input.phrase_hint");
                 } else if (uploadPipeline.uploading()) {
                     hintText = tr("atomchat.input.uploading");
@@ -2660,11 +2760,19 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
                 if (ownComposer) {
                     composerPointer.drawSelection(canvas, inputFont, lines, from, shown, textX, layout.inputTextCenterY, lineH);
                 }
+                int lineOffset=0;
+                for(int i=0;i<from;i++) lineOffset+=lines.get(i).length();
                 for (int i = from; i < from + shown && i < total; i++) {
                     float cy = layout.inputTextCenterY + (i - from) * lineH;
-                    SkiaFontRenderer.drawText(canvas, inputFont, lines.get(i), textX,
-                            SkiaFontRenderer.centerBaselineY(inputFont, cy), textPrimary());
+                    var visibleLine=ownComposer && canUseCompletions()
+                            ? suggestorWiring.formattedInputLine(lines.get(i),lineOffset) : com.atom.chat.render.FormattedLine.plain(lines.get(i));
+                    visibleLine.drawOnSurface(canvas,inputFont,textX,SkiaFontRenderer.centerBaselineY(inputFont,cy),textPrimary(),UiTokens.cardCutout());
+                    lineOffset+=lines.get(i).length();
                 }
+            }
+            if (ownComposer && canUseCompletions()) {
+                composerPointer.drawGhostSuffix(canvas,inputFont,lines,from,shown,textX,layout.inputTextCenterY,lineH,
+                        suggestorWiring.ghostSuffix(),textSecondary());
             }
             if (ownComposer && composer.focused() && composer.fieldFocused()
                     && (System.currentTimeMillis() / 500L) % 2L == 0L) {
@@ -2684,7 +2792,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
                     cursorY = layout.inputTextCenterY + (caretRow - from) * lineH;
                     measure = lines.get(caretRow).substring(0, col);
                 }
-                float cursorX = textX + SkiaFontRenderer.getStringWidth(inputFont, measure) + 2.0F;
+                float cursorX = textX + com.atom.chat.render.PlainText.width(inputFont, measure) + 2.0F;
                 float cursorH = SkiaFontRenderer.textHeight(inputFont);
                 SkiaDraw.drawRoundedRect(canvas, cursorX, cursorY - cursorH / 2.0F, 2.0F, cursorH, 1.0F, textPrimary());
             }
@@ -2929,7 +3037,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
     }
 
     private void drawSendButton(Canvas canvas, float bx, float by, int mouseX, int mouseY) {
-        primitives.drawSendButton(canvas, bx, by, toVirtualX(mouseX), toVirtualY(mouseY));
+        primitives.drawSendButton(canvas, bx, by, toVirtualX(mouseX), toVirtualY(mouseY), !composerTools.searching());
     }
 
     /** Draws an icon centered on an arbitrary point; used by toolbar and menus. */
@@ -3073,6 +3181,9 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
         foreignPointer.press(button, canUseForeignChatUi(), suggestorWiring.hovered(mouseX, mouseY));
         com.atom.chat.audio.FeedbackSoundController.beginAction();
         try {
+            if (button == 0 && !imageCropper.isActive() && !colorPicker.isActive() && !imagePreview.isActive()
+                    && !PanelOpenMotion.animating(panelProgress, closing) && !director.pageNavActive())
+                clickRipples.click(toVirtualX(mouseX), toVirtualY(mouseY));
             Boolean direct = gate.click(mouseX, mouseY, button);
             if (direct != null) return direct;
             return super.mouseClicked(mouseX, mouseY, button);
@@ -3200,7 +3311,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
 
     /** Sends whatever the composer holds; the pipeline owns the whole order. */
     private void sendMessage(String text) {
-        sendPipeline.sendMessage(text);
+        if (!composerTools.searching()) sendPipeline.sendMessage(text);
     }
 
     /** The local player's name, or the "(me)" stand-in outside a world. */
@@ -3281,7 +3392,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
      */
     private UiLayout layout() {
         float replyH = replyBarVisible() ? s(34) : 0.0F;
-        return UiLayout.of(panelX(), panelY(), panelWidth(), panelHeight(), composer.extraH(), replyH, AtomChatConfig.get().halfScreenMode);
+        return UiLayout.of(panelX(), panelY(), panelWidth(), panelHeight(), composer.extraH(), replyH, AtomChatConfig.get().halfScreenMode, composerTools.searching());
     }
 
     // ---------------------------------------------------------------- input box
@@ -3600,7 +3711,6 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
                             mx, my, pageLayout, section, pageScroll.getScrollY());
                     if (slider != null) {
                         // Any click that is not the armed button disarms it.
-                        settingsSectionPage.disarmAction();
                         // The retention-days row is an inline numeric input, not a
                         // linear 0..365 slider that cannot land on exact values.
                         if ("history_retention".equals(slider.row().slider().id())) {
@@ -3621,7 +3731,6 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
                     SettingsSectionPage.ColorHit colorHit = settingsSectionPage.colorHit(
                             mx, my, pageLayout, section, pageScroll.getScrollY());
                     if (colorHit != null) {
-                        settingsSectionPage.disarmAction();
                         // Arm the swatch bounce; the press visual holds until release.
                         settingsSectionPage.setPressedSwatch(
                                 colorHit.plus() ? -1 : colorHit.rowIndex(),
@@ -3648,7 +3757,6 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
                             return true;
                         }
                     }
-                    settingsSectionPage.disarmAction();
                 }
                 return true;
             }
@@ -3876,7 +3984,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
 
             // Private read-only pages (offline/blocked) must not let the composer
             // buttons or the text field take focus.
-            if (isPrivateReadOnly()
+            if (isPrivateReadOnly() && !composerTools.searching()
                     && (layout.inputBar.contains((float) mx, (float) my)
                     || layout.imageBtn.contains((float) mx, (float) my)
                     || layout.emojiBtn.contains((float) mx, (float) my)
@@ -4003,7 +4111,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
                 com.atom.chat.audio.FeedbackSoundController.play(com.atom.chat.audio.FeedbackCue.BUTTON);
                 primitives.setButtonHeld(0);
                 composer.setFocused(true);
-                pickAndUploadImage();
+                composerTools.toggle();
                 return true;
             }
             // Inserting an emoji must NOT close the panel: users often want to pick several
@@ -4221,7 +4329,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
             float mx = toVirtualX(mouseX);
             float my = toVirtualY(mouseY);
             // Suggestion popup scrolls first when open.
-            if (suggestorWiring.mouseScrolled(verticalAmount)) {
+            if (suggestorWiring.mouseScrolled(mouseX,mouseY,verticalAmount)) {
                 return true;
             }
             if (emojiPanel.isOpen() && emojiPanel.overPanel(layout(), mx, my)) {
@@ -4242,6 +4350,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
 
         @Override
         public boolean onKey(int keyCode, int scanCode, int modifiers) {
+            if (composerTools.searching()) return false;
             if (!isWorldChatPage()) {
                 return false;
             }

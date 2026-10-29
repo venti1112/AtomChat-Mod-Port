@@ -1,0 +1,125 @@
+{
+  "version": "0.4.0",
+  "sourceHead": "93f58a16a7e910adec2106891e13f717473680b2",
+  "sourceDirty": true,
+  "time": "2026-10-28T13:32:25.803649+08:00",
+  "sourceInputCount": 523,
+  "sourceFingerprint": "3348ed824e96c10beb1236eb5510b3d1042fbc5fe1b2439612d909fb0b7c0055",
+  "packages": [
+    {
+      "target": "1.20.1-forge",
+      "platform": "windows-x64",
+      "path": "platforms/1.20.1-forge/build/libs/atomchat-Forge-1.20.1-0.4.0-windows-x64.jar",
+      "sha256": "1af076fa8f344cbc30a23bb2311d582b48c7e7d88848991db40c791cde9ee3f3",
+      "bytes": 19197500,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.20.1-forge",
+      "platform": "windows-arm64",
+      "path": "platforms/1.20.1-forge/build/windows-arm64/libs/atomchat-Forge-1.20.1-0.4.0-windows-arm64.jar",
+      "sha256": "4020d988af2c74cb838730f837c05aa1807131fdf3d265abd07b2e84c31b560f",
+      "bytes": 18573790,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.20.1-forge",
+      "platform": "linux-x64",
+      "path": "platforms/1.20.1-forge/build/linux-x64/libs/atomchat-Forge-1.20.1-0.4.0-linux-x64.jar",
+      "sha256": "8936f94d011e86c8a95d5d58ad06e88f8524cb1de3ec81d2dd64a27d83ae5601",
+      "bytes": 20324688,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.21.1-fabric",
+      "platform": "windows-x64",
+      "path": "platforms/1.21.1-fabric/build/libs/atomchat-Fabric-1.21.1-0.4.0-windows-x64.jar",
+      "sha256": "25a65e339c33c1988b327abbb6636b5ec838d29e05fc481bfc6968602590c54c",
+      "bytes": 19218797,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.21.1-fabric",
+      "platform": "windows-arm64",
+      "path": "platforms/1.21.1-fabric/build/windows-arm64/libs/atomchat-Fabric-1.21.1-0.4.0-windows-arm64.jar",
+      "sha256": "132e9437dfdbe279192f09671191b09a791329b6e02e09ef0f3d2df984c52c24",
+      "bytes": 18595082,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.21.1-fabric",
+      "platform": "linux-x64",
+      "path": "platforms/1.21.1-fabric/build/linux-x64/libs/atomchat-Fabric-1.21.1-0.4.0-linux-x64.jar",
+      "sha256": "a7669ae8e6647240c5fa509e6c383d950afcbc4959a90d3a753531c43d648a23",
+      "bytes": 20345984,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.21.1-neoforge",
+      "platform": "windows-x64",
+      "path": "platforms/1.21.1-neoforge/build/libs/atomchat-NeoForge-1.21.1-0.4.0-windows-x64.jar",
+      "sha256": "6776f78d0dfea785460d7526f24c98ccce2abe02c2e48d754979d8ba674879e8",
+      "bytes": 19210295,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.21.1-neoforge",
+      "platform": "windows-arm64",
+      "path": "platforms/1.21.1-neoforge/build/windows-arm64/libs/atomchat-NeoForge-1.21.1-0.4.0-windows-arm64.jar",
+      "sha256": "6b648c41006144b8b93a49248d23e4a42a46ae978cf57b22a19e39ecda893f82",
+      "bytes": 18586586,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.21.1-neoforge",
+      "platform": "linux-x64",
+      "path": "platforms/1.21.1-neoforge/build/linux-x64/libs/atomchat-NeoForge-1.21.1-0.4.0-linux-x64.jar",
+      "sha256": "e8fc5ed6a7aca9bd13167de0b756122a06ccf9e58e3f1d3733770d238e488f82",
+      "bytes": 20337483,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    }
+  ],
+  "applicationComparisons": {
+    "1.20.1-forge": {
+      "applicationEntries": 652,
+      "threeOperatingSystemsByteIdentical": true
+    },
+    "1.21.1-fabric": {
+      "applicationEntries": 648,
+      "threeOperatingSystemsByteIdentical": true
+    },
+    "1.21.1-neoforge": {
+      "applicationEntries": 663,
+      "threeOperatingSystemsByteIdentical": true
+    }
+  },
+  "tests": {
+    "1.20.1-forge": {
+      "tests": 1500,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 2
+    },
+    "1.21.1-fabric": {
+      "tests": 1512,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 2
+    },
+    "1.21.1-neoforge": {
+      "tests": 1500,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 2
+    }
+  }
+}

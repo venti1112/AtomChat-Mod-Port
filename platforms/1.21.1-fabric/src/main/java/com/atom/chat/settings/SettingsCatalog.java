@@ -128,7 +128,10 @@ public final class SettingsCatalog {
                             () -> AtomChatConfig.get().feedbackPanelEnabled, v -> AtomChatConfig.get().feedbackPanelEnabled = v),
                     new SettingsItem("fun_effects", "atomchat.settings.experimental.fun", "atomchat.settings.experimental.fun.desc",
                             () -> AtomChatConfig.get().funEffectsEnabled,
-                            v -> AtomChatConfig.get().funEffectsEnabled = v));
+                            v -> AtomChatConfig.get().funEffectsEnabled = v),
+                    new SettingsItem("experimental_effects", "atomchat.settings.experimental.enabled", "atomchat.settings.experimental.enabled.desc",
+                            () -> AtomChatConfig.get().experimentalEffectsEnabled,
+                            v -> AtomChatConfig.get().experimentalEffectsEnabled = v));
             case PRIVACY -> List.of(
                     new SettingsItem("hideBlocked",
                             "atomchat.settings.privacy.hide",

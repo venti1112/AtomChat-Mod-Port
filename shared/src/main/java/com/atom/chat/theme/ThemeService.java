@@ -111,10 +111,10 @@ public final class ThemeService {
 
     /** 极简 — white settings surfaces, a mist-blue incoming bubble and blue accent. */
     public static final Preset MINIMAL = new Preset("minimal",
-            0xFF3B82F6,
-            0xFF3B82F6, 0xFFFFFFFF,
+            0xFF2563D8,
+            0xFF2563D8, 0xFFFFFFFF,
             0xFFB9CDE6, 0xFF1A1D21,
-            0xFFF7F8FA, 0xFF1A1D21, 0xFF6B7280,
+            0xFFF7F8FA, 0xFF151A22, 0xFF596273,
             0xFFFFFFFF, 0xFF6B7280,
             0xFFECEEF2, 0xFF6B7280,
             null, null, "small");
@@ -123,16 +123,16 @@ public final class ThemeService {
             0xFF84CC16,
             0xFF84CC16, 0xFF1A2E05,
             0xFFC3D38D, 0xFF1F2937,
-            0xFFFAFCF3, 0xFF1F2937, 0xFF6B7280,
+            0xFFFAFCF3, 0xFF192521, 0xFF56634C,
             0xFFFFFFFF, 0xFF6B7280,
             0xFFEBF2DC, 0xFF4D7C0F,
             null, null, "medium");
     /** 典雅 — warm paper, clay-sand incoming bubbles and a terracotta accent. */
     public static final Preset ELEGANT = new Preset("elegant",
-            0xFFD97757,
-            0xFFD97757, 0xFFFFFFFF,
+            0xFFBD6043,
+            0xFFBD6043, 0xFFFFFFFF,
             0xFFD0B294, 0xFF3D3929,
-            0xFFF5F0E8, 0xFF3D3929, 0xFF8A8377,
+            0xFFF5F0E8, 0xFF332E23, 0xFF71685C,
             0xFFE8DDD0, 0xFF8A8377,
             0xFFEAE1D3, 0xFF7A7264,
             null, null, "medium");
@@ -140,8 +140,8 @@ public final class ThemeService {
     public static final Preset RAVEN = new Preset("raven",
             0xFFE3B341,
             0xFFE3B341, 0xFF1C1901,
-            0xFF1F2630, 0xFFE6EDF3,
-            0xFF0D1117, 0xFFE6EDF3, 0xFF8B949E,
+            0xFF27323F, 0xFFF0F4F8,
+            0xFF0D1117, 0xFFF0F4F8, 0xFFA4AFBD,
             0xFF161B27, 0xFF8B949E,
             0xFF2A313C, 0xFF8B949E,
             null, null, "medium");
@@ -150,16 +150,16 @@ public final class ThemeService {
             0xFFFF9000,
             0xFFFF9000, 0xFF1A0E00,
             0xFF111111, 0xFFF5F5F5,
-            0xFF0A0A0A, 0xFFFFFFFF, 0xFF9CA3AF,
+            0xFF0A0A0A, 0xFFFFFFFF, 0xFFB0B9C7,
             0xFF141414, 0xFF9CA3AF,
             0xFF161616, 0xFFD4D4D4,
             null, null, "small");
     /** 活力 — pale pink background, muted rose incoming bubbles and a punchy pink accent. */
     public static final Preset VIVID = new Preset("vivid",
-            0xFFE85A8A,
-            0xFFE85A8A, 0xFFFFFFFF,
+            0xFFCA3F70,
+            0xFFCA3F70, 0xFFFFFFFF,
             0xFFDEA6BE, 0xFF3D2C35,
-            0xFFFDF0F4, 0xFF3D2C35, 0xFF9A7F8C,
+            0xFFFDF0F4, 0xFF36212B, 0xFF785666,
             0xFFFFFFFF, 0xFF9A7F8C,
             0xFFF9DCE7, 0xFFB04A70,
             null, null, "medium");
@@ -167,9 +167,9 @@ public final class ThemeService {
      *  the blurred world, lavender accent and bubbles, near-white text. */
     public static final Preset DUSK = new Preset("dusk",
             0xFFA78BFA,
-            0xFFA78BFA, 0xFFFFFFFF,
+            0xFFA78BFA, 0xFF241536,
             0xFF333950, 0xFFECEEF4,
-            0xFF232633, 0xFFF2F3F7, 0xFF9BA0B5,
+            0xFF232633, 0xFFF5F6FA, 0xFFB3B8CD,
             0xFF2B2E3D, 0xFF9BA0B5,
             0xFF313548, 0xFFC9CDE0,
             0.88F, true, "large");
@@ -179,13 +179,32 @@ public final class ThemeService {
             0xFF5EEAD4,
             0xFF5EEAD4, 0xFF082620,
             0xFF1B3B34, 0xFFE7F5F0,
-            0xFF0F2622, 0xFFEFFAF6, 0xFF9DB8AF,
+            0xFF0F2622, 0xFFF3FCF8, 0xFFB2CEC3,
             0xFF16332D, 0xFF9DB8AF,
             0xFF1E423A, 0xFFBFE8DC,
             0.9F, true, "large");
 
+    /** Deep blue glass, light blue glass, plum glass and warm paper glass keep the world visible. */
+    public static final Preset AZURE_GLASS = new Preset("azure_glass",
+            0xFF82BEFF, 0xFF82BEFF, 0xFF10263E, 0xFF253E5A, 0xFFF0F6FF,
+            0xFF12263B, 0xFFF5F8FF, 0xFFBCCDE1, 0xFF29425D, 0xFFA9C6E8,
+            0xD9233B56, 0xFFE0ECFB, .70F, true, "large");
+    public static final Preset PLUM_GLASS = new Preset("plum_glass",
+            0xFFE1AFF1, 0xFFE1AFF1, 0xFF35143D, 0xFF50334F, 0xFFFFF0FC,
+            0xFF2D1C31, 0xFFFFF4FD, 0xFFD5BDDA, 0xFF49304E, 0xFFD9B6E0,
+            0xD9452B4C, 0xFFF4DDF7, .72F, true, "large");
+    public static final Preset ICE_GLASS = new Preset("ice_glass",
+            0xFF246889, 0xFF246889, 0xFFFFFFFF, 0xFFC4DBE5, 0xFF173243,
+            0xFFE4F0F5, 0xFF152D3B, 0xFF425F70, 0xFFF2F8FB, 0xFF536E7D,
+            0xD9C4DCE7, 0xFF294D63, .74F, true, "large");
+    public static final Preset SAND_GLASS = new Preset("sand_glass",
+            0xFF926027, 0xFF926027, 0xFFFFFFFF, 0xFFE1CCAC, 0xFF3C2D1B,
+            0xFFF2E7D6, 0xFF352819, 0xFF69543B, 0xFFFFF8EB, 0xFF826C50,
+            0xD9DFCCAF, 0xFF584025, .76F, true, "large");
+
     private static final Preset[] COLOR_PRESETS =
-            {MINIMAL, SUMMER, ELEGANT, RAVEN, HUB, VIVID, DUSK, MINT};
+            {MINIMAL, SUMMER, ELEGANT, RAVEN, HUB, VIVID, DUSK, MINT,
+                    AZURE_GLASS, PLUM_GLASS, ICE_GLASS, SAND_GLASS};
 
     /** The colour presets in picker order (the frosted tile is rendered separately). */
     public static Preset[] presets() {

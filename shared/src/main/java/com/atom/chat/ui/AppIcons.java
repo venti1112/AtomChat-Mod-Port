@@ -140,6 +140,8 @@ public final class AppIcons {
     public static final Path ICON_SIGNAL_PATH = Path.makeFromSVGString(ICON_SIGNAL_SVG);
     public static final Path ICON_CLOCK_PATH = Path.makeFromSVGString(ICON_CLOCK_SVG);
     public static final Path ICON_STATS_PATH = Path.makeFromSVGString(ICON_STATS_SVG);
+    /** Warning uses the shell's open line language, with a separate dot for a legible exclamation. */
+    public static final Path ICON_WARNING_PATH = Path.makeFromSVGString("M10 2L19 18H1Z M10 7V12 M10 15V15.2");
 
     private AppIcons() {
     }

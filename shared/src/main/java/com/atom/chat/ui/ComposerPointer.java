@@ -80,6 +80,7 @@ public final class ComposerPointer {
 
     /** The shell's own dependencies of this half. */
     public interface Host {
+        default boolean commandModeAllowed() { return true; }
         /** The design density every virtual→GUI conversion divides by. */
         double density();
 
@@ -132,6 +133,17 @@ public final class ComposerPointer {
     public void setDragAnchor(int index) {
         inputDragAnchor = index;
     }
+    /** Paint the suffix already calculated by vanilla, including the empty-field case. */
+    public void drawGhostSuffix(Canvas canvas,Font font,List<String> lines,int from,int shown,
+                                float textX,float centerY,float lineH,String suffix,int color) {
+        if(suffix==null || suffix.isEmpty())return;
+        int row=lines.isEmpty() ? 0 : ComposerInput.caretLine(lines,composer.caretIndex());
+        if(!lines.isEmpty() && (row<from || row>=from+shown))return;
+        String prefix=lines.isEmpty() ? "" : lines.get(row);
+        float x=textX+com.atom.chat.render.PlainText.width(font,prefix);
+        float y=centerY+(row-from)*lineH;
+        com.atom.chat.render.FormattedLine.legacy(suffix).draw(canvas,font,x,SkiaFontRenderer.centerBaselineY(font,y),color);
+    }
 
     // ------------------------------------------------------------- the anchor
 
@@ -173,7 +185,7 @@ public final class ComposerPointer {
         String wholePrefix = current.substring(0, Math.min(caret, current.length()));
         String linePrefix = linePrefixAt(layout, caret);
         Font inputFont = FontManager.font(UiTokens.FONT_INPUT);
-        float skiaLinePrefixVirtual = SkiaFontRenderer.getStringWidth(inputFont, linePrefix);
+        float skiaLinePrefixVirtual = com.atom.chat.render.PlainText.width(inputFont, linePrefix);
         int desiredGuiX = (int) Math.round((layout.inputBar.x() + UiTokens.INPUT_TEXT_X + skiaLinePrefixVirtual)
                 * density / scaleFactor);
         int vanillaWholePrefixGuiWidth = host.vanillaPrefixWidth(wholePrefix);
@@ -181,7 +193,7 @@ public final class ComposerPointer {
         // IMBlocker bridge: English IME while a command is being typed
         // (e33chat parity). Change-guarded — the reflection call only fires
         // when the command/native state actually flips.
-        boolean commandMode = current.startsWith("/");
+        boolean commandMode = host.commandModeAllowed() && current.startsWith("/");
         if (commandMode != imeEnglishState) {
             imeEnglishState = commandMode;
             field.setCommandMode(commandMode);
@@ -239,7 +251,7 @@ public final class ComposerPointer {
         while (i < s.length()) {
             int cp = s.codePointAt(i);
             int chars = Character.charCount(cp);
-            float cw = SkiaFontRenderer.getStringWidth(inputFont, s.substring(i, i + chars));
+            float cw = com.atom.chat.render.PlainText.width(inputFont, s.substring(i, i + chars));
             if (dx < acc + cw / 2.0F) {
                 return lineStart + i;
             }
@@ -286,8 +298,8 @@ public final class ComposerPointer {
                 continue;
             }
             String line = lines.get(i);
-            float x0 = textX + SkiaFontRenderer.getStringWidth(font, line.substring(0, c0));
-            float x1 = textX + SkiaFontRenderer.getStringWidth(font, line.substring(0, c1));
+            float x0 = textX + com.atom.chat.render.PlainText.width(font, line.substring(0, c0));
+            float x1 = textX + com.atom.chat.render.PlainText.width(font, line.substring(0, c1));
             float cy = centerY + (i - from) * lineH;
             SkiaDraw.drawRoundedRect(canvas, x0, cy - lineH / 2.0F, Math.max(1.0F, x1 - x0), lineH,
                     UiTokens.radius(2), 0xE02D6FD6);

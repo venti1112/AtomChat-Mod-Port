@@ -41,6 +41,14 @@ class FrameProfileTest {
         assertFalse(summary.contains("n="), summary);
         assertTrue(summary.contains("no samples"), summary);
     }
+    @Test void popupMeasurementsNeverMixWithChatOrSettingsSamples() {
+        FrameProfile.surface(FrameProfile.Surface.CHAT); FrameProfile.frame(System.nanoTime() - 1_000_000L, -1);
+        FrameProfile.surface(FrameProfile.Surface.EMOJI); FrameProfile.frame(System.nanoTime() - 1_000_000L, -1);
+        String summary = FrameProfile.summary();
+        assertTrue(rowFor(summary, "chat_render").contains("n=1"), summary);
+        assertTrue(rowFor(summary, "emoji_render").contains("n=1"), summary);
+        assertFalse(summary.contains("emoji_interval"), "a state transition is not a steady frame interval");
+    }
 
     /**
      * 最近秩法：取排序后第 {@code ceil(p*n)} 个（1-based）。样本少的时候它退化成最大值，
@@ -123,7 +131,7 @@ class FrameProfileTest {
         String summary = FrameProfile.summary();
         assertTrue(summary.chars().allMatch(c -> c < 0x80), summary);
         String[] lines = summary.split("\n");
-        assertEquals(4, lines.length, summary);
+        assertEquals(5, lines.length, summary);
         assertTrue(lines[0].equals(FrameProfile.SUMMARY_HEADER), summary);
         assertTrue(lines[1].startsWith("  panel"), summary);
         assertTrue(lines[2].startsWith("  decode"), summary);

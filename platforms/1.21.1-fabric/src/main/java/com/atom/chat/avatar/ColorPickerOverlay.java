@@ -388,19 +388,13 @@ public final class ColorPickerOverlay {
         canvas.save();
         try {
             com.atom.chat.ui.PanelBackground.clipInterior(canvas, panel);
-            SkiaDraw.drawRoundedRect(canvas, panel.x(), panel.y(), panel.w(), panel.h(),
-                    UiTokens.modalBackdropRadius(), Color.makeARGB((int) (200.0F * anim), 8, 9, 14));
+            com.atom.chat.ui.PickerModalPaint.backdrop(canvas,panel,anim);
 
             float cx = cardX(panel);
             float cy = cardY(panel);
             float cw = cardW(panel);
             float ch = cardH();
-            SkiaDraw.drawRoundedShadow(canvas, cx, cy, cw, ch, UiTokens.radius(14), s(8),
-                    // No whole-card alpha layer here: every element
-                    // scales its own alpha by the fade, the shadow too.
-                    UiTokens.withAlpha(UiTokens.CHROME_SHADOW, 100.0F * anim));
-            SkiaDraw.drawRoundedRect(canvas, cx, cy, cw, ch, UiTokens.radius(14),
-                    Color.makeARGB((int) (0.96F * alpha), 32, 36, 46));
+            com.atom.chat.ui.PickerModalPaint.surface(canvas,new UiLayout.Rect(cx,cy,cw,ch),anim);
 
             int live = ColorUtil.hsvToRgb(hue, sat, bri);
 
@@ -587,13 +581,8 @@ public final class ColorPickerOverlay {
     private void drawRoundButton(Canvas canvas, float cx, float cy, io.github.humbleui.skija.Path icon,
                                  float hover, int alpha) {
         float r = s(18);
-        float radius = UiTokens.radius(18);
-        SkiaDraw.drawRoundedRect(canvas, cx - r, cy - r, 2.0F * r, 2.0F * r, radius,
-                Color.makeARGB((int) (0.92F * alpha), 35, 39, 47));
-        if (hover > 0.01F) {
-            SkiaDraw.drawRoundedRect(canvas, cx - r, cy - r, 2.0F * r, 2.0F * r, radius,
-                    Color.makeARGB((int) (60.0F * hover), 255, 255, 255));
-        }
+        com.atom.chat.ui.PickerModalPaint.buttonFace(canvas,
+                new UiLayout.Rect(cx-r,cy-r,2*r,2*r),hover,alpha,false);
         Rect b = icon.getBounds();
         if (b == null || b.isEmpty()) {
             return;

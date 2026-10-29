@@ -1,0 +1,46 @@
+{
+  "version": "0.4.0",
+  "time": "2026-10-29T16:23:29.468818+08:00",
+  "backupRoot": "D:\\AtomChat-Backups\\2026-10-29-experimental-iris\\20261029-162329",
+  "deployments": [
+    {
+      "loader": "Forge",
+      "instance": "1.20.1-main",
+      "installed": "D:\\Myworld\\.minecraft\\versions\\1.20.1-main\\mods\\atomchat-Forge-1.20.1-0.4.0-windows-x64.jar",
+      "sha256": "ac7b36a2d301a837e632429e1c884f9e3adb6b7e65128df5b2c578002f1d9af8",
+      "bytes": 19239607,
+      "backup": "D:\\AtomChat-Backups\\2026-10-29-experimental-iris\\20261029-162329\\Forge\\atomchat-Forge-1.20.1-0.4.0-windows-x64.jar",
+      "backupSha256": "e6c96e68932803d828453ab85a74d7c901608a14317bae0e5260048c4e94e5cd",
+      "otherFilesUnchanged": 163,
+      "atomchatModCount": 1,
+      "gameStartedByAgent": false,
+      "playerDataModifiedByDeployment": false
+    },
+    {
+      "loader": "Fabric",
+      "instance": "1.21.1-CCB",
+      "installed": "D:\\Myworld\\.minecraft\\versions\\1.21.1-CCB\\mods\\atomchat-Fabric-1.21.1-0.4.0-windows-x64.jar",
+      "sha256": "15fbd8bfe9a9885f0ba23d498f232650b0631923ff04568012d1ddb3950bb58a",
+      "bytes": 19261587,
+      "backup": "D:\\AtomChat-Backups\\2026-10-29-experimental-iris\\20261029-162329\\Fabric\\atomchat-Fabric-1.21.1-0.4.0-windows-x64.jar",
+      "backupSha256": "ffc917f1b7c1613d2b08782ba0f4e02f5bf6155515023c33a6719ade7705c578",
+      "otherFilesUnchanged": 73,
+      "atomchatModCount": 1,
+      "gameStartedByAgent": false,
+      "playerDataModifiedByDeployment": false
+    },
+    {
+      "loader": "NeoForge",
+      "instance": "Mechanomania-航空学",
+      "installed": "D:\\Myworld\\.minecraft\\versions\\Mechanomania-航空学\\mods\\atomchat-NeoForge-1.21.1-0.4.0-windows-x64.jar",
+      "sha256": "d86f3291082aed81d58027e7caba7bc44bf5fda0131f16820ad487dbca4d174c",
+      "bytes": 19252249,
+      "backup": "D:\\AtomChat-Backups\\2026-10-29-experimental-iris\\20261029-162329\\NeoForge\\atomchat-NeoForge-1.21.1-0.4.0-windows-x64.jar",
+      "backupSha256": "150593c92e116a92eb3b9196415e99510adc27a07c407b897e846149e7d37919",
+      "otherFilesUnchanged": 201,
+      "atomchatModCount": 1,
+      "gameStartedByAgent": false,
+      "playerDataModifiedByDeployment": false
+    }
+  ]
+}

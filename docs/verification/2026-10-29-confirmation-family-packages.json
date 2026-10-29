@@ -1,0 +1,59 @@
+{
+  "version": "0.4.0",
+  "sourceHead": "93f58a16a7e910adec2106891e13f717473680b2",
+  "sourceDirty": true,
+  "time": "2026-10-29T11:54:38.835027+08:00",
+  "sourceInputCount": 533,
+  "sourceFingerprint": "85fdfd00b007f46b02222b943c6950752a0eaf74824c54f9d4c0b9b6e436a0d9",
+  "packages": [
+    {
+      "target": "1.20.1-forge",
+      "platform": "windows-x64",
+      "path": "platforms/1.20.1-forge/build/libs/atomchat-Forge-1.20.1-0.4.0-windows-x64.jar",
+      "sha256": "46562cb6289dd110569b191c6b925ee8e7da94dce21c2538feb4245fc717507e",
+      "bytes": 19226642,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.21.1-fabric",
+      "platform": "windows-x64",
+      "path": "platforms/1.21.1-fabric/build/libs/atomchat-Fabric-1.21.1-0.4.0-windows-x64.jar",
+      "sha256": "341a73ca7e9eb3b40950096378f6736947a59023b07a7b2438a8491f0ce0210e",
+      "bytes": 19248505,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    },
+    {
+      "target": "1.21.1-neoforge",
+      "platform": "windows-x64",
+      "path": "platforms/1.21.1-neoforge/build/libs/atomchat-NeoForge-1.21.1-0.4.0-windows-x64.jar",
+      "sha256": "bb63475bd502efa5fa69f6f5ae77bb48a4c997c863901d234561a6310c9ca531",
+      "bytes": 19239300,
+      "version": "0.4.0",
+      "testCodeExcluded": true
+    }
+  ],
+  "tests": {
+    "1.20.1-forge": {
+      "tests": 1537,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 4
+    },
+    "1.21.1-fabric": {
+      "tests": 1549,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 4
+    },
+    "1.21.1-neoforge": {
+      "tests": 1537,
+      "failures": 0,
+      "errors": 0,
+      "skipped": 4
+    }
+  },
+  "status": "Colour-picker confirmation family, origin press recovery and fold heading icons verified offline; final in-game acceptance pending",
+  "nativeScope": "Windows x64 only; older ARM64/Linux candidates are not this correction"
+}

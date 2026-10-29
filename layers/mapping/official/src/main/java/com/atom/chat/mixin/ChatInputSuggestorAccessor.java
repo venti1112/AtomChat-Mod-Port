@@ -9,4 +9,9 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface ChatInputSuggestorAccessor {
     @Accessor("suggestions")
     CommandSuggestions.SuggestionsList atomchat$getSuggestions();
+    @Accessor("commandUsage")
+    java.util.List<net.minecraft.util.FormattedCharSequence> atomchat$getUsage();
+    @org.spongepowered.asm.mixin.Mutable
+    @Accessor("suggestionLineLimit")
+    void atomchat$setLineLimit(int limit);
 }

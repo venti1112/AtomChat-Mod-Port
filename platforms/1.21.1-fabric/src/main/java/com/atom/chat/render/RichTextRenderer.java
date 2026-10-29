@@ -241,14 +241,14 @@ public final class RichTextRenderer {
      * ARGB. Like vanilla's TextRenderer, a styled run replaces the RGB channels
      * of the fallback color while keeping its alpha.
      */
-    private static int effectiveColor(Style style, int fallbackColor) {
+    public static int effectiveColor(Style style, int fallbackColor) {
         if (style == null || style.getColor() == null) {
             return fallbackColor;
         }
         return (fallbackColor & 0xFF000000) | (style.getColor().getRgb() & 0xFFFFFF);
     }
 
-    private static void drawUnderline(Canvas canvas, Font font, float x, float baseline,
+    public static void drawUnderline(Canvas canvas, Font font, float x, float baseline,
                                       float width, int color) {
         FontMetrics metrics = font.getMetrics();
         Float underlinePos = metrics.getUnderlinePosition();

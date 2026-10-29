@@ -95,8 +95,8 @@ class ThemeServiceTest {
     // ------------------------------------------------------------- colour presets
 
     @Test
-    void eightColourPresetsShip() {
-        assertEquals(8, ThemeService.presets().length);
+    void twelveColourPresetsShip() {
+        assertEquals(12, ThemeService.presets().length);
         for (ThemeService.Preset preset : ThemeService.presets()) {
             assertEquals(preset, ThemeService.byId(preset.id()));
         }
@@ -111,31 +111,31 @@ class ThemeServiceTest {
     void eachColourPresetWritesItsSignatureFields() {
         AtomChatConfig c = new AtomChatConfig();
         ThemeService.apply(c, "minimal");
-        assertEquals(0xFF3B82F6, c.accentColor);
+        assertEquals(0xFF2563D8, c.accentColor);
         assertEquals(0xFFF7F8FA, c.panelBgColor);
-        assertEquals(0xFF1A1D21, c.textPrimaryColor);
+        assertEquals(0xFF151A22, c.textPrimaryColor);
         assertEquals(0xFFFFFFFF, c.cardColor);
 
         c = new AtomChatConfig();
         ThemeService.apply(c, "summer");
         assertEquals(0xFF84CC16, c.accentColor);
         assertEquals(0xFFFAFCF3, c.panelBgColor);
-        assertEquals(0xFF1F2937, c.textPrimaryColor);
+        assertEquals(0xFF192521, c.textPrimaryColor);
         assertEquals(0xFF84CC16, c.ownBubbleColor);
 
         c = new AtomChatConfig();
         ThemeService.apply(c, "elegant");
-        assertEquals(0xFFD97757, c.accentColor);
+        assertEquals(0xFFBD6043, c.accentColor);
         assertEquals(0xFFF5F0E8, c.panelBgColor);
         assertEquals(0xFFE8DDD0, c.cardColor);
-        assertEquals(0xFF3D3929, c.textPrimaryColor);
+        assertEquals(0xFF332E23, c.textPrimaryColor);
 
         c = new AtomChatConfig();
         ThemeService.apply(c, "raven");
         assertEquals(0xFFE3B341, c.accentColor);
         assertEquals(0xFF0D1117, c.panelBgColor);
         assertEquals(0xFF161B27, c.cardColor);
-        assertEquals(0xFFE6EDF3, c.textPrimaryColor);
+        assertEquals(0xFFF0F4F8, c.textPrimaryColor);
 
         c = new AtomChatConfig();
         ThemeService.apply(c, "hub");
@@ -148,17 +148,17 @@ class ThemeServiceTest {
 
         c = new AtomChatConfig();
         ThemeService.apply(c, "vivid");
-        assertEquals(0xFFE85A8A, c.accentColor);
+        assertEquals(0xFFCA3F70, c.accentColor);
         assertEquals(0xFFFDF0F4, c.panelBgColor);
         assertEquals(0xFFDEA6BE, c.otherBubbleColor);
-        assertEquals(0xFF3D2C35, c.textPrimaryColor);
+        assertEquals(0xFF36212B, c.textPrimaryColor);
 
         c = new AtomChatConfig();
         ThemeService.apply(c, "dusk");
         assertEquals(0xFFA78BFA, c.accentColor);
         assertEquals(0xFF232633, c.panelBgColor);
         assertEquals(0xFF2B2E3D, c.cardColor);
-        assertEquals(0xFFF2F3F7, c.textPrimaryColor);
+        assertEquals(0xFFF5F6FA, c.textPrimaryColor);
         assertEquals(0.88F, c.panelOpacity, 1e-6F);
         assertTrue(c.blurEnabled);
 
@@ -167,7 +167,7 @@ class ThemeServiceTest {
         assertEquals(0xFF5EEAD4, c.accentColor);
         assertEquals(0xFF0F2622, c.panelBgColor);
         assertEquals(0xFF16332D, c.cardColor);
-        assertEquals(0xFFEFFAF6, c.textPrimaryColor);
+        assertEquals(0xFFF3FCF8, c.textPrimaryColor);
         assertEquals(0.9F, c.panelOpacity, 1e-6F);
         assertTrue(c.blurEnabled);
     }
@@ -288,7 +288,7 @@ class ThemeServiceTest {
         assertEquals(0xFF112233, c.accentColor);
         // Re-picking the preset is the user asking for the snapshot back.
         ThemeService.apply(c, "elegant");
-        assertEquals(0xFFD97757, c.accentColor);
+        assertEquals(0xFFBD6043, c.accentColor);
     }
 
     /** An old config file (themeName empty) survives a Gson round trip with

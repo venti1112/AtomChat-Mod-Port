@@ -1,0 +1,7 @@
+{
+  "source": ".work\\experimental-iris\\user-video.mp4",
+  "sha256": "c109d58ccb44fa2788874a7b0e0b05ff047cf341aa4f7a6151e9968d0e4bb758",
+  "duration": 17.626377777777776,
+  "fps": 119.9906201185849,
+  "decoder": "PyAV libdav1d"
+}

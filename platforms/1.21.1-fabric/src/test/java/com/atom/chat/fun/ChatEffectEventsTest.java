@@ -69,4 +69,25 @@ class ChatEffectEventsTest {
    cfg.funEffectsEnabled=false;assertFalse(presentation.session().active(ChatEffectPresentation.nowMs()));
   } finally { presentation.close();cfg.funEffectsEnabled=fun;cfg.animationEnabled=motion; }
  }
+
+ @Test void experimentalTriggersUseTheVisibleFeedAndRemainIndependentOfEmojiSwitch() throws Exception {
+  var cfg=com.atom.chat.config.AtomChatConfig.get();
+  boolean previous=cfg.experimentalEffectsEnabled,fun=cfg.funEffectsEnabled,motion=cfg.animationEnabled;
+  cfg.experimentalEffectsEnabled=true;cfg.funEffectsEnabled=false;cfg.animationEnabled=true;
+  var visible=new java.util.concurrent.atomic.AtomicBoolean(true);
+  var presentation=new ChatEffectPresentation((m,p)->visible.get()&&p==null);
+  var field=ChatEffectPresentation.class.getDeclaredField("experimental");field.setAccessible(true);
+  presentation.install();var effects=(ExperimentalEffects)field.get(presentation);
+  var message=new ChatMessage(Text.literal("黑洞"),false,false,null,null,UUID.randomUUID(),"Alice","Alice","黑洞");
+  try(var surface=io.github.humbleui.skija.Surface.makeRasterN32Premul(16,16)) {
+   ChatEffectEvents.publish(message,PlayerRef.of(UUID.randomUUID(),"Background"));assertNull(effects.type());
+   ChatEffectEvents.publish(message);assertEquals(ExperimentalEffectType.GRAVITY,effects.type());
+   assertFalse(presentation.session().active(ChatEffectPresentation.nowMs()));
+   visible.set(false);presentation.renderExperimental(surface);assertNull(effects.type());
+   visible.set(true);ChatEffectEvents.publish(message);assertEquals(ExperimentalEffectType.GRAVITY,effects.type());
+   cfg.animationEnabled=false;presentation.renderExperimental(surface);assertNull(effects.type());
+   ChatEffectEvents.publish(message);assertNull(effects.type());
+  } finally {presentation.close();cfg.experimentalEffectsEnabled=previous;cfg.funEffectsEnabled=fun;cfg.animationEnabled=motion;}
+  ChatEffectEvents.publish(message);assertNull(effects.type());
+ }
 }

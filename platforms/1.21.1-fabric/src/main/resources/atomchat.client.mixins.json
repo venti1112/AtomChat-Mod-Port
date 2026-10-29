@@ -9,7 +9,8 @@
     "ChatHudMixin",
     "MessageHandlerMixin",
     "MouseHandlerAccessor",
-    "SuggestionWindowAccessor"
+    "SuggestionWindowAccessor",
+    "ComposerSuggestionAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

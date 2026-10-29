@@ -17,6 +17,36 @@
   ],
   "rules": [
     {
+      "yarn": "@org.spongepowered.asm.mixin.gen.Invoker(\"complete\")",
+      "official": "@org.spongepowered.asm.mixin.gen.Invoker(\"useSuggestion\")",
+      "note": "Completion window mapping verified from Minecraft 1.21.1 cached official sources and Yarn 1.21.1+build.3 API; also checked by all target builds.",
+      "literal": true
+    },
+    {
+      "yarn": "@Accessor(\"selection\")",
+      "official": "@Accessor(\"current\")",
+      "note": "Completion window mapping verified from Minecraft 1.21.1 cached official sources and Yarn 1.21.1+build.3 API; also checked by all target builds.",
+      "literal": true
+    },
+    {
+      "yarn": "@Accessor(\"inWindowIndex\")",
+      "official": "@Accessor(\"offset\")",
+      "note": "Completion window mapping verified from Minecraft 1.21.1 cached official sources and Yarn 1.21.1+build.3 API; also checked by all target builds.",
+      "literal": true
+    },
+    {
+      "yarn": "net.minecraft.text.OrderedText",
+      "official": "net.minecraft.util.FormattedCharSequence",
+      "note": "Completion window mapping verified from Minecraft 1.21.1 cached official sources and Yarn 1.21.1+build.3 API; also checked by all target builds.",
+      "literal": true
+    },
+    {
+      "yarn": "@Accessor(\"messages\")",
+      "official": "@Accessor(\"commandUsage\")",
+      "note": "Completion window mapping verified from Minecraft 1.21.1 cached official sources and Yarn 1.21.1+build.3 API; also checked by all target builds.",
+      "literal": true
+    },
+    {
       "yarn": "Text",
       "official": "Component",
       "note": "net.minecraft.text.Text ↔ net.minecraft.network.chat.Component"
@@ -579,6 +609,120 @@
       "yarn": "atomchat$getArea",
       "official": "atomchat$getRect",
       "note": "Suggestion window rectangle accessor already used by AtomChatSuggestor; Yarn area maps to official rect."
+    },
+    {
+      "yarn": "OrderedText",
+      "official": "FormattedCharSequence",
+      "literal": false,
+      "note": "Verified vanilla completion/input mapping from MinecraftDev 1.21.1 Yarn and 1.20.1/1.21.1 official sources; full receiver/declaration scope used for short methods and reflected field names."
+    },
+    {
+      "yarn": "renderTextProvider",
+      "official": "formatter",
+      "literal": false,
+      "note": "Verified vanilla completion/input mapping from MinecraftDev 1.21.1 Yarn and 1.20.1/1.21.1 official sources; full receiver/declaration scope used for short methods and reflected field names."
+    },
+    {
+      "yarn": "setCanLeave",
+      "official": "setAllowHiding",
+      "literal": false,
+      "note": "Verified vanilla completion/input mapping from MinecraftDev 1.21.1 Yarn and 1.20.1/1.21.1 official sources; full receiver/declaration scope used for short methods and reflected field names."
+    },
+    {
+      "yarn": "net.minecraft.client.gui.Element",
+      "official": "net.minecraft.client.gui.components.events.GuiEventListener",
+      "literal": true,
+      "note": "Verified vanilla completion/input mapping from MinecraftDev 1.21.1 Yarn and 1.20.1/1.21.1 official sources; full receiver/declaration scope used for short methods and reflected field names."
+    },
+    {
+      "yarn": "host.input().getText()",
+      "official": "host.input().getValue()",
+      "literal": true,
+      "note": "Verified vanilla completion/input mapping from MinecraftDev 1.21.1 Yarn and 1.20.1/1.21.1 official sources; full receiver/declaration scope used for short methods and reflected field names."
+    },
+    {
+      "yarn": "host.input().getCursor()",
+      "official": "host.input().getCursorPosition()",
+      "literal": true,
+      "note": "Verified vanilla completion/input mapping from MinecraftDev 1.21.1 Yarn and 1.20.1/1.21.1 official sources; full receiver/declaration scope used for short methods and reflected field names."
+    },
+    {
+      "yarn": "suggestor.refresh()",
+      "official": "suggestor.updateCommandInfo()",
+      "literal": true,
+      "note": "Verified vanilla completion/input mapping from MinecraftDev 1.21.1 Yarn and 1.20.1/1.21.1 official sources; full receiver/declaration scope used for short methods and reflected field names."
+    },
+    {
+      "yarn": "chatInputSuggestor.refresh()",
+      "official": "chatInputSuggestor.updateCommandInfo()",
+      "literal": true,
+      "note": "Verified vanilla completion/input mapping from MinecraftDev 1.21.1 Yarn and 1.20.1/1.21.1 official sources; full receiver/declaration scope used for short methods and reflected field names."
+    },
+    {
+      "yarn": "@Override public void refresh() { refreshes++; }",
+      "official": "@Override public void updateCommandInfo() { refreshes++; }",
+      "literal": true,
+      "note": "Verified vanilla completion/input mapping from MinecraftDev 1.21.1 Yarn and 1.20.1/1.21.1 official sources; full receiver/declaration scope used for short methods and reflected field names."
+    },
+    {
+      "yarn": "@Override public void show(boolean narration) { shows++; }",
+      "official": "@Override public void showSuggestions(boolean narration) { shows++; }",
+      "literal": true,
+      "note": "Verified vanilla completion/input mapping from MinecraftDev 1.21.1 Yarn and 1.20.1/1.21.1 official sources; full receiver/declaration scope used for short methods and reflected field names."
+    },
+    {
+      "yarn": "engine.setCanLeave(true)",
+      "official": "engine.setAllowHiding(true)",
+      "literal": true,
+      "note": "Verified vanilla completion/input mapping from MinecraftDev 1.21.1 Yarn and 1.20.1/1.21.1 official sources; full receiver/declaration scope used for short methods and reflected field names."
+    },
+    {
+      "yarn": "net.minecraft.text.Texts.toText",
+      "official": "net.minecraft.network.chat.ComponentUtils.fromMessage",
+      "literal": true,
+      "note": "Verified vanilla completion/input mapping from MinecraftDev 1.21.1 Yarn and 1.20.1/1.21.1 official sources; full receiver/declaration scope used for short methods and reflected field names."
+    },
+    {
+      "yarn": "context.drawTooltip(hostFont(),",
+      "official": "context.renderTooltip(hostFont(),",
+      "literal": true,
+      "note": "Verified vanilla completion/input mapping from MinecraftDev 1.21.1 Yarn and 1.20.1/1.21.1 official sources; full receiver/declaration scope used for short methods and reflected field names."
+    },
+    {
+      "yarn": "TextFieldWidget.class,\"text\"",
+      "official": "EditBox.class,\"value\"",
+      "literal": true,
+      "note": "Verified vanilla completion/input mapping from MinecraftDev 1.21.1 Yarn and 1.20.1/1.21.1 official sources; full receiver/declaration scope used for short methods and reflected field names."
+    },
+    {
+      "yarn": "TextFieldWidget.class,\"selectionStart\"",
+      "official": "EditBox.class,\"cursorPos\"",
+      "literal": true,
+      "note": "Verified vanilla completion/input mapping from MinecraftDev 1.21.1 Yarn and 1.20.1/1.21.1 official sources; full receiver/declaration scope used for short methods and reflected field names."
+    },
+    {
+      "yarn": "ChatInputSuggestor.class,\"owner\"",
+      "official": "CommandSuggestions.class,\"screen\"",
+      "literal": true,
+      "note": "Verified vanilla completion/input mapping from MinecraftDev 1.21.1 Yarn and 1.20.1/1.21.1 official sources; full receiver/declaration scope used for short methods and reflected field names."
+    },
+    {
+      "yarn": "ChatInputSuggestor.class,\"textField\"",
+      "official": "CommandSuggestions.class,\"input\"",
+      "literal": true,
+      "note": "Verified vanilla completion/input mapping from MinecraftDev 1.21.1 Yarn and 1.20.1/1.21.1 official sources; full receiver/declaration scope used for short methods and reflected field names."
+    },
+    {
+      "yarn": "ChatInputSuggestor.class,\"parse\"",
+      "official": "CommandSuggestions.class,\"currentParse\"",
+      "literal": true,
+      "note": "Verified vanilla completion/input mapping from MinecraftDev 1.21.1 Yarn and 1.20.1/1.21.1 official sources; full receiver/declaration scope used for short methods and reflected field names."
+    },
+    {
+      "yarn": "getDeclaredMethod(\"provideRenderText\",",
+      "official": "getDeclaredMethod(\"formatChat\",",
+      "literal": true,
+      "note": "Verified vanilla completion/input mapping from MinecraftDev 1.21.1 Yarn and 1.20.1/1.21.1 official sources; full receiver/declaration scope used for short methods and reflected field names."
     }
   ]
 }
