@@ -107,7 +107,7 @@ public final class SkiaSupport {
     static String unavailableLine(String os, String arch, String reason) {
         return "Skija natives unavailable on " + text(os) + "/" + text(arch) + " (" + text(reason)
                 + "): the AtomChat panel stays disabled and vanilla chat is unchanged. "
-                + "Available native packages: Windows x64 and Linux x64 only; macOS/ARM64 are not packaged. "
+                + "Available native packages: Windows x64/ARM64 and Linux x64/ARM64 only; macOS is not packaged. "
                 + "Linux also needs EGL/GL system libraries.";
     }
 

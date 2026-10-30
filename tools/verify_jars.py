@@ -11,6 +11,7 @@
 用法：
     python3 tools/verify_jars.py --platform windows-x64 platforms/1.21.1-fabric
     python3 tools/verify_jars.py --platform linux-x64 platforms/1.21.1-fabric
+    python3 tools/verify_jars.py --platform linux-arm64 platforms/1.21.1-fabric
 
 取件规则与 CI 里那一步完全一致（不要 `-sources`、不要 `-slim`），并且**必须恰好一个**：
 产物名有歧义时宁可红，也不要挑一个自己觉得对的。
@@ -30,7 +31,7 @@ NESTED_PREFIXES = ("META-INF/jars/", "META-INF/jarjar/")
 SHADED = "com/atom/chat/shaded/flatlaf/"
 PLAIN = b"com/formdev/flatlaf"
 MODULE_NAME = "Automatic-Module-Name: com.atom.chat.shaded.flatlaf"
-PLATFORMS = ("windows-x64", "windows-arm64", "linux-x64")
+PLATFORMS = ("windows-x64", "windows-arm64", "linux-x64", "linux-arm64")
 
 failures = []
 
@@ -150,11 +151,12 @@ def verify(project, platform="windows-x64"):
                 library_path = resource + ('skija.dll' if platform.startswith('windows-') else 'libskija.so')
                 check(f"{project}: 原生包含 {extension} 库",
                       library_path in native_jar.namelist())
-                if platform == 'linux-x64' and library_path in native_jar.namelist():
+                if platform.startswith('linux-') and library_path in native_jar.namelist():
                     content = native_jar.read(library_path)
+                    expected = 183 if platform == 'linux-arm64' else 62
                     elf_ok = (len(content) >= 20 and content[:6] == b'\x7fELF\x02\x01'
-                              and struct.unpack_from('<H', content, 18)[0] == 62)
-                    check(f"{project}: ELF 架构", elf_ok, library_path)
+                              and struct.unpack_from('<H', content, 18)[0] == expected)
+                    check(f"{project}: ELF 架构", elf_ok, f"{library_path}, expected={expected}")
                 if platform.startswith('windows-'):
                     dlls = [n for n in native_jar.namelist() if n.endswith('.dll')]
                     for dll in dlls:
