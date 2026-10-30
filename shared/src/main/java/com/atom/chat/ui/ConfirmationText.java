@@ -16,7 +16,10 @@ record ConfirmationText(float size,float lineHeight,List<String> lines) {
         font=FontManager.font(size);
         var lines=new ArrayList<String>();
         for(String paragraph:text.split("\n",-1)) {
-            var wrapped=SkiaFontRenderer.wrapWords(font,paragraph,width);
+            // Linear metrics report 1em as 13.750076px, so a line the design
+            // fits exactly measures a hairline over the box; wrapping it would
+            // strand a glyph on a third line. Sub-pixel slack, not a wider box.
+            var wrapped=SkiaFontRenderer.wrapWords(font,paragraph,width+.05F);
             if(wrapped.size()>1) {
                 int last=wrapped.size()-1;String tail=wrapped.get(last),previous=wrapped.get(last-1);
                 if(tail.codePointCount(0,tail.length())==1&&!previous.isEmpty()
