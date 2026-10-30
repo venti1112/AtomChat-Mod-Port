@@ -60,7 +60,8 @@ def artifact(path, natives, prefix='META-INF/jars/', include_types=True, registe
         extension = 'dll' if native.startswith('windows-') else 'so'
         native_path = prefix + 'skija-' + native + '-' + native_version + '.jar'
         content = pe(machine if machine is not None else
-                     (0xAA64 if native == 'windows-arm64' else 0x8664)) if extension == 'dll' else (linux_bytes or elf())
+                     (0xAA64 if native == 'windows-arm64' else 0x8664)) if extension == 'dll' \
+            else (linux_bytes or elf(183 if native == 'linux-arm64' else 62))
         resource = 'io/github/humbleui/skija/' + native.replace('-', '/') + '/'
         entries[native_path] = archive({
             resource + ('skija.dll' if extension == 'dll' else 'libskija.so'): content,
@@ -89,7 +90,7 @@ class ArtifactVariantsTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             for loader, prefix in [('Fabric', 'META-INF/jars/'), ('NeoForge', 'META-INF/jarjar/'),
                                    ('Forge', 'META-INF/jarjar/')]:
-                for platform in ['windows-x64', 'windows-arm64', 'linux-x64']:
+                for platform in ['windows-x64', 'windows-arm64', 'linux-x64', 'linux-arm64']:
                     with self.subTest(loader=loader, platform=platform):
                         jar = Path(tmp) / f'atomchat-{loader}-0.3.2-{platform}.jar'
                         artifact(jar, [platform], prefix)
@@ -113,7 +114,8 @@ class ArtifactVariantsTest(unittest.TestCase):
             artifact(project / 'build/linux-x64/libs/atomchat-linux-x64.jar', ['linux-x64'])
             artifact(project / 'build/linux-x64/libs/atomchat-linux-x64-slim.jar', [])
             artifact(project / 'build/linux-x64/libs/atomchat-linux-x64-sources.jar', [])
-            for platform in ['windows-x64', 'windows-arm64', 'linux-x64']:
+            artifact(project / 'build/linux-arm64/libs/atomchat-linux-arm64.jar', ['linux-arm64'])
+            for platform in ['windows-x64', 'windows-arm64', 'linux-x64', 'linux-arm64']:
                 result = self.run_verifier(platform, project)
                 self.assertEqual(0, result.returncode, result.stdout + result.stderr)
             artifact(project / 'build/linux-x64/libs/old-linux-x64.jar', ['linux-x64'])
@@ -124,7 +126,8 @@ class ArtifactVariantsTest(unittest.TestCase):
             for platform, name in [('linux-x64', 'atomchat.jar'),
                                    ('windows-x64', 'atomchat.jar'),
                                    ('windows-x64', 'atomchat-linux-x64.jar'),
-                                   ('windows-arm64', 'atomchat-windows-x64.jar')]:
+                                   ('windows-arm64', 'atomchat-windows-x64.jar'),
+                                   ('linux-arm64', 'atomchat-linux-x64.jar')]:
                 jar = Path(tmp) / name
                 artifact(jar, [platform])
                 self.assertEqual(1, self.run_verifier(platform, jar).returncode)
@@ -183,6 +186,14 @@ class ArtifactVariantsTest(unittest.TestCase):
                 result = self.run_verifier('linux-x64', jar)
                 self.assertEqual(1, result.returncode, result.stdout + result.stderr)
                 self.assertIn('ELF 架构', result.stdout)
+
+    def test_x64_elf_hidden_inside_arm64_native_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            jar = Path(tmp) / 'atomchat-linux-arm64.jar'
+            artifact(jar, ['linux-arm64'], linux_bytes=elf(62))
+            result = self.run_verifier('linux-arm64', jar)
+            self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+            self.assertIn('ELF 架构', result.stdout)
 
     def test_unregistered_fabric_native_is_rejected(self):
         with tempfile.TemporaryDirectory() as tmp:
