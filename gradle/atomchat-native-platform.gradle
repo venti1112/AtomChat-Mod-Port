@@ -1,8 +1,8 @@
 // Each invocation builds one OS/architecture variant; cross-builds still test
 // with the native for the JVM running Gradle, not the target artifact's native.
 def platform = providers.gradleProperty('atomchat.nativePlatform').getOrElse('windows-x64')
-if (!(platform in ['windows-x64', 'windows-arm64', 'linux-x64'])) {
-    throw new GradleException("atomchat.nativePlatform must be windows-x64, windows-arm64 or linux-x64, got ${platform}")
+if (!(platform in ['windows-x64', 'windows-arm64', 'linux-x64', 'linux-arm64'])) {
+    throw new GradleException("atomchat.nativePlatform must be windows-x64, windows-arm64, linux-x64 or linux-arm64, got ${platform}")
 }
 ext.atomchatNativePlatform = platform
 ext.atomchatNativeArtifact = "skija-${platform}".toString()
