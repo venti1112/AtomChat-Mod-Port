@@ -102,6 +102,11 @@ public final class FontManager {
             return cached;
         }
         Font font = new Font(getDefaultTypeface(), size);
+        // Linear advances, like the Windows backend: hinted metrics round a
+        // 13.75px glyph up to 14px on Linux, so copy fitted to an approved
+        // layout wraps a line wider here and only here. Measure and draw share
+        // this Font, so both use the same advances.
+        font.setMetricsLinear(true);
         if (usingFallbackTypeface) {
             font.setEmboldened(true);
         }
@@ -124,10 +129,12 @@ public final class FontManager {
         Typeface bold = getBoldTypeface();
         if (bold != null) {
             Font font = new Font(bold, size);
+            font.setMetricsLinear(true);
             BOLD_CACHE.put(key, font);
             return font;
         }
         Font font = new Font(getDefaultTypeface(), size);
+        font.setMetricsLinear(true);
         font.setEmboldened(true);
         BOLD_CACHE.put(key, font);
         return font;

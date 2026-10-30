@@ -549,6 +549,7 @@ public final class SkiaFontRenderer {
                 }
                 if (match != null) {
                     resolved = new Font(match, primary.getSize());
+                    resolved.setMetricsLinear(primary.areMetricsLinear());
                 }
             }
         } catch (Throwable t) {
