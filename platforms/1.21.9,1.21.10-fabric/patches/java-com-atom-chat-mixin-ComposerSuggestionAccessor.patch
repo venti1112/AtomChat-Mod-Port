@@ -1,0 +1,21 @@
+diff --git a/src/main/java/com/atom/chat/mixin/ComposerSuggestionAccessor.java b/src/main/java/com/atom/chat/mixin/ComposerSuggestionAccessor.java
+index e2f2d4b..cea418d 100644
+--- a/src/main/java/com/atom/chat/mixin/ComposerSuggestionAccessor.java
++++ b/src/main/java/com/atom/chat/mixin/ComposerSuggestionAccessor.java
+@@ -1,15 +1,13 @@
+ package com.atom.chat.mixin;
+ 
+ import net.minecraft.client.gui.widget.TextFieldWidget;
+-import net.minecraft.text.OrderedText;
+ import org.spongepowered.asm.mixin.Mixin;
+ import org.spongepowered.asm.mixin.gen.Accessor;
+-import java.util.function.BiFunction;
+ 
+ /** Read the native completion presentation without calculating a second suffix or parser. */
+ @Mixin(TextFieldWidget.class)
+ public interface ComposerSuggestionAccessor {
+     @Accessor("suggestion") String atomchat$getSuffix();
+     @Accessor("maxLength") int atomchat$getMaxLength();
+-    @Accessor("renderTextProvider") BiFunction<String,Integer,OrderedText> atomchat$getFormatter();
++    @Accessor("formatters") java.util.List<TextFieldWidget.Formatter> atomchat$getFormatters();
+ }

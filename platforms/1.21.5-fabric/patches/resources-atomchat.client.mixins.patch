@@ -1,4 +1,5 @@
 diff --git a/src/main/resources/atomchat.client.mixins.json b/src/main/resources/atomchat.client.mixins.json
+index ca8ccaa..debdc92 100644
 --- a/src/main/resources/atomchat.client.mixins.json
 +++ b/src/main/resources/atomchat.client.mixins.json
 @@ -8,6 +8,8 @@
@@ -8,5 +9,5 @@ diff --git a/src/main/resources/atomchat.client.mixins.json b/src/main/resources
 +    "RenderPhaseTargetMixin",
 +    "GlResourceManagerAccessor",
      "MouseHandlerAccessor",
-     "SuggestionWindowAccessor"
-   ],
+     "SuggestionWindowAccessor",
+     "ComposerSuggestionAccessor"

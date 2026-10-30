@@ -258,6 +258,13 @@ public class SkiaGraphics {
         return context;
     }
 
+    public Surface requireSurface() {
+        if (surface == null) {
+            throw new IllegalStateException("Surface not created");
+        }
+        return surface;
+    }
+
     /** The borrowed world image is per-frame; nothing survives the frame. */
     public void releaseWorldSnapshot() {
     }

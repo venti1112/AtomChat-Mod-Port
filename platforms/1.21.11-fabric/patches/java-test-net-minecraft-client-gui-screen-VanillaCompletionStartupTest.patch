@@ -1,0 +1,24 @@
+diff --git a/src/test/java/net/minecraft/client/gui/screen/VanillaCompletionStartupTest.java b/src/test/java/net/minecraft/client/gui/screen/VanillaCompletionStartupTest.java
+index e30cf4e..283b786 100644
+--- a/src/test/java/net/minecraft/client/gui/screen/VanillaCompletionStartupTest.java
++++ b/src/test/java/net/minecraft/client/gui/screen/VanillaCompletionStartupTest.java
+@@ -33,7 +33,8 @@ class VanillaCompletionStartupTest {
+         public int atomchat$getMaxLength() {return (Integer)read(this,TextFieldWidget.class,"maxLength");}
+         public String atomchat$getSuffix() { return (String)read(this,TextFieldWidget.class,"suggestion"); }
+         @SuppressWarnings("unchecked") public java.util.function.BiFunction<String,Integer,OrderedText> atomchat$getFormatter() {
+-            return (java.util.function.BiFunction<String,Integer,OrderedText>)read(this,TextFieldWidget.class,"renderTextProvider");
++            var formatters=(java.util.List<TextFieldWidget.Formatter>)read(this,TextFieldWidget.class,"formatters");
++            return formatters==null||formatters.isEmpty()?null:formatters.get(formatters.size()-1)::format;
+         }
+     }
+     private static Object read(Object owner,Class<?> type,String name) {
+@@ -126,7 +127,8 @@ class VanillaCompletionStartupTest {
+         java.util.function.BiFunction<String,Integer,OrderedText> provider=(part,offset)->{
+             try {return (OrderedText)format.invoke(engine,part,offset);} catch(Exception e) {throw new AssertionError(e);}
+         };
+-        put(input,TextFieldWidget.class,"renderTextProvider",provider);
++        var formatters=new java.util.ArrayList<TextFieldWidget.Formatter>();formatters.add(provider::apply);
++        put(input,TextFieldWidget.class,"formatters",formatters);
+         for(String line:List.of("/help 2","/help §c2")) {
+             var reader=new com.mojang.brigadier.StringReader(line);reader.skip();
+             put(engine,ChatInputSuggestor.class,"parse",dispatcher.parse(reader,new Object()));

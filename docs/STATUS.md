@@ -1,6 +1,6 @@
 # AtomChat 当前状态
 
-> 截至 2026-10-29。这里只维护当前快照，提交及推送事实以 Git 查询为准。
+> 截至 2026-10-30。这里只维护当前快照，提交及推送事实以 Git 查询为准。
 
 ## 当前交付：0.4.0 续开发已验收
 
@@ -57,6 +57,14 @@
 - 最终完整 `test build`：Forge 1526／Fabric 1538／NeoForge 1526，失败与错误均 0，各 4 项跳过；Windows x64 新包已备份部署三实例，源码指纹及安装哈希见 [返工证据](verification/2026-10-28-ui-corrections.md)。ARM64／Linux 未更新。
 - CCB 带状态 JFR 捕获到 Emoji 开关慢帧，独立动态缩放 GL 探针复现字形生成／提交开销；共享 Emoji 字形缓存已通过像素、容量与缩放回归。最终新包在 CCB 的开关、稳定帧率和观感仍待用户实测。
 - 早期独立审查问题已修；本轮最新补全／缓存修改的独立复审因 429 未完成，不能当作审查通过。代理未启动或关闭游戏，未提交／推送／发布。
+
+## 上游 28fd6de 同步（2026-10-30）
+
+- 用 rebase 把本地四个移植提交重放到上游 `28fd6de`，重新签名，未暂存／提交／推送。`shared/PLATFORM-SEAMS.md` 与 `docs/STATUS.md` 的冲突按生成物重跑与时间顺序合并，后者由 `tools/gen_seams.py` 重新生成为甲 164／乙 86。
+- 上游改了基础平台 29 个文件、shared 46 个文件：新增点击反馈、确认弹窗、候选弹层与输入栏工具族群，`SuggestorWiring` 的候选点击改为直接窗口命中，新增 `ComposerSuggestionAccessor` 与 `VanillaCompletionStartupTest`。五个增量目标（1.21.5／1.21.6,1.21.7／1.21.8／1.21.9,1.21.10／1.21.11）的 15 个补丁按三方合并重生成（`AtomChatScreen`、`SuggestorWiring`、mixins 清单），全部可应用。
+- 上游新增的渲染入口 `SkiaGraphics.requireSurface()` 由五个目标的本地渲染桥补齐；1.21.9+ 的 authlib 6 把 `GameProfile` 变成 record，`AtomChatScreen` 补丁把 `getProfile().getId()/getName()` 改成 `id()/name()`；1.21.9+ 的原版补全把 `TextFieldWidget.renderTextProvider` 换成 `formatters` 列表 + `addFormatter`，两个目标的 `ComposerSuggestionAccessor`、`SuggestorWiring` 与 `VanillaCompletionStartupTest` 各加一份差异补丁。
+- `ConfirmationPickerFamilyTest` 在 Linux 失败是字体度量平台差异：共享 `FontManager` 用 hinted 度量时 13.75px 字形的步进取整成 14px，上游按 Windows 后端验收的两行文案在 Linux 上多折一行。改为在 `FontManager` 的常规／粗体／回退字形上开 `setMetricsLinear(true)`，让量宽与绘制使用同一份线性步进；`ConfirmationText` 折行留 0.05px 亚像素余量（线性度量下 1em 实测 13.750076px，16 字 220.00122 略超 220）。Windows 行为不变。
+- 十个有工程的目标 `test build` 全绿：Fabric 八端各 1563 项、NeoForge 1.21.1 与 Forge 1.20.1 各 1551 项，失败／错误 0、各 8 项跳过。`verify_targets`、seams 164／86、孪生 77 对（未归类／陈旧 0）、日志 1111 出口 0 违规、裸值基线收紧到 458、`verify_jars` 十端通过，`tools` 自测全绿。未跑 Windows GL 或实机复测。
 
 ## 目标命名与 CI 范围（2026-10-29）
 

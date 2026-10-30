@@ -1,8 +1,8 @@
 diff --git a/src/main/java/net/minecraft/client/gui/screen/AtomChatScreen.java b/src/main/java/net/minecraft/client/gui/screen/AtomChatScreen.java
-index bf1ab8e..f80b615 100644
+index ad543f3..03edfc8 100644
 --- a/src/main/java/net/minecraft/client/gui/screen/AtomChatScreen.java
 +++ b/src/main/java/net/minecraft/client/gui/screen/AtomChatScreen.java
-@@ -1956,11 +1956,9 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+@@ -2014,11 +2014,9 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
              this.client.setScreen(null);
              return;
          }
@@ -17,7 +17,7 @@ index bf1ab8e..f80b615 100644
          blurDrawnThisFrame = false;
          boolean blurWanted = AtomChatConfig.get().blurEnabled && !WallpaperStore.isSet();
          if (blurWanted) {
-@@ -1976,12 +1974,10 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+@@ -2034,12 +2032,10 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
                      // The capture rect must be the rect drawPhone paints: the
                      // inset panel rect carried through the same open transform
                      // (zoom around the panel centre, then the slide offset).
@@ -32,7 +32,7 @@ index bf1ab8e..f80b615 100644
                              capture.x(), capture.y(), capture.w(), capture.h(), capture.radius(),
                              panelProgress);
                  } catch (Throwable t) {
-@@ -2001,7 +1997,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+@@ -2059,7 +2055,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
          // No super.render: ChatScreen/Screen would draw the vanilla input box and
          // widget chrome; our UI is fully Skia-drawn, the suggestor renders explicitly.
          Runnable blurPreUi = preUi;
@@ -40,8 +40,8 @@ index bf1ab8e..f80b615 100644
 +        graphics.draw(context, () -> {
              if (blurPreUi != null) blurPreUi.run();
              com.atom.chat.render.ItemIconRenderer.prepare(context, graphics);
-         }, uiDensity(), (canvas, worldSnapshot) -> drawPhone(canvas, worldSnapshot, mouseX, mouseY, delta));
-@@ -2401,15 +2397,16 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+         }, uiDensity(), (canvas, worldSnapshot) -> {
+@@ -2499,15 +2495,16 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
                  canvas.restore();
              }
          } else {

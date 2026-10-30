@@ -1,5 +1,5 @@
 diff --git a/src/main/java/net/minecraft/client/gui/screen/AtomChatScreen.java b/src/main/java/net/minecraft/client/gui/screen/AtomChatScreen.java
-index bf1ab8e..01d710c 100644
+index ad543f3..2457977 100644
 --- a/src/main/java/net/minecraft/client/gui/screen/AtomChatScreen.java
 +++ b/src/main/java/net/minecraft/client/gui/screen/AtomChatScreen.java
 @@ -102,10 +102,17 @@ import io.github.humbleui.types.Rect;
@@ -30,7 +30,7 @@ index bf1ab8e..01d710c 100644
          }
  
          @Override
-@@ -581,8 +589,9 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+@@ -595,8 +603,9 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
                  boolean covered = available && suggestorWiring.hovered(x, y);
                  if (!available) return false;
                  if (covered) return suggestorWiring.mouseClicked((int) x, (int) y, button);
@@ -41,7 +41,7 @@ index bf1ab8e..01d710c 100644
                          setFocused(child);
                          foreignPointerHeld = true;
                          foreignPointerButton = button;
-@@ -600,8 +609,9 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+@@ -614,8 +623,9 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
              }
              @Override public boolean onDrag(double x, double y, int button, double dx, double dy) {
                  if (!foreignPointerHeld || button != foreignPointerButton) return false;
@@ -52,7 +52,7 @@ index bf1ab8e..01d710c 100644
                  }
                  return true;
              }
-@@ -609,8 +619,9 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+@@ -623,8 +633,9 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
                  if (!foreignPointerHeld || button != foreignPointerButton) return false;
                  foreignPointerHeld = false;
                  foreignPointerButton = -1;
@@ -63,7 +63,16 @@ index bf1ab8e..01d710c 100644
                  }
                  return true;
              }
-@@ -1279,8 +1290,8 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+@@ -655,7 +666,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+         public String clipboard() { return client.keyboard.getClipboard(); }
+         public java.util.List<PlayerRef> onlinePlayers() {
+             if (client.getNetworkHandler() == null) return java.util.List.of();
+-            return client.getNetworkHandler().getPlayerList().stream().map(p -> PlayerRef.of(p.getProfile().getId(), p.getProfile().getName())).toList();
++            return client.getNetworkHandler().getPlayerList().stream().map(p -> PlayerRef.of(p.getProfile().id(), p.getProfile().name())).toList();
+         }
+         public void mention(PlayerRef player) { composer.insert("@" + player.realName() + " "); }
+         public String composerText() { return composer.text(); }
+@@ -1336,8 +1347,8 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
              }
              java.util.List<ContextMenuActions.OnlinePlayer> out = new java.util.ArrayList<>();
              for (PlayerListEntry entry : client.getNetworkHandler().getPlayerList()) {
@@ -74,7 +83,7 @@ index bf1ab8e..01d710c 100644
              }
              return out;
          }
-@@ -1555,7 +1566,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+@@ -1612,7 +1623,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
      }
  
      public AtomChatScreen(String originalChatText, AtomChatOpenMode mode) {
@@ -83,7 +92,7 @@ index bf1ab8e..01d710c 100644
          this.originalChatText = originalChatText;
          // Screen objects are constructed fresh on every open (init() re-runs on
          // resize), so this is the right hook for picking up hand-edited config
-@@ -1614,7 +1625,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+@@ -1671,7 +1682,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
      }
  
      private boolean isVanillaChatKey(int keyCode, int scanCode) {
@@ -92,7 +101,7 @@ index bf1ab8e..01d710c 100644
      }
  
      /** Filter button: the back button's recipe, one slot to its right. */
-@@ -1956,11 +1967,9 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+@@ -2014,11 +2025,9 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
              this.client.setScreen(null);
              return;
          }
@@ -107,7 +116,7 @@ index bf1ab8e..01d710c 100644
          blurDrawnThisFrame = false;
          boolean blurWanted = AtomChatConfig.get().blurEnabled && !WallpaperStore.isSet();
          if (blurWanted) {
-@@ -1976,12 +1985,10 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+@@ -2034,12 +2043,10 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
                      // The capture rect must be the rect drawPhone paints: the
                      // inset panel rect carried through the same open transform
                      // (zoom around the panel centre, then the slide offset).
@@ -122,7 +131,7 @@ index bf1ab8e..01d710c 100644
                              capture.x(), capture.y(), capture.w(), capture.h(), capture.radius(),
                              panelProgress);
                  } catch (Throwable t) {
-@@ -2001,7 +2008,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+@@ -2059,7 +2066,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
          // No super.render: ChatScreen/Screen would draw the vanilla input box and
          // widget chrome; our UI is fully Skia-drawn, the suggestor renders explicitly.
          Runnable blurPreUi = preUi;
@@ -130,8 +139,8 @@ index bf1ab8e..01d710c 100644
 +        graphics.draw(context, () -> {
              if (blurPreUi != null) blurPreUi.run();
              com.atom.chat.render.ItemIconRenderer.prepare(context, graphics);
-         }, uiDensity(), (canvas, worldSnapshot) -> drawPhone(canvas, worldSnapshot, mouseX, mouseY, delta));
-@@ -2401,15 +2408,16 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+         }, uiDensity(), (canvas, worldSnapshot) -> {
+@@ -2499,15 +2506,16 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
                  canvas.restore();
              }
          } else {
@@ -157,7 +166,7 @@ index bf1ab8e..01d710c 100644
                      AtomChatConfig.get().panelBgColor, AtomChatConfig.get().panelOpacity);
              try (Paint bg = new Paint().setColor(tint)) {
                  canvas.drawRRect(RRect.makeXYWH(innerX, innerY, innerW, innerH, innerRadius), bg);
-@@ -3006,7 +3014,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+@@ -3114,7 +3122,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
      private void pickEmoteFile() {
          KeyBinding.unpressAll();
          if (this.client.mouse != null) {
@@ -166,7 +175,7 @@ index bf1ab8e..01d710c 100644
          }
          emojiWiring.pickEmoteFile();
      }
-@@ -3042,7 +3050,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+@@ -3150,7 +3158,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
              net.minecraft.client.network.PlayerListEntry entry =
                      client.getNetworkHandler().getPlayerListEntry(uuid);
              if (entry != null) {
@@ -175,7 +184,7 @@ index bf1ab8e..01d710c 100644
              }
          }
          return uuid.toString();
-@@ -3067,7 +3075,10 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+@@ -3175,7 +3183,10 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
      }
  
      @Override
@@ -187,8 +196,8 @@ index bf1ab8e..01d710c 100644
          // Completes the input trio next to keyPressed:/charTyped:. The whole UI is
          // Skia-drawn, so without this line a "the button does nothing" report has
          // no way to tell "the click never arrived" from "it arrived somewhere
-@@ -3085,47 +3096,53 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
-         try {
+@@ -3196,47 +3207,53 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+                 clickRipples.click(toVirtualX(mouseX), toVirtualY(mouseY));
              Boolean direct = gate.click(mouseX, mouseY, button);
              if (direct != null) return direct;
 -            return super.mouseClicked(mouseX, mouseY, button);
@@ -252,7 +261,7 @@ index bf1ab8e..01d710c 100644
      }
  
  
-@@ -3134,7 +3151,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+@@ -3245,7 +3262,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
          // the UI does not think the image button is still pressed when it returns.
          KeyBinding.unpressAll();
          if (this.client.mouse != null) {
@@ -261,7 +270,7 @@ index bf1ab8e..01d710c 100644
          }
          Thread worker = new Thread(() -> {
              Path file = FilePicker.pickImage(this::suppressAutoIconify, this::restoreAutoIconify);
-@@ -4041,7 +4058,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+@@ -4149,7 +4166,7 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
                  // map the virtual point to a text index ourselves (the hidden
                  // EditBox geometry is caret-shifted and single-line, useless here).
                  int idx = composerPointer.caretIndexAt(layout, (float) mx, (float) my);
@@ -270,7 +279,7 @@ index bf1ab8e..01d710c 100644
                      chatField.setSelectionEnd(idx);
                  } else {
                      composerPointer.setDragAnchor(idx);
-@@ -4223,6 +4240,15 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
+@@ -4331,6 +4348,15 @@ public final class AtomChatScreen extends ChatScreen implements PageHost, Notifi
              return false;
          }
  
