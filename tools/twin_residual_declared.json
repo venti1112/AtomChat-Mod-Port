@@ -304,6 +304,171 @@
         "sample_a": "        wiring.install(null,owner,null,\"/he\");",
         "sample_b": "        wiring.install(null,owner,null);"
       }
+    ],
+    "src/main/java/com/atom/chat/render/SkiaGraphics.java": [
+      {
+        "fingerprint": "5ba93c9db0cf",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "",
+        "sample_b": ""
+      },
+      {
+        "fingerprint": "b563422bcf5e",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "",
+        "sample_b": "    private static ShaderInstance compositeShader;"
+      },
+      {
+        "fingerprint": "aaa5c60f4335",
+        "kind": "comment",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "     * Reserved for the panel background blur. Currently always null — see",
+        "sample_b": "     * How the panel reaches the screen."
+      },
+      {
+        "fingerprint": "8d66e35fbc5a",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "",
+        "sample_b": "    private enum Backend { GL, RASTER }"
+      },
+      {
+        "fingerprint": "6783340a4e7f",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "        if (context == null) {",
+        "sample_b": "        var fb = Minecraft.getInstance().getFramebuffer();"
+      },
+      {
+        "fingerprint": "cb0eaeb59896",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "",
+        "sample_b": "        lastFrameBufferId = frameBufferId;"
+      },
+      {
+        "fingerprint": "1662be84d209",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "",
+        "sample_b": ""
+      },
+      {
+        "fingerprint": "645ffb5917a4",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "        lastFrameBufferId = frameBufferId;",
+        "sample_b": ""
+      },
+      {
+        "fingerprint": "5e88d82dfe0f",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "",
+        "sample_b": "    }"
+      },
+      {
+        "fingerprint": "625ee332dc40",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "            if (context == null || surface == null || canvas == null || surfaceDirty) {",
+        "sample_b": "            if (surface == null || canvas == null || surfaceDirty) {"
+      },
+      {
+        "fingerprint": "11e368d5fc8e",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "            context.resetAll();",
+        "sample_b": "            if (backend == Backend.GL) {"
+      },
+      {
+        "fingerprint": "17cbb650b5d7",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "            context.flush(surface);",
+        "sample_b": "            if (backend == Backend.GL) {"
+      },
+      {
+        "fingerprint": "ee923b917e4f",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "",
+        "sample_b": "    /** False while the bridge draws through the CPU rasterizer (no Skia GPU context). */"
+      },
+      {
+        "fingerprint": "e53dc84e6c42",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "",
+        "sample_b": "        if (rasterPixmap != null) { rasterPixmap.close(); rasterPixmap = null; }"
+      }
+    ],
+    "src/main/java/com/atom/chat/render/ItemIconRenderer.java": [
+      {
+        "fingerprint": "1ae5f9d69ec1",
+        "kind": "comment",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": " * Native item renderer -> offscreen texture -> borrowed Skija image.",
+        "sample_b": " * Native item renderer -> offscreen texture -> Skija image."
+      },
+      {
+        "fingerprint": "b784682cb410",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "",
+        "sample_b": "            if (!bridge.hasGpuContext()) {"
+      },
+      {
+        "fingerprint": "cbad7cee5a35",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "                RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 16, 16, 0, -1000, 1000),",
+        "sample_b": "                setItemProjection();"
+      },
+      {
+        "fingerprint": "c90b1f2dc341",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "",
+        "sample_b": "    /**"
+      },
+      {
+        "fingerprint": "4bda80adfd0f",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "        int texture = GL11C.glGenTextures();",
+        "sample_b": "        try (Offscreen offscreen = Offscreen.render(gui, stack)) {"
+      },
+      {
+        "fingerprint": "05656622877e",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "                    new GLTextureInfo(GL11C.GL_TEXTURE_2D, texture, GL11C.GL_RGBA8))) {",
+        "sample_b": "                    new GLTextureInfo(GL11C.GL_TEXTURE_2D, offscreen.texture, GL11C.GL_RGBA8))) {"
+      },
+      {
+        "fingerprint": "0356284819f6",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "                borrowed = true;",
+        "sample_b": "                offscreen.keepTexture();"
+      },
+      {
+        "fingerprint": "1c1195431d1d",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "        } finally {",
+        "sample_b": "        }"
+      },
+      {
+        "fingerprint": "40101092dc4f",
+        "kind": "code",
+        "reason": "Android/FCL 的 CPU 光栅回退只在 1.21.1-fabric 实机验证通过（2026-10-31，一加 PKR110 + FCL）；官方名孪生服务于 NeoForge 1.21.1 / Forge 1.20.1 桌面版，GL 路径正常且不出 Android 包，移植未经实机验证，故保留结构分歧",
+        "sample_a": "            if (!borrowed) GlStateManager._deleteTexture(texture);",
+        "sample_b": "            if (!textureKept) GlStateManager._deleteTexture(texture);"
+      }
     ]
   }
 }

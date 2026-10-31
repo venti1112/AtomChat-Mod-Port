@@ -3,6 +3,7 @@
   "atomchat.input.image_too_many_pixels": "Image exceeds 32 million pixels. Reduce its dimensions.",
   "atomchat.input.image_invalid": "Invalid or incomplete image. Use PNG, JPEG, GIF, WebP or BMP.",
   "atomchat.screen.title": "AtomChat",
+  "atomchat.render.skija_unavailable": "AtomChat disabled its chat panel: the Skija graphics library failed to load. Vanilla chat still works. See the game log for details.",
   "atomchat.channel.world": "Public",
   "atomchat.conversation.world": "Public",
   "atomchat.conversation.empty": "No messages yet",

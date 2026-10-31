@@ -9,9 +9,9 @@ Build a high-quality, highly customizable phone-app-style chat UI for Minecraft,
 ## Rendering engine
 
 - **Skija (HumbleUI Skia bindings, 0.143.18)** — Java bindings and native libraries are pinned together; HumbleUI types is 0.2.0.
-- Draw directly onto Minecraft's main framebuffer via `BackendRenderTarget.makeGL` + `Surface.wrapBackendRenderTarget`.
+- Draw directly onto Minecraft's main framebuffer via `BackendRenderTarget.makeGL` + `Surface.wrapBackendRenderTarget`. When `DirectContext.makeGL()` is unavailable — Android/FCL: Skija resolves the system EGL context while Minecraft's lives in MobileGlues — the panel falls back to Skia's CPU rasterizer and is composited through a textured quad; item icons are read back from the same offscreen target with `glReadPixels`.
 - Save/restore GL state around Skia drawing (`GlStateUtil`).
-- Bundled native libraries (`skija-windows-x64`, `skija-windows-arm64`, `skija-linux-x64` or `skija-linux-arm64`, selected per artifact) are auto-extracted by Skija at runtime. Windows ARM64 and Linux ARM64 still require in-game validation.
+- Bundled native libraries (`skija-windows-x64`, `skija-windows-arm64`, `skija-linux-x64`, `skija-linux-arm64` or `skija-android-arm64`, selected per artifact) are auto-extracted at runtime; on Android, `SkiaSupport` stages the bionic copy itself and points `skija.library.path` at it. Windows ARM64 and Linux ARM64 still require in-game validation.
 
 ## Architecture (learned from Tuui)
 

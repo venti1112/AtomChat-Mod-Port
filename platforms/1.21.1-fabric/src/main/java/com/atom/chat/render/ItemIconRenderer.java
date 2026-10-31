@@ -14,6 +14,7 @@ import io.github.humbleui.skija.ColorType;
 import io.github.humbleui.skija.DirectContext;
 import io.github.humbleui.skija.GLTextureInfo;
 import io.github.humbleui.skija.Image;
+import io.github.humbleui.skija.ImageInfo;
 import io.github.humbleui.skija.SurfaceOrigin;
 import io.github.humbleui.types.Rect;
 import net.minecraft.client.MinecraftClient;
@@ -27,8 +28,10 @@ import org.lwjgl.opengl.GL13C;
 import org.lwjgl.opengl.GL14C;
 import org.lwjgl.opengl.GL30C;
 import org.lwjgl.opengl.GLCapabilities;
+import org.lwjgl.system.MemoryStack;
 
 import java.lang.reflect.Field;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -37,7 +40,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Consumer;
 
 /**
- * Native item renderer -> offscreen texture -> borrowed Skija image.
+ * Native item renderer -> offscreen texture -> Skija image.
+ *
+ * <p>With a Skia GPU context the texture is borrowed ({@link Image#borrowTextureFrom}).
+ * On the CPU raster bridge there is no context to borrow into, so the same offscreen
+ * pass is read back with {@code glReadPixels} and wrapped as a raster image instead.
  * Prepare in SkiaGraphics.preUi after blur; draw only during Skia paint.
  * Render-thread only. First paint queues the icon and leaves its slot blank.
  */
@@ -79,6 +86,10 @@ public final class ItemIconRenderer {
         if (requests.isEmpty() && CACHE.isEmpty() && RETIRED.isEmpty()) return;
         try (NativeState ignored = new NativeState()) {
             gui.draw();
+            if (!bridge.hasGpuContext()) {
+                prepareRaster(requests);
+                return;
+            }
             DirectContext context = bridge.requireContext();
             if (owner != null && owner != context && ownerGl == gl && !owner.isClosed()) {
                 owner.resetGLAll();
@@ -98,10 +109,7 @@ public final class ItemIconRenderer {
             var items = new DrawContext(minecraft, minecraft.getBufferBuilders().getEntityVertexConsumers());
             ItemIconModelView.pushIdentity();
             try {
-                RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 16, 16, 0, -1000, 1000),
-                        VertexSorter.BY_Z);
-                RenderSystem.resetTextureMatrix();
-                RenderSystem.setShaderColor(1, 1, 1, 1);
+                setItemProjection();
                 for (HoverEvent.ItemStackContent info : requests) {
                     var stack = info.asStack();
                     if (stack != null && !stack.isEmpty()) CACHE.put(info, render(items, stack.copy(), context, gl));
@@ -131,64 +139,159 @@ public final class ItemIconRenderer {
         }
     }
 
+    /**
+     * Raster bridge: no Skia GPU context, so each icon is rendered into the same
+     * offscreen target and read back into a CPU-backed image. The raster canvas
+     * draws those directly; nothing here touches a Skia context.
+     */
+    private static void prepareRaster(List<HoverEvent.ItemStackContent> requests) {
+        if (requests.isEmpty()) return;
+        var minecraft = MinecraftClient.getInstance();
+        var items = new DrawContext(minecraft, minecraft.getBufferBuilders().getEntityVertexConsumers());
+        ItemIconModelView.pushIdentity();
+        try {
+            setItemProjection();
+            for (HoverEvent.ItemStackContent info : requests) {
+                var stack = info.asStack();
+                if (stack != null && !stack.isEmpty()) {
+                    CACHE.put(info, renderRaster(items, stack.copy()));
+                }
+            }
+        } finally {
+            ItemIconModelView.pop();
+        }
+    }
+
+    private static void setItemProjection() {
+        RenderSystem.setProjectionMatrix(new Matrix4f().setOrtho(0, 16, 16, 0, -1000, 1000),
+                VertexSorter.BY_Z);
+        RenderSystem.resetTextureMatrix();
+        RenderSystem.setShaderColor(1, 1, 1, 1);
+    }
+
     private static Image render(DrawContext gui, ItemStack stack,
                                 DirectContext context, GLCapabilities gl) {
-        int texture = GL11C.glGenTextures();
-        int framebuffer = 0;
-        int depth = 0;
-        boolean borrowed = false;
-        try {
-            RenderSystem.activeTexture(GL13C.GL_TEXTURE0);
-            GlStateManager._bindTexture(texture);
-            GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
-            GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
-            GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
-            GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
-            org.lwjgl.opengl.GL15C.glBindBuffer(org.lwjgl.opengl.GL21C.GL_PIXEL_UNPACK_BUFFER, 0);
-            GL11C.glTexImage2D(GL11C.GL_TEXTURE_2D, 0, GL11C.GL_RGBA8,
-                    PIXELS, PIXELS, 0, GL11C.GL_RGBA, GL11C.GL_UNSIGNED_BYTE, 0L);
-            framebuffer = GL30C.glGenFramebuffers();
-            GL30C.glBindFramebuffer(GL30C.GL_FRAMEBUFFER, framebuffer);
-            GL30C.glFramebufferTexture2D(GL30C.GL_FRAMEBUFFER, GL30C.GL_COLOR_ATTACHMENT0,
-                    GL11C.GL_TEXTURE_2D, texture, 0);
-            depth = GL30C.glGenRenderbuffers();
-            GL30C.glBindRenderbuffer(GL30C.GL_RENDERBUFFER, depth);
-            GL30C.glRenderbufferStorage(GL30C.GL_RENDERBUFFER, GL14C.GL_DEPTH_COMPONENT24, PIXELS, PIXELS);
-            GL30C.glFramebufferRenderbuffer(GL30C.GL_FRAMEBUFFER, GL30C.GL_DEPTH_ATTACHMENT,
-                    GL30C.GL_RENDERBUFFER, depth);
-            if (GL30C.glCheckFramebufferStatus(GL30C.GL_FRAMEBUFFER) != GL30C.GL_FRAMEBUFFER_COMPLETE) {
-                throw new IllegalStateException("Incomplete item icon framebuffer");
-            }
-            RenderSystem.viewport(0, 0, PIXELS, PIXELS);
-            RenderSystem.disableScissor();
-            GL11C.glDisable(GL11C.GL_STENCIL_TEST);
-            RenderSystem.colorMask(true, true, true, true);
-            RenderSystem.depthMask(true);
-            GL11C.glClearColor(0, 0, 0, 0);
-            GL11C.glClearDepth(1);
-            GL11C.glClear(GL11C.GL_COLOR_BUFFER_BIT | GL11C.GL_DEPTH_BUFFER_BIT);
-            RenderSystem.enableDepthTest();
-            RenderSystem.depthFunc(GL11C.GL_LEQUAL);
-            RenderSystem.enableBlend();
-            RenderSystem.defaultBlendFunc();
-            // Vanilla resolves model overrides and native custom renderers, applies
-            // GUI lighting, fullbright and foil, then flushes the native buffers.
-            gui.drawItem(stack, 0, 0);
-            gui.draw();
+        try (Offscreen offscreen = Offscreen.render(gui, stack)) {
             try (BackendTexture backend = BackendTexture.makeGL(PIXELS, PIXELS, false,
-                    new GLTextureInfo(GL11C.GL_TEXTURE_2D, texture, GL11C.GL_RGBA8))) {
-                int ownedTexture = texture;
+                    new GLTextureInfo(GL11C.GL_TEXTURE_2D, offscreen.texture, GL11C.GL_RGBA8))) {
+                int ownedTexture = offscreen.texture;
                 Image image = Image.borrowTextureFrom(context, backend, SurfaceOrigin.BOTTOM_LEFT,
                         ColorType.RGBA_8888, ColorAlphaType.PREMUL, null,
                         () -> RETIRED.add(new RetiredTexture(gl, ownedTexture)));
-                borrowed = true;
+                offscreen.keepTexture();
                 return image;
             }
-        } finally {
-            // Only the color texture crosses into Skia, never the FBO/depth buffer.
+        }
+    }
+
+    /** CPU twin of {@link #render}: same offscreen pass, pixels read back instead of borrowed. */
+    private static Image renderRaster(DrawContext gui, ItemStack stack) {
+        try (Offscreen offscreen = Offscreen.render(gui, stack)) {
+            int rowBytes = PIXELS * 4;
+            byte[] pixels = new byte[rowBytes * PIXELS];
+            try (MemoryStack memory = MemoryStack.stackPush()) {
+                ByteBuffer raw = memory.malloc(rowBytes * PIXELS);
+                GL30C.glBindFramebuffer(GL30C.GL_READ_FRAMEBUFFER, offscreen.framebuffer);
+                GL11C.glPixelStorei(GL11C.GL_PACK_ALIGNMENT, 4);
+                GL11C.glPixelStorei(GL11C.GL_PACK_ROW_LENGTH, 0);
+                GL11C.glPixelStorei(GL11C.GL_PACK_SKIP_PIXELS, 0);
+                GL11C.glPixelStorei(GL11C.GL_PACK_SKIP_ROWS, 0);
+                GL11C.glReadPixels(0, 0, PIXELS, PIXELS, GL11C.GL_RGBA, GL11C.GL_UNSIGNED_BYTE, raw);
+                // GL delivers rows bottom-up; a Skia raster image's first row is the top.
+                for (int y = 0; y < PIXELS; y++) {
+                    raw.position((PIXELS - 1 - y) * rowBytes);
+                    raw.get(pixels, y * rowBytes, rowBytes);
+                }
+            }
+            return Image.makeRaster(new ImageInfo(PIXELS, PIXELS,
+                    ColorType.RGBA_8888, ColorAlphaType.PREMUL), pixels, rowBytes);
+        }
+    }
+
+    /**
+     * The 64×64 colour+depth target both icon paths render into.
+     *
+     * <p>Cleared to transparent and drawn with the default blend func, whose alpha
+     * channel is {@code one}; the colour channel therefore ends up premultiplied,
+     * which is why both consumers declare PREMUL. The texture stays bottom-up (GL
+     * convention): the GPU path tells Skia through {@code SurfaceOrigin.BOTTOM_LEFT},
+     * the raster path flips the rows during readback.
+     *
+     * <p>{@link #keepTexture()} hands the colour texture to Skia; only then does
+     * {@link #close()} stop deleting it. The FBO and depth buffer never cross.
+     */
+    private static final class Offscreen implements AutoCloseable {
+        private final int framebuffer;
+        private final int texture;
+        private final int depth;
+        private boolean textureKept;
+
+        private Offscreen(int framebuffer, int texture, int depth) {
+            this.framebuffer = framebuffer;
+            this.texture = texture;
+            this.depth = depth;
+        }
+
+        static Offscreen render(DrawContext gui, ItemStack stack) {
+            int texture = GL11C.glGenTextures();
+            int framebuffer = 0;
+            int depth = 0;
+            try {
+                RenderSystem.activeTexture(GL13C.GL_TEXTURE0);
+                GlStateManager._bindTexture(texture);
+                GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MIN_FILTER, GL11C.GL_LINEAR);
+                GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_MAG_FILTER, GL11C.GL_LINEAR);
+                GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_S, GL13C.GL_CLAMP_TO_EDGE);
+                GL11C.glTexParameteri(GL11C.GL_TEXTURE_2D, GL11C.GL_TEXTURE_WRAP_T, GL13C.GL_CLAMP_TO_EDGE);
+                org.lwjgl.opengl.GL15C.glBindBuffer(org.lwjgl.opengl.GL21C.GL_PIXEL_UNPACK_BUFFER, 0);
+                GL11C.glTexImage2D(GL11C.GL_TEXTURE_2D, 0, GL11C.GL_RGBA8,
+                        PIXELS, PIXELS, 0, GL11C.GL_RGBA, GL11C.GL_UNSIGNED_BYTE, 0L);
+                framebuffer = GL30C.glGenFramebuffers();
+                GL30C.glBindFramebuffer(GL30C.GL_FRAMEBUFFER, framebuffer);
+                GL30C.glFramebufferTexture2D(GL30C.GL_FRAMEBUFFER, GL30C.GL_COLOR_ATTACHMENT0,
+                        GL11C.GL_TEXTURE_2D, texture, 0);
+                depth = GL30C.glGenRenderbuffers();
+                GL30C.glBindRenderbuffer(GL30C.GL_RENDERBUFFER, depth);
+                GL30C.glRenderbufferStorage(GL30C.GL_RENDERBUFFER, GL14C.GL_DEPTH_COMPONENT24, PIXELS, PIXELS);
+                GL30C.glFramebufferRenderbuffer(GL30C.GL_FRAMEBUFFER, GL30C.GL_DEPTH_ATTACHMENT,
+                        GL30C.GL_RENDERBUFFER, depth);
+                if (GL30C.glCheckFramebufferStatus(GL30C.GL_FRAMEBUFFER) != GL30C.GL_FRAMEBUFFER_COMPLETE) {
+                    throw new IllegalStateException("Incomplete item icon framebuffer");
+                }
+                RenderSystem.viewport(0, 0, PIXELS, PIXELS);
+                RenderSystem.disableScissor();
+                GL11C.glDisable(GL11C.GL_STENCIL_TEST);
+                RenderSystem.colorMask(true, true, true, true);
+                RenderSystem.depthMask(true);
+                GL11C.glClearColor(0, 0, 0, 0);
+                GL11C.glClearDepth(1);
+                GL11C.glClear(GL11C.GL_COLOR_BUFFER_BIT | GL11C.GL_DEPTH_BUFFER_BIT);
+                RenderSystem.enableDepthTest();
+                RenderSystem.depthFunc(GL11C.GL_LEQUAL);
+                RenderSystem.enableBlend();
+                RenderSystem.defaultBlendFunc();
+                // Vanilla resolves model overrides and native custom renderers, applies
+                // GUI lighting, fullbright and foil, then flushes the native buffers.
+                gui.drawItem(stack, 0, 0);
+                gui.draw();
+                return new Offscreen(framebuffer, texture, depth);
+            } catch (RuntimeException | Error failure) {
+                if (framebuffer != 0) GL30C.glDeleteFramebuffers(framebuffer);
+                if (depth != 0) GL30C.glDeleteRenderbuffers(depth);
+                GlStateManager._deleteTexture(texture);
+                throw failure;
+            }
+        }
+
+        void keepTexture() {
+            textureKept = true;
+        }
+
+        @Override
+        public void close() {
             if (framebuffer != 0) GL30C.glDeleteFramebuffers(framebuffer);
             if (depth != 0) GL30C.glDeleteRenderbuffers(depth);
-            if (!borrowed) GlStateManager._deleteTexture(texture);
+            if (!textureKept) GlStateManager._deleteTexture(texture);
         }
     }
 

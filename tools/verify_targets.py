@@ -660,7 +660,9 @@ def check_resource_paths(paths: dict) -> None:
         if not res.is_dir():
             continue  # 还没建起来的目标
         expected = set(also)
-        for shader in names:
+        # 目标自带的额外着色器（如 Fabric 基座的 CPU 光栅合成）只在该目标展开，
+        # 别的目标没有这份实现，多声明反而要求它们各放一份不会加载的文件。
+        for shader in set(names) | set(t.get("shader_names", [])):
             for ext in exts:
                 expected.add(f"{t['shaders_root']}/{shader}{ext}")
         for lang in langs:

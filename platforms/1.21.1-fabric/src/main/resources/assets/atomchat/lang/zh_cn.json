@@ -3,6 +3,7 @@
   "atomchat.input.image_too_many_pixels": "图片超过 3200 万像素，请缩小图片尺寸。",
   "atomchat.input.image_invalid": "图片无效或不完整，请使用 PNG、JPEG、GIF、WebP 或 BMP。",
   "atomchat.screen.title": "AtomChat",
+  "atomchat.render.skija_unavailable": "AtomChat 已禁用聊天面板：Skija 图形库加载失败，原版聊天不受影响。详见游戏日志。",
   "atomchat.channel.world": "公屏",
   "atomchat.conversation.world": "公屏",
   "atomchat.conversation.empty": "暂无消息",

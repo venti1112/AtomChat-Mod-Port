@@ -91,6 +91,7 @@ jobs:
           ./gradlew build --no-daemon
           ./gradlew build -x test -Patomchat.nativePlatform=linux-x64 --no-daemon
           ./gradlew build -x test -Patomchat.nativePlatform=windows-arm64 --no-daemon
+          ./gradlew build -x test -Patomchat.nativePlatform=linux-arm64 --no-daemon
 
       # 版本号是注入的，不是脏；这里仍然要断言，防止 assume-unchanged 之外的
       # 意外改动让发行 jar 带上 git_dirty=true。
@@ -105,7 +106,7 @@ jobs:
             echo "::error::发行 jar 的构建戳写着 git_dirty=true，但版本号只是注入的，源码应来自干净 checkout"
             exit 1
           fi
-          done < <(find build/libs build/linux-x64/libs build/windows-arm64/libs -name "*.jar" ! -name "*sources*" ! -name "*-slim*")
+          done < <(find build/libs build/linux-x64/libs build/windows-arm64/libs build/linux-arm64/libs -name "*.jar" ! -name "*sources*" ! -name "*-slim*")
 
       - name: 断言产物内容
         run: |
@@ -113,18 +114,19 @@ jobs:
           python3 tools/verify_jars.py --platform windows-x64 "${{ matrix.project }}"
           python3 tools/verify_jars.py --platform linux-x64 "${{ matrix.project }}"
           python3 tools/verify_jars.py --platform windows-arm64 "${{ matrix.project }}"
+          python3 tools/verify_jars.py --platform linux-arm64 "${{ matrix.project }}"
 
       - name: 取产物（-slim 与 sources 一律不要）
         working-directory: ${{ matrix.project }}
         run: |
           set -euo pipefail
           mkdir -p "$GITHUB_WORKSPACE/dist"
-          find build/libs build/linux-x64/libs build/windows-arm64/libs -name "*.jar" ! -name "*sources*" ! -name "*-slim*" \
+          find build/libs build/linux-x64/libs build/windows-arm64/libs build/linux-arm64/libs -name "*.jar" ! -name "*sources*" ! -name "*-slim*" \
             -exec cp {} "$GITHUB_WORKSPACE/dist/" \;
           ls -la "$GITHUB_WORKSPACE/dist"
           count=$(find "$GITHUB_WORKSPACE/dist" -name "*.jar" | wc -l)
-          if [ "$count" -ne 3 ]; then
-            echo "::error::期望恰好 Windows x64 / Windows ARM64 / Linux x64 三个发布 jar，实际 $count 个"
+          if [ "$count" -ne 4 ]; then
+            echo "::error::期望恰好 Windows x64 / Windows ARM64 / Linux x64 / Linux ARM64 四个发布 jar，实际 $count 个"
             exit 1
           fi
           if find "$GITHUB_WORKSPACE/dist" -name "*-slim*" | grep -q .; then
@@ -161,8 +163,8 @@ jobs:
             ! -path "*-未验证/*" -exec cp {} release-out/ \;
           ls -la release-out
           count=$(find release-out -name "*.jar" | wc -l)
-          expected=$(python3 -c "import json; t=json.load(open('versions/targets.json', encoding='utf-8')); print(3*sum(1 for k,v in t.items() if not k.startswith('_') and v.get('buildable')))")
-          echo "Release 将挂上 ${count} 个 jar（期望 ${expected} = 可发布目标 × 3 个系统/架构变体）"
+          expected=$(python3 -c "import json; t=json.load(open('versions/targets.json', encoding='utf-8')); print(4*sum(1 for k,v in t.items() if not k.startswith('_') and v.get('buildable')))")
+          echo "Release 将挂上 ${count} 个 jar（期望 ${expected} = 可发布目标 × 4 个系统/架构变体）"
           if [ "$count" -ne "$expected" ]; then
             echo "::error::期望 ${expected} 个发布 JAR，实际 ${count} 个"
             exit 1

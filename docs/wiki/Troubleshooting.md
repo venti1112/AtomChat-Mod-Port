@@ -36,7 +36,7 @@ Before 0.2.8, opening the panel on Forge 1.20.1 could turn the whole screen blac
 
 - **Linux x64 / ARM64:** use the `linux-x64` or `linux-arm64` JAR and remove the Windows JAR. Ubuntu/Debian needs `libegl1 libgl1`; inspect the native-loading reason in the log if the panel stays disabled.
 - **Windows ARM64:** use the `windows-arm64` package with ARM64 Java; packaging is experimental until tested on real hardware.
-- **macOS / Linux ARM64 / Android:** matching native libraries are not bundled, so the panel cannot start.
+- **macOS:** no matching native library is bundled, so the panel cannot start.
 - **Quark:** the emote menu does not appear when Quark is installed; compatibility work is in progress.
 - **Other MC versions / loaders:** currently Fabric and NeoForge 1.21.1, plus Forge 1.20.1.
 

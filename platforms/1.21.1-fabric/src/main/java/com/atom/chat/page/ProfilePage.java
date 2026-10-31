@@ -274,9 +274,19 @@ public final class ProfilePage {
     /**
      * Two overlapping rects, normalised to a 9x9 box so the drawn glyph size
      * is exact: scale = targetPx / 9, no empty viewBox margins shrinking it.
+     *
+     * <p>Built lazily: {@code noteJoin()} initializes this class on every join,
+     * and the icon must not load the Skija natives on machines where the panel
+     * is already disabled.
      */
-    private static final io.github.humbleui.skija.Path ROW_COPY_ICON =
-            io.github.humbleui.skija.Path.makeFromSVGString("M0 0 L6 0 L6 6 L0 6 Z M3 3 L9 3 L9 9 L3 9 Z");
+    private static io.github.humbleui.skija.Path rowCopyIcon() {
+        return RowCopyIconHolder.ICON;
+    }
+
+    private static final class RowCopyIconHolder {
+        private static final io.github.humbleui.skija.Path ICON =
+                io.github.humbleui.skija.Path.makeFromSVGString("M0 0 L6 0 L6 6 L0 6 Z M3 3 L9 3 L9 9 L3 9 Z");
+    }
     private static final float COPY_GLYPH_UNITS = 9.0F;
 
     /** Copy button docked right after the identity card's UUID label. */
@@ -364,7 +374,7 @@ public final class ProfilePage {
                 canvas.translate(cx - COPY_GLYPH_UNITS / 2.0F * sc,
                         cy - COPY_GLYPH_UNITS / 2.0F * sc);
                 canvas.scale(sc, sc);
-                canvas.drawPath(ROW_COPY_ICON, paint);
+                canvas.drawPath(rowCopyIcon(), paint);
                 canvas.restore();
             }
         } finally {

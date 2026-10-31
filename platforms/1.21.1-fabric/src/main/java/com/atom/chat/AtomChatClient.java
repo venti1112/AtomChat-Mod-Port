@@ -31,6 +31,8 @@ public class AtomChatClient implements ClientModInitializer {
     public static final KeyBinding OPEN_ATOMCHAT_KEY = KeyBindingHelper.registerKeyBinding(
             new KeyBinding("key.atomchat.open", InputUtil.Type.KEYSYM, GLFW.GLFW_KEY_Y,
                     "key.atomchat.category"));
+    /** One warning per launch: the probe is cached, so the outcome cannot change within a session. */
+    private static boolean skijaNoticeSent;
 
     @Override
     public void onInitializeClient() {
@@ -78,6 +80,13 @@ public class AtomChatClient implements ClientModInitializer {
         com.atom.chat.chat.DraftSessionStore.reset();
         NotificationBanner.INSTANCE.reset();
             com.atom.chat.page.ProfilePage.noteJoin();
+            if (!skijaNoticeSent && !com.atom.chat.render.SkiaSupport.available()) {
+                skijaNoticeSent = true;
+                if (client.inGameHud != null) {
+                    client.inGameHud.getChatHud().addMessage(
+                            net.minecraft.text.Text.translatable("atomchat.render.skija_unavailable"));
+                }
+            }
             com.atom.chat.net.AvatarCompanionClient.onJoin();
             com.atom.chat.net.MediaCompanionClient.onJoin();
             com.atom.chat.net.ProfileCompanionClient.onJoin();

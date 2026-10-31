@@ -9,7 +9,9 @@
     "语言文件与 sounds.json 各端都在 assets/atomchat/ 下。",
     "",
     "【判据】每个目标的实际文件集合必须与声明**逐项相等**（多一个少一个都红）：",
-    "着色器按 <shaders_root>/<名字><扩展名> 展开，语言文件按两种语言各一份。"
+    "着色器按 <shaders_root>/<名字><扩展名> 展开，语言文件按两种语言各一份。",
+    "全局 shader_names 对所有目标生效；目标条目里的 shader_names 只对那个目标生效，",
+    "用于只有该目标才有的着色器（例如 Fabric 基座的 atomchat_ui_composite）。"
   ],
 
   "shader_names": ["atomchat_kawase_blur", "atomchat_panel_blur"],
@@ -19,7 +21,8 @@
     "1.21.1-fabric": {
       "shaders_root": "assets/minecraft/shaders/core",
       "lang_root": "assets/atomchat/lang",
-      "note": "Fabric 侧着色器必须落在原版命名空间下"
+      "shader_names": ["atomchat_ui_composite"],
+      "note": "Fabric 侧着色器必须落在原版命名空间下；atomchat_ui_composite 是 CPU 光栅后端的合成通道"
     },
     "1.21.1-neoforge": {
       "shaders_root": "assets/atomchat/shaders/core",

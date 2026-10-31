@@ -5,8 +5,9 @@ import com.atom.chat.AtomChat;
 /**
  * 这台机器上 Skija 的原生库到底能不能用 —— 正面探测一次，答案留给所有要问的人。
  *
- * <p><strong>为什么不看 {@code os.name}。</strong>每个发行包仅带 Windows x64 或 Linux x64 的一份原生库，
- * 而"包里有没有那一份"和"这台机器加载得起来没有"是两件事：
+ * <p><strong>为什么不看 {@code os.name}。</strong>每个发行包仅带所选系统/架构的一份原生库
+ * （Windows x64／ARM64、Linux x64／ARM64、Android ARM64），而"包里有没有那一份"和
+ * "这台机器加载得起来没有"是两件事：
  * 换了架构、缺了系统的图形库、或者被别的东西抢先占了库名，平台自述都对不上。
  * 所以探的是能力本身 —— 真的去加载一次。这和 0.2.11 里 LAF 那个守卫是同一个道理。
  *
@@ -40,6 +41,15 @@ public final class SkiaSupport {
     }
 
     private static final String LIBRARY = "io.github.humbleui.skija.impl.Library";
+
+    /**
+     * Android 那一份原生库在包里的路径。
+     *
+     * <p>桌面 {@code linux-arm64} 那份是 glibc 链接的 —— 它问链接器要 {@code libfreetype.so.6}、
+     * {@code libfontconfig.so.1}、{@code libstdc++.so.6}，bionic 一个都没有，手机上必然 dlopen 失败。
+     * 官方 {@code skija-android-arm64} 是 NDK 构建的 bionic 库，只依赖 Android 系统库。
+     */
+    private static final String ANDROID_NATIVE = "io/github/humbleui/skija/android/arm64/libskija.so";
 
     /**
      * 唯一的一份结果。单测会把它钉成"没有原生库"，好让降级那条分支真的被走一遍 ——
@@ -107,12 +117,46 @@ public final class SkiaSupport {
     static String unavailableLine(String os, String arch, String reason) {
         return "Skija natives unavailable on " + text(os) + "/" + text(arch) + " (" + text(reason)
                 + "): the AtomChat panel stays disabled and vanilla chat is unchanged. "
-                + "Available native packages: Windows x64/ARM64 and Linux x64/ARM64 only; macOS is not packaged. "
+                + "Available native packages: Windows x64/ARM64, Linux x64/ARM64 and Android ARM64 only; macOS is not packaged. "
                 + "Linux also needs EGL/GL system libraries.";
     }
 
     /** 真加载：就是我们自己包里那一个。 */
     private static void loadBundled() throws Throwable {
+        if (android()) {
+            loadBundledAndroid();
+        } else {
+            loadLibrary(LIBRARY, SkiaSupport.class.getClassLoader());
+        }
+    }
+
+    /**
+     * FCL/Pojav 在 bionic 上跑的是真 JVM：{@code os.name} 照样报 Linux，
+     * 只有启动器传的 {@code -Dos.version=Android-17} 这一行把它和桌面 Linux 分开。
+     */
+    private static boolean android() {
+        return System.getProperty("os.version", "").startsWith("Android");
+    }
+
+    /**
+     * Android 从 {@code skija.library.path} 进：{@code Library.load()} 看到这个属性就直接
+     * {@code System.load(目录/libskija.so)} 然后返回 —— 完全不看 os.name，
+     * 所以包里那份 bionic 库能被认下来，桌面 glibc 那条路在这个分支里根本不会走。
+     */
+    private static void loadBundledAndroid() throws Throwable {
+        java.nio.file.Path dir = java.nio.file.Paths.get(System.getProperty("java.io.tmpdir"), "atomchat-skija-android");
+        java.nio.file.Files.createDirectories(dir);
+        java.nio.file.Path staging = java.nio.file.Files.createTempFile(dir, "skija-", ".tmp");
+        try (java.io.InputStream in = SkiaSupport.class.getClassLoader().getResourceAsStream(ANDROID_NATIVE)) {
+            if (in == null) {
+                throw new IllegalStateException("this build bundles no Android Skija native (" + ANDROID_NATIVE + ")");
+            }
+            java.nio.file.Files.copy(in, staging, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        }
+        // 改名覆盖而不是直接写目标文件：上一个进程还映射着旧库时，直接写会撞上 ETXTBSY。
+        java.nio.file.Files.move(staging, dir.resolve(System.mapLibraryName("skija")),
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        System.setProperty("skija.library.path", dir.toAbsolutePath().toString());
         loadLibrary(LIBRARY, SkiaSupport.class.getClassLoader());
     }
 
